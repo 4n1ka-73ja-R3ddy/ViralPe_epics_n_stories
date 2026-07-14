@@ -1,0 +1,13 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^\\$env:JAVA_HOME='C:\\\\Users\\\\anika_tywp\\\\\\.jdks\\\\ms-21\\.0\\.11'; \\$env:Path=\"\\$env:JAVA_HOME;\" \\+ \\$env:Path; cd \"c:\\\\Users\\\\anika_tywp\\\\OneDrive\\\\Desktop\\\\Anika_Teja_Reddy_Work\\\\Vpe\\\\ViralPe_epics_n_stories\\\\backend\"; mvn clean test-compile -q$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^\\$env:JAVA_HOME='C:\\\\Program Files\\\\Java\\\\jdk-26\\.0\\.1'; \\$env:Path=\"\\$env:JAVA_HOME\\\\bin;\\$env:Path\"; cd 'c:\\\\Users\\\\anika_tywp\\\\OneDrive\\\\Desktop\\\\Anika_Teja_Reddy_Work\\\\Vpe\\\\ViralPe_epics_n_stories\\\\backend'; mvn -DskipTests spring-boot:run$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    },
+    "java.compile.nullAnalysis.mode": "disabled"
+}

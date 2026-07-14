@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/wallet")
+@RequestMapping("/api/wallet/activity")
 public class WalletActivityController {
 
     private final LedgerEntryRepository ledgerEntryRepository;
@@ -22,6 +22,8 @@ public class WalletActivityController {
 
     @GetMapping("/ledger/{userId}")
     public ResponseEntity<List<LedgerEntry>> ledger(@PathVariable Long userId) {
-        return ResponseEntity.ok(ledgerEntryRepository.findByUserIdOrderByCreatedAtDesc(userId));
+        return ResponseEntity.ok(
+                ledgerEntryRepository.findByUserIdOrderByCreatedAtDesc(userId)
+        );
     }
 }

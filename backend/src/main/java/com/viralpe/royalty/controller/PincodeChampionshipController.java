@@ -15,14 +15,22 @@ public class PincodeChampionshipController {
 
     private final PincodePoolRepository pincodePoolRepository;
 
-    public PincodeChampionshipController(PincodePoolRepository pincodePoolRepository) {
+    public PincodeChampionshipController(
+            PincodePoolRepository pincodePoolRepository
+    ) {
         this.pincodePoolRepository = pincodePoolRepository;
     }
 
     @GetMapping("/top")
     public ResponseEntity<List<PincodePool>> topPincodes() {
+
         List<PincodePool> all = pincodePoolRepository.findAll();
-        all.sort((a, b) -> Double.compare(b.getPoolBalance() == null ? 0.0 : b.getPoolBalance(), a.getPoolBalance() == null ? 0.0 : a.getPoolBalance()));
+
+        all.sort((a, b) -> Double.compare(
+                b.getPoolBalance() == null ? 0.0 : b.getPoolBalance(),
+                a.getPoolBalance() == null ? 0.0 : a.getPoolBalance()
+        ));
+
         return ResponseEntity.ok(all);
     }
 }
