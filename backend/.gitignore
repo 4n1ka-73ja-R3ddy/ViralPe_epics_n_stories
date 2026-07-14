@@ -1,0 +1,61 @@
+# Maven
+/target/
+
+# Compiled class files
+*.class
+
+# Logs
+*.log
+/logs/
+
+# Package files
+*.jar
+*.war
+
+# IntelliJ
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Temporary
+tmp/
+*.tmp
+
+# Node modules (frontend)
+node_modules/
+
+# IDE files
+*.swp
+
+# Spring Boot devtools
+spring-boot-devtools.properties
+
+# Flyway
+# keep migrations, but ignore any local generated files
+
+# OneDrive temp
+~$*
+
+# Build output (other)
+build/
+
+# Coverage
+coverage/
+
+# Logs and runtime files
+*.pid
+*.seed

@@ -1,0 +1,12 @@
+package com.viralpe.transaction.repository;
+
+import com.viralpe.transaction.model.PincodePool;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface PincodePoolRepository extends JpaRepository<PincodePool, Long> {
+    Optional<PincodePool> findByPincode(String pincode);
+}
