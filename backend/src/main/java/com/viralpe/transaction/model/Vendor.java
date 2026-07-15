@@ -13,9 +13,11 @@ public class Vendor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String vendorCode;
     private String onboardedPincode;
+    private Long onboardedByUserId;
     private Double royaltyPercentage;
     private Boolean active = true;
 
@@ -49,6 +51,14 @@ public class Vendor {
 
     public void setOnboardedPincode(String onboardedPincode) {
         this.onboardedPincode = onboardedPincode;
+    }
+
+    public Long getOnboardedByUserId() {
+        return onboardedByUserId;
+    }
+
+    public void setOnboardedByUserId(Long onboardedByUserId) {
+        this.onboardedByUserId = onboardedByUserId;
     }
 
     public Double getRoyaltyPercentage() {
