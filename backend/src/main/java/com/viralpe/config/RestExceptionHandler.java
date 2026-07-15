@@ -32,4 +32,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         m.put("error", ex.getMessage() == null ? "unexpected" : ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(m);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, String> m = new HashMap<>();
+        m.put("error", ex.getMessage() == null ? "invalid request" : ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(m);
+    }
 }

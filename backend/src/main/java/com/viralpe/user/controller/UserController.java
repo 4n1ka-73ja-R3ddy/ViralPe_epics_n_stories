@@ -1,6 +1,8 @@
 package com.viralpe.user.controller;
 
 import com.viralpe.user.dto.ProfileCompletionRequest;
+import com.viralpe.user.dto.ProfileCompletionResponse;
+import com.viralpe.user.dto.PincodeValidationResponse;
 import com.viralpe.user.dto.UserProfileResponse;
 import com.viralpe.user.model.User;
 import com.viralpe.user.service.UserService;
@@ -23,10 +25,14 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/pincode/{pincode}")
+    public ResponseEntity<PincodeValidationResponse> validatePincode(@PathVariable String pincode) {
+        return ResponseEntity.ok(userService.validatePincode(pincode));
+    }
+
     @PostMapping("/complete-profile")
-    public ResponseEntity<String> completeProfile(@Valid @RequestBody ProfileCompletionRequest request) {
-        userService.completeProfile(request);
-        return ResponseEntity.ok("Profile completed successfully.");
+    public ResponseEntity<ProfileCompletionResponse> completeProfile(@Valid @RequestBody ProfileCompletionRequest request) {
+        return ResponseEntity.ok(userService.completeProfile(request));
     }
 
     @GetMapping("/profile/{userId}")
