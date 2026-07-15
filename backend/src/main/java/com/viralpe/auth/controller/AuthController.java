@@ -2,6 +2,8 @@ package com.viralpe.auth.controller;
 
 import com.viralpe.auth.dto.AuthRequest;
 import com.viralpe.auth.dto.AuthResponse;
+import com.viralpe.auth.dto.DemoSignInRequest;
+import com.viralpe.auth.dto.GoogleSignInRequest;
 import com.viralpe.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +23,17 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in/google")
-    public ResponseEntity<AuthResponse> signInWithGoogle(@Valid @RequestBody AuthRequest request) {
-        return ResponseEntity.ok(authService.signInOrRegister(request, "GOOGLE"));
+    public ResponseEntity<AuthResponse> signInWithGoogle(@Valid @RequestBody GoogleSignInRequest request) {
+        return ResponseEntity.ok(authService.signInWithGoogle(request.getIdToken()));
     }
 
     @PostMapping("/sign-in/apple")
     public ResponseEntity<AuthResponse> signInWithApple(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.signInOrRegister(request, "APPLE"));
+    }
+
+    @PostMapping("/sign-in/demo")
+    public ResponseEntity<AuthResponse> signInDemo(@Valid @RequestBody DemoSignInRequest request) {
+        return ResponseEntity.ok(authService.signInDemo(request));
     }
 }

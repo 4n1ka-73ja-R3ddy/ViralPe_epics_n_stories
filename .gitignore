@@ -1,0 +1,102 @@
+# =========================
+# Global OS junk
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Editor / IDE files
+# =========================
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+
+# VS user settings
+*.code-workspace
+
+# Vim / swap
+*.swp
+*.swo
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# =========================
+# Logs and runtime files
+# =========================
+logs/
+*.log
+*.out
+*.err
+*.pid
+*.seed
+
+# =========================
+# Java / Maven / Gradle
+# =========================
+**/target/
+**/build/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Gradle
+.gradle/
+
+# =========================
+# Node / frontend
+# =========================
+**/node_modules/
+**/dist/
+**/.vite/
+**/.cache/
+coverage/
+
+# npm / yarn / pnpm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Python / virtual env
+# =========================
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# =========================
+# Temporary / local artifacts
+# =========================
+tmp/
+tmp_docx_extract/
+*.tmp
+~$*
+
+# Local modernization and generated logs
+**/.github/modernize/java-upgrade/*/logs/

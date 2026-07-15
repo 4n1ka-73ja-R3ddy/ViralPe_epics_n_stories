@@ -20,3 +20,10 @@ logging:
   level:
     root: INFO
     org.springframework: INFO
+
+viralpe:
+  frontend:
+    url: ${VIRALPE_FRONTEND_URL:http://localhost:3000}
+  auth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}

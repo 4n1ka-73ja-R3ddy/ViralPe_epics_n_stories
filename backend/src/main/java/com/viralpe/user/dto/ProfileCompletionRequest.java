@@ -2,6 +2,7 @@ package com.viralpe.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
 
 public class ProfileCompletionRequest {
 
@@ -10,6 +11,9 @@ public class ProfileCompletionRequest {
 
     @NotBlank
     private String pincode;
+
+    @AssertTrue(message = "Pincode location confirmation is required")
+    private boolean locationConfirmed;
 
     private String referralCode;
 
@@ -35,5 +39,13 @@ public class ProfileCompletionRequest {
 
     public void setReferralCode(String referralCode) {
         this.referralCode = referralCode;
+    }
+
+    public boolean isLocationConfirmed() {
+        return locationConfirmed;
+    }
+
+    public void setLocationConfirmed(boolean locationConfirmed) {
+        this.locationConfirmed = locationConfirmed;
     }
 }
