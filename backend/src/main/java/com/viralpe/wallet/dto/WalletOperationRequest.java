@@ -1,19 +1,23 @@
 package com.viralpe.wallet.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class WalletOperationRequest {
 
-    @NotNull
+    @NotNull(message = "User ID is required.")
     private Long userId;
 
-    @NotNull
-    @Min(0)
+    @NotNull(message = "Amount is required.")
+    @DecimalMin(
+            value = "0.01",
+            inclusive = true,
+            message = "Amount must be greater than 0."
+    )
     private Double amount;
 
-    @NotBlank
+    @NotBlank(message = "Category is required.")
     private String category;
 
     private String sourceReference;

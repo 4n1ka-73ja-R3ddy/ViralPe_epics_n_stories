@@ -3,19 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import {
   getLedger,
   getProfile,
-  getReversalWallet,
-  getWalletBalance,
+  getWalletSummary,
   LedgerEntryResponse,
-  UserProfileResponse
+  UserProfileResponse,
+  WalletSummaryResponse
 } from '../lib/api';
 import { clearSession, getSession } from '../lib/session';
+
+const EMPTY_SUMMARY: WalletSummaryResponse = {
+  walletBalance: 0,
+  reversalBalance: 0,
+  cashback: 0,
+  referral: 0,
+  vendorRoyalty: 0,
+  pincodeRoyalty: 0,
+  totalEarnings: 0
+};
 
 export default function DashboardPage() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [reversalBalance, setReversalBalance] = useState(0);
+  const [walletSummary, setWalletSummary] =
+    useState<WalletSummaryResponse>(EMPTY_SUMMARY);
   const [ledger, setLedger] = useState<LedgerEntryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,21 +43,25 @@ export default function DashboardPage() {
       setError('');
 
       try {
-        const [
-          profileData,
-          walletData,
-          reversalData,
-          ledgerData
-        ] = await Promise.all([
-          getProfile(session.userId),
-          getWalletBalance(session.userId),
-          getReversalWallet(session.userId),
-          getLedger(session.userId)
-        ]);
+        const [profileData, summaryData, ledgerData] =
+          await Promise.all([
+            getProfile(session.userId),
+            getWalletSummary(session.userId),
+            getLedger(session.userId)
+          ]);
 
         setProfile(profileData);
-        setWalletBalance(walletData.balance ?? 0);
-        setReversalBalance(reversalData.balance ?? 0);
+
+        setWalletSummary({
+          walletBalance: summaryData.walletBalance ?? 0,
+          reversalBalance: summaryData.reversalBalance ?? 0,
+          cashback: summaryData.cashback ?? 0,
+          referral: summaryData.referral ?? 0,
+          vendorRoyalty: summaryData.vendorRoyalty ?? 0,
+          pincodeRoyalty: summaryData.pincodeRoyalty ?? 0,
+          totalEarnings: summaryData.totalEarnings ?? 0
+        });
+
         setLedger(ledgerData ?? []);
       } catch (dashboardError) {
         setError(
@@ -79,7 +93,11 @@ export default function DashboardPage() {
   return (
     <div className="fintech-dashboard-page">
       <header className="fintech-topbar">
-        <a className="brand" href="/dashboard" aria-label="ViralPe dashboard">
+        <a
+          className="brand"
+          href="/dashboard"
+          aria-label="ViralPe dashboard"
+        >
           <span className="brand-mark">V</span>
 
           <span className="brand-copy">
@@ -107,16 +125,23 @@ export default function DashboardPage() {
       <main className="fintech-dashboard-main">
         <section className="dashboard-welcome">
           <div>
-            <p className="login-eyebrow">Your ViralPe dashboard</p>
+            <p className="login-eyebrow">
+              Your ViralPe dashboard
+            </p>
+
             <h1>Welcome back, {firstName}.</h1>
+
             <p>
-              Manage your wallet, rewards and recent activity from one place.
+              Manage your wallet, earnings and recent activity
+              from one place.
             </p>
           </div>
 
           <div className="dashboard-pincode-pill">
             <span>Registered pincode</span>
-            <strong>{profile?.registeredPincode || 'Not set'}</strong>
+            <strong>
+              {profile?.registeredPincode || 'Not set'}
+            </strong>
           </div>
         </section>
 
@@ -137,15 +162,21 @@ export default function DashboardPage() {
           <article className="dashboard-primary-wallet">
             <div className="wallet-card-top">
               <div>
-                <span className="wallet-label">Spendable balance</span>
-                <strong>₹{walletBalance.toFixed(2)}</strong>
+                <span className="wallet-label">
+                  Spendable balance
+                </span>
+
+                <strong>
+                  ₹{walletSummary.walletBalance.toFixed(2)}
+                </strong>
               </div>
 
               <span className="wallet-symbol">₹</span>
             </div>
 
             <p>
-              Use this balance for utility payments and eligible purchases.
+              Use this balance for utility payments and eligible
+              purchases.
             </p>
 
             <div className="wallet-card-footer">
@@ -155,55 +186,156 @@ export default function DashboardPage() {
           </article>
 
           <article className="dashboard-mini-card">
-            <div className="dashboard-mini-icon reversal-icon">↺</div>
+            <div className="dashboard-mini-icon reversal-icon">
+              ↺
+            </div>
 
             <div>
               <span>Reversal Wallet</span>
-              <strong>₹{reversalBalance.toFixed(2)}</strong>
-              <p>Same-day reusable failed-payment balance.</p>
+
+              <strong>
+                ₹{walletSummary.reversalBalance.toFixed(2)}
+              </strong>
+
+              <p>
+                Same-day reusable failed-payment balance.
+              </p>
             </div>
           </article>
 
           <article className="dashboard-mini-card">
-            <div className="dashboard-mini-icon location-icon-small">⌖</div>
+            <div className="dashboard-mini-icon earnings-icon">
+              ↗
+            </div>
 
             <div>
-              <span>Pincode Rewards</span>
-              <strong>{profile?.registeredPincode || 'Not set'}</strong>
-              <p>Your regional championship location.</p>
+              <span>Total Earnings</span>
+
+              <strong>
+                ₹{walletSummary.totalEarnings.toFixed(2)}
+              </strong>
+
+              <p>
+                Combined total of all read-only earning ledgers.
+              </p>
             </div>
           </article>
+        </section>
+
+        <section className="earnings-summary-section">
+          <div className="dashboard-panel-heading">
+            <div>
+              <span className="panel-kicker">
+                Lifetime earnings
+              </span>
+
+              <h2>Earnings overview</h2>
+            </div>
+          </div>
+
+          <div className="earnings-summary-grid">
+            <article className="earnings-summary-card">
+              <span className="earnings-summary-icon">
+                ₹
+              </span>
+
+              <div>
+                <p>Cashback</p>
+                <strong>
+                  ₹{walletSummary.cashback.toFixed(2)}
+                </strong>
+                <span>Your transaction cashback earnings.</span>
+              </div>
+            </article>
+
+            <article className="earnings-summary-card">
+              <span className="earnings-summary-icon">
+                ◎
+              </span>
+
+              <div>
+                <p>Referral</p>
+                <strong>
+                  ₹{walletSummary.referral.toFixed(2)}
+                </strong>
+                <span>Earnings from referred users.</span>
+              </div>
+            </article>
+
+            <article className="earnings-summary-card">
+              <span className="earnings-summary-icon">
+                ◇
+              </span>
+
+              <div>
+                <p>Vendor Royalty</p>
+                <strong>
+                  ₹{walletSummary.vendorRoyalty.toFixed(2)}
+                </strong>
+                <span>Earnings from onboarded vendors.</span>
+              </div>
+            </article>
+
+            <article className="earnings-summary-card">
+              <span className="earnings-summary-icon">
+                ⌖
+              </span>
+
+              <div>
+                <p>Pincode Royalty</p>
+                <strong>
+                  ₹{walletSummary.pincodeRoyalty.toFixed(2)}
+                </strong>
+                <span>Championship and regional earnings.</span>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section className="dashboard-content-grid">
           <article className="dashboard-panel">
             <div className="dashboard-panel-heading">
               <div>
-                <span className="panel-kicker">Start here</span>
+                <span className="panel-kicker">
+                  Start here
+                </span>
+
                 <h2>Quick actions</h2>
               </div>
             </div>
 
             <div className="quick-action-grid">
-              <button type="button" className="quick-action-card">
+              <button
+                type="button"
+                className="quick-action-card"
+              >
                 <span className="quick-action-icon">▣</span>
                 <strong>Pay Bills</strong>
                 <p>Electricity, water and broadband.</p>
               </button>
 
-              <button type="button" className="quick-action-card">
+              <button
+                type="button"
+                className="quick-action-card"
+              >
                 <span className="quick-action-icon">⌁</span>
                 <strong>Mobile Recharge</strong>
                 <p>Recharge prepaid mobile numbers.</p>
               </button>
 
-              <button type="button" className="quick-action-card">
+              <button
+                type="button"
+                className="quick-action-card"
+              >
                 <span className="quick-action-icon">↗</span>
                 <strong>Cashback</strong>
-                <p>Track your reward earnings.</p>
+                <p>Track your cashback earnings.</p>
               </button>
 
-              <button type="button" className="quick-action-card">
+              <button
+                type="button"
+                className="quick-action-card"
+              >
                 <span className="quick-action-icon">◎</span>
                 <strong>Referrals</strong>
                 <p>Invite users and earn rewards.</p>
@@ -214,25 +346,37 @@ export default function DashboardPage() {
           <article className="dashboard-panel dashboard-reward-panel">
             <div className="dashboard-panel-heading">
               <div>
-                <span className="panel-kicker">Regional rewards</span>
+                <span className="panel-kicker">
+                  Regional rewards
+                </span>
+
                 <h2>Pincode Championship</h2>
               </div>
 
-              <span className="reward-phase-pill">Daily</span>
+              <span className="reward-phase-pill">
+                Daily
+              </span>
             </div>
 
             <div className="reward-pool-card">
-              <span>Current reward pool</span>
-              <strong>₹0.00</strong>
+              <span>Pincode royalty earned</span>
+
+              <strong>
+                ₹{walletSummary.pincodeRoyalty.toFixed(2)}
+              </strong>
+
               <p>
-                Contributions from your pincode will appear here.
+                Championship earnings for your registered
+                pincode will appear here.
               </p>
             </div>
 
             <div className="reward-details">
               <div>
                 <span>Your pincode</span>
-                <strong>{profile?.registeredPincode || '-'}</strong>
+                <strong>
+                  {profile?.registeredPincode || '-'}
+                </strong>
               </div>
 
               <div>
@@ -246,11 +390,17 @@ export default function DashboardPage() {
         <section className="dashboard-panel dashboard-activity-panel">
           <div className="dashboard-panel-heading">
             <div>
-              <span className="panel-kicker">Wallet history</span>
+              <span className="panel-kicker">
+                Wallet history
+              </span>
+
               <h2>Recent activity</h2>
             </div>
 
-            <button type="button" className="panel-link-button">
+            <button
+              type="button"
+              className="panel-link-button"
+            >
               View all
             </button>
           </div>
@@ -258,9 +408,12 @@ export default function DashboardPage() {
           {ledgerPreview.length === 0 ? (
             <div className="dashboard-empty-state">
               <span className="empty-state-icon">↕</span>
+
               <strong>No wallet activity yet</strong>
+
               <p>
-                Your credits, debits and reward entries will appear here.
+                Your credits, debits and reward entries will
+                appear here.
               </p>
             </div>
           ) : (
@@ -269,21 +422,46 @@ export default function DashboardPage() {
                 const isCredit = entry.amount >= 0;
 
                 return (
-                  <div className="dashboard-activity-row" key={entry.id}>
-                    <div className={`activity-direction ${isCredit ? 'activity-credit' : 'activity-debit'}`}>
+                  <div
+                    className="dashboard-activity-row"
+                    key={entry.id}
+                  >
+                    <div
+                      className={`activity-direction ${
+                        isCredit
+                          ? 'activity-credit'
+                          : 'activity-debit'
+                      }`}
+                    >
                       {isCredit ? '+' : '−'}
                     </div>
 
                     <div className="activity-main">
                       <strong>{entry.category}</strong>
-                      <span>{entry.sourceReference || 'Wallet activity'}</span>
+
+                      <span>
+                        {entry.sourceReference ||
+                          'Wallet activity'}
+                      </span>
                     </div>
 
                     <div className="activity-meta">
-                      <strong className={isCredit ? 'amount-credit' : 'amount-debit'}>
-                        {isCredit ? '+' : '−'}₹{Math.abs(entry.amount).toFixed(2)}
+                      <strong
+                        className={
+                          isCredit
+                            ? 'amount-credit'
+                            : 'amount-debit'
+                        }
+                      >
+                        {isCredit ? '+' : '−'}₹
+                        {Math.abs(entry.amount).toFixed(2)}
                       </strong>
-                      <span>{new Date(entry.createdAt).toLocaleString()}</span>
+
+                      <span>
+                        {new Date(
+                          entry.createdAt
+                        ).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 );

@@ -24,6 +24,16 @@ export interface ReversalWalletResponse {
   expiresAt: string | null;
 }
 
+export interface WalletSummaryResponse {
+  walletBalance: number;
+  reversalBalance: number;
+  cashback: number;
+  referral: number;
+  vendorRoyalty: number;
+  pincodeRoyalty: number;
+  totalEarnings: number;
+}
+
 export interface LedgerEntryResponse {
   id: number;
   category: string;
@@ -176,5 +186,13 @@ export function getLedger(
 ): Promise<LedgerEntryResponse[]> {
   return apiRequest<LedgerEntryResponse[]>(
     `/api/wallet/ledger/${userId}`
+  );
+}
+
+export function getWalletSummary(
+  userId: number
+): Promise<WalletSummaryResponse> {
+  return apiRequest<WalletSummaryResponse>(
+    `/api/wallet/summary/${userId}`
   );
 }
