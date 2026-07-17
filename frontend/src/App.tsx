@@ -2,31 +2,45 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
+import CheckoutPage from './pages/CheckoutPage';
 import { getSession } from './lib/session';
 
 function RequireSession({ children }: { children: JSX.Element }) {
   const session = getSession();
+
   if (!session) {
     return <Navigate to="/" replace />;
   }
+
   return children;
 }
 
-function RequireCompletedProfile({ children }: { children: JSX.Element }) {
+function RequireCompletedProfile({
+  children
+}: {
+  children: JSX.Element;
+}) {
   const session = getSession();
+
   if (!session) {
     return <Navigate to="/" replace />;
   }
+
   if (!session.profileComplete) {
     return <Navigate to="/onboarding" replace />;
   }
+
   return children;
 }
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route
+        path="/"
+        element={<HomePage />}
+      />
+
       <Route
         path="/onboarding"
         element={
@@ -35,6 +49,7 @@ function App() {
           </RequireSession>
         }
       />
+
       <Route
         path="/dashboard"
         element={
@@ -43,7 +58,20 @@ function App() {
           </RequireCompletedProfile>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+
+      <Route
+        path="/checkout"
+        element={
+          <RequireCompletedProfile>
+            <CheckoutPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
     </Routes>
   );
 }

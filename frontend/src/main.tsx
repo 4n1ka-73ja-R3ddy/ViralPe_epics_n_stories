@@ -1,28 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 import App from './App';
+
 import './index.css';
+import './earnings.css';
+import './checkout.css';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+const googleClientId =
+  (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? '';
 
-function AppProviders() {
-  const app = (
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  );
-
-  if (!googleClientId) {
-    return app;
-  }
-
-  return <GoogleOAuthProvider clientId={googleClientId}>{app}</GoogleOAuthProvider>;
-}
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+).render(
   <React.StrictMode>
-    <AppProviders />
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );

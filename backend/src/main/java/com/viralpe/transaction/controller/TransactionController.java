@@ -1,13 +1,16 @@
 package com.viralpe.transaction.controller;
 
+import com.viralpe.transaction.dto.CheckoutConfirmRequest;
+import com.viralpe.transaction.dto.CheckoutConfirmResponse;
+import com.viralpe.transaction.dto.CheckoutPreviewRequest;
+import com.viralpe.transaction.dto.CheckoutPreviewResponse;
 import com.viralpe.transaction.model.Transaction;
 import com.viralpe.transaction.repository.TransactionRepository;
+import com.viralpe.transaction.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -18,9 +21,34 @@ import java.util.stream.Collectors;
 public class TransactionController {
 
     private final TransactionRepository transactionRepository;
+    private final TransactionService transactionService;
 
-    public TransactionController(TransactionRepository transactionRepository) {
+    public TransactionController(
+            TransactionRepository transactionRepository,
+            TransactionService transactionService
+    ) {
         this.transactionRepository = transactionRepository;
+        this.transactionService = transactionService;
+    }
+
+    @PostMapping("/checkout/preview")
+    public ResponseEntity<CheckoutPreviewResponse> previewCheckout(
+            @Valid @RequestBody CheckoutPreviewRequest request
+    ) {
+        CheckoutPreviewResponse response =
+                transactionService.previewCheckout(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/checkout/confirm")
+    public ResponseEntity<CheckoutConfirmResponse> confirmCheckout(
+            @Valid @RequestBody CheckoutConfirmRequest request
+    ) {
+        CheckoutConfirmResponse response =
+                transactionService.confirmCheckout(request);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -28,18 +56,53 @@ public class TransactionController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            OffsetDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            OffsetDateTime to
     ) {
         List<Transaction> all = transactionRepository.findAll();
-        List<Transaction> filtered = all.stream().filter(t -> {
-            if (userId != null && !userId.equals(t.getUserId())) return false;
-            if (type != null && !type.equalsIgnoreCase(t.getTransactionType())) return false;
-            if (status != null && !status.equalsIgnoreCase(t.getStatus())) return false;
-            if (from != null && (t.getCreatedAt() == null || t.getCreatedAt().isBefore(from))) return false;
-            if (to != null && (t.getCreatedAt() == null || t.getCreatedAt().isAfter(to))) return false;
-            return true;
-        }).collect(Collectors.toList());
+
+        List<Transaction> filtered =
+                all.stream()
+                        .filter(transaction -> {
+                            if (userId != null
+                                    && !userId.equals(transaction.getUserId())) {
+                                return false;
+                            }
+
+                            if (type != null
+                                    && !type.equalsIgnoreCase(
+                                            transaction.getTransactionType()
+                                    )) {
+                                return false;
+                            }
+
+                            if (status != null
+                                    && !status.equalsIgnoreCase(
+                                            transaction.getStatus()
+                                    )) {
+                                return false;
+                            }
+
+                            if (from != null
+                                    && (transaction.getCreatedAt() == null
+                                    || transaction.getCreatedAt().isBefore(from))) {
+                                return false;
+                            }
+
+                            if (to != null
+                                    && (transaction.getCreatedAt() == null
+                                    || transaction.getCreatedAt().isAfter(to))) {
+                                return false;
+                            }
+
+                            return true;
+                        })
+                        .collect(Collectors.toList());
+
         return ResponseEntity.ok(filtered);
     }
 }

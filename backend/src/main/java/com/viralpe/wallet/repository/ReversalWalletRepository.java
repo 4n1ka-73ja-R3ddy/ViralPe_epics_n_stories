@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface ReversalWalletRepository extends JpaRepository<ReversalWallet, Long> {
+
     Optional<ReversalWallet> findByUserId(Long userId);
 }

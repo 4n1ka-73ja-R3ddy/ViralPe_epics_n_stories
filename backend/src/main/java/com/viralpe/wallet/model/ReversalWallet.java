@@ -13,8 +13,11 @@ public class ReversalWallet {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private Long userId;
+
     private Double balance;
+
     private String expiresAt;
 
     public Long getId() {
