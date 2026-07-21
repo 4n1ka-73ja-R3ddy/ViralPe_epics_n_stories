@@ -455,3 +455,130 @@ This file is intended as the teammate handoff reference:
 - Know where each feature lives.
 - Identify what is prototype-only versus production-ready.
 - Quickly find docs, code paths, and next implementation priorities.
+
+---
+
+## 11. Detailed implementation analysis (2026-07-21)
+
+### 11.1 Backend implementation analysis
+
+The backend is a Java Spring Boot application organized as a modular monolith. The active codebase is located under backend/src/main/java/com/viralpe/, while the root-level folders such as admin/, auth/, wallet/ etc. are scaffolding artifacts and are not the runtime implementation source.
+
+#### Application bootstrap
+- backend/src/main/java/com/viralpe/ViralPeApplication.java is the main launcher.
+- It enables Spring Boot, JPA repositories, and component scanning under com.viralpe.
+- Scheduling is enabled with @EnableScheduling, so the app can support background jobs.
+
+#### Configuration and infrastructure
+- backend/src/main/java/com/viralpe/config/WebSecurityConfig.java configures Spring Security with CORS and disables CSRF.
+- Security is currently permissive: every request is permitted. This is a prototype-level setup rather than a hardened production security model.
+- backend/src/main/java/com/viralpe/config/RestExceptionHandler.java and backend/src/main/java/com/viralpe/exception/ApiExceptionHandler.java provide centralized exception handling for API errors.
+- backend/src/main/java/com/viralpe/config/StartupDocsLauncher.java is a utility component to help expose documentation-related startup behavior.
+
+#### Authentication module
+- backend/src/main/java/com/viralpe/auth/controller/AuthController.java exposes auth endpoints.
+- backend/src/main/java/com/viralpe/auth/service/AuthService.java implements Google sign-in verification through Google tokeninfo and also supports a demo sign-in flow.
+- The service performs user lookup by provider ID or email, creates a user when missing, and returns a session-like token plus a profile-complete flag.
+- The current implementation uses a generated UUID token rather than a JWT-based authentication mechanism.
+
+#### User and onboarding module
+- backend/src/main/java/com/viralpe/user/controller/UserController.java exposes pincode validation, profile completion, and profile retrieval endpoints.
+- backend/src/main/java/com/viralpe/user/service/UserService.java implements:
+  - pincode validation against the pincode master table,
+  - profile completion with mandatory location confirmation,
+  - referral and vendor onboarding linkage rules,
+  - immutability of the pincode after profile completion.
+- The user model stores the user’s profile, auth provider, pincode, referrer ID, and onboarder ID.
+
+#### Wallet module
+- backend/src/main/java/com/viralpe/wallet/controller/WalletController.java, WalletActivityController.java, and ReversalWalletSweepController.java expose wallet-related APIs.
+- backend/src/main/java/com/viralpe/wallet/service/WalletService.java implements the core wallet logic:
+  - spendable wallet balance management,
+  - reversal wallet management,
+  - ledger entry creation for every wallet mutation,
+  - summary calculations for cashback, referral, vendor royalty, and pincode royalty.
+- The wallet implementation is stateful and persists balances and ledger records in PostgreSQL rather than keeping them in memory.
+
+#### Transaction and checkout module
+- backend/src/main/java/com/viralpe/transaction/controller/TransactionController.java exposes transaction-related APIs.
+- backend/src/main/java/com/viralpe/transaction/service/TransactionService.java implements the checkout preview and confirm flows.
+- The checkout flow is designed around a split payment model:
+  - reversal wallet is applied first,
+  - spendable wallet is applied second,
+  - the remaining amount goes to the gateway.
+- On success the transaction is marked SUCCESS; on failure the wallet amounts are restored.
+- backend/src/main/java/com/viralpe/payment/controller/CheckoutController.java and backend/src/main/java/com/viralpe/payment/service/CheckoutService.java provide a payment-service layer that combines wallet usage, payment gateway interaction, and reward distribution.
+
+#### Utility and payment integration
+- backend/src/main/java/com/viralpe/utility/controller/UtilityController.java exposes a recharge stub endpoint.
+- backend/src/main/java/com/viralpe/utility/service/UtilityService.java returns a simulated recharge success response.
+- backend/src/main/java/com/viralpe/payment/service/PaymentService.java is a mock payment gateway abstraction that simulates payment success behavior.
+
+#### Royalty and referral module
+- backend/src/main/java/com/viralpe/royalty/controller/RoyaltyAdminController.java and PincodeChampionshipController.java expose royalty configuration and pincode-pool endpoints.
+- backend/src/main/java/com/viralpe/royalty/service/CashbackService.java and ReferralService.java implement reward calculation/crediting logic.
+- backend/src/main/java/com/viralpe/royalty/service/RoyaltyService.java is still a skeleton service and indicates that the royalty engine is not fully implemented.
+- backend/src/main/java/com/viralpe/referral/service/ReferralService.java credits referral bonuses to the referred user’s wallet.
+
+#### Admin module
+- backend/src/main/java/com/viralpe/admin/controller/AdminController.java supports admin fund operations, pincode management, and admin status checks.
+- backend/src/main/java/com/viralpe/admin/service/AdminService.java handles audit logging for administrator actions.
+- backend/src/main/java/com/viralpe/admin/model/AdminAuditLog.java stores the actions and details for later review.
+
+#### Scheduled jobs and metadata
+- backend/src/main/java/com/viralpe/job/JobScheduler.java defines a scheduled hourly heartbeat.
+- backend/src/main/java/com/viralpe/meta/MetaController.java and backend/src/main/java/com/viralpe/meta/ApiDocsController.java expose metadata and documentation endpoints.
+
+#### Persistence layer
+- The application uses Spring Data JPA with PostgreSQL.
+- backend/src/main/resources/application.yml contains the PostgreSQL datasource configuration and Flyway settings.
+- backend/src/main/resources/db/migration/V1__init.sql creates the initial schema for users, pincode master data, wallet balances, reversal wallet, ledger entries, transactions, vendors, pincode pools, royalty configuration, and admin audit log.
+- backend/src/main/resources/db/migration/V2__seed_data.sql seeds sample pincodes and royalty configuration defaults.
+- The data model is implemented using entities under the domain packages such as user/model, wallet/model, transaction/model, and royalty/model.
+
+### 11.2 Frontend implementation analysis
+
+The frontend is a React + TypeScript single-page application built with Vite. It uses React Router for navigation and local browser storage for simple session persistence.
+
+#### Main entry and routing
+- frontend/src/main.tsx boots the application, wraps it in BrowserRouter and GoogleOAuthProvider, and loads global styles.
+- frontend/src/App.tsx defines the main route guards:
+  - / for the landing page,
+  - /onboarding for users who have not completed onboarding,
+  - /dashboard for authenticated and fully onboarded users,
+  - /checkout for the payment preview flow.
+
+#### Page-level responsibilities
+- frontend/src/pages/HomePage.tsx is the landing and authentication page.
+  - It renders the Google Sign-In experience.
+  - It sends the Google ID token to the backend auth endpoint.
+  - If the backend returns a profile-complete state, the user is routed to the dashboard or onboarding page.
+- frontend/src/pages/OnboardingPage.tsx handles profile completion.
+  - It validates the user’s pincode via the backend.
+  - It requires confirmation of the location data before submission.
+  - It supports an optional referral or onboarding code.
+- frontend/src/pages/DashboardPage.tsx loads the user profile, wallet balance, reversal wallet balance, and ledger entries from the backend.
+  - It presents a wallet summary and recent activity.
+- frontend/src/pages/CheckoutPage.tsx provides an interactive checkout preview experience.
+  - It calculates a split between reversal wallet, spendable wallet, and payment gateway.
+  - It sends the preview request to the backend transaction preview endpoint.
+
+#### State and API layer
+- frontend/src/lib/session.ts stores the current user session in localStorage.
+- frontend/src/lib/api.ts is the communication layer for backend endpoints such as auth, user profile, wallet summary, and transaction preview.
+- The frontend does not use a global state framework; it uses component-local state and browser storage.
+
+#### Styling and UX
+- frontend/src/index.css, frontend/src/earnings.css, and frontend/src/checkout.css provide the styling for the experience.
+- The UI is a polished prototype with cards, panels, gradients, and responsive layout, rather than a production-grade design system.
+
+### 11.3 Architecture conclusion
+
+The codebase is implementing a layered modular monolith architecture:
+- React SPA frontend for the user experience.
+- Spring Boot REST backend for business logic and persistence.
+- Domain-oriented service modules grouped by business capability.
+- JPA repositories and PostgreSQL for durable storage.
+- LocalStorage-based session handling on the client and simple token-based auth on the server.
+
+This is not a microservices system. It is a single deployable backend application with separate domain modules under one codebase, and it is currently closer to a working prototype / MVP foundation than a fully hardened production platform.
