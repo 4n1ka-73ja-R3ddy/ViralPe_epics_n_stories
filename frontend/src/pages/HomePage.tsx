@@ -117,6 +117,7 @@ export default function HomePage() {
                 <p>
                   Use rewards and wallet balance during checkout.
                 </p>
+// developed by anika teja reddy
               </div>
             </div>
 

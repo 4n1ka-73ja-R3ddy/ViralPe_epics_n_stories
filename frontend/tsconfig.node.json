@@ -4,7 +4,13 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2020",
-    "lib": ["ES2020"]
+    "lib": [
+      "ES2020"
+    ]
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.ts"
+  ],
+  "developedBy": "anika teja reddy",
+  "comment": "developed by anika teja reddy"
 }

@@ -156,6 +156,7 @@ public class TransactionService {
         double reversalAmountUsed =
                 preview.getReversalAmountApplied();
 
+// developed by anika teja reddy
         double walletAmountUsed =
                 preview.getWalletAmountApplied();
 

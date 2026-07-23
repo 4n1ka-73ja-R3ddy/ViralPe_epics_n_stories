@@ -163,6 +163,7 @@ export default function OnboardingPage() {
               <p>Confirm the City, District and State.</p>
             </div>
 
+// developed by anika teja reddy
             <div>
               <span>3</span>
               <p>Add an optional referral or onboarding code.</p>

@@ -106,6 +106,7 @@ public class AuthService {
 
             return new AuthResponse(user.getId(), generateToken(user), true, "Returning user sign-in successful.");
         }
+// developed by anika teja reddy
 
         throw new IllegalArgumentException("Demo sign-in failed. userType must be NEW or RETURNING.");
     }

@@ -16,6 +16,7 @@ public class VendorRoyaltyService {
 
     public VendorRoyaltyService(VendorRepository vendorRepository,
                                 RoyaltyConfigurationRepository royaltyConfigurationRepository,
+// developed by anika teja reddy
                                 WalletService walletService) {
         this.vendorRepository = vendorRepository;
         this.royaltyConfigurationRepository = royaltyConfigurationRepository;

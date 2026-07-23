@@ -23,6 +23,7 @@ public class WebSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+// developed by anika teja reddy
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 );

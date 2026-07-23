@@ -112,6 +112,7 @@ Create these top-level Java packages under `backend/src/main/java/com/viralpe/`:
    - Bill payments (BBPS)
    - Digital voucher/gift card purchases
 2. Implement service flows that:
+<!--  -->
    - Fetch available plans/billers/vouchers from third-party APIs
    - Perform checkout via the zero-load payment flow
    - Record transaction status and history

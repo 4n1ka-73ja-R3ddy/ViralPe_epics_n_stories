@@ -29,6 +29,7 @@ public class LedgerEntryResponse {
         this.id = id;
     }
 
+// developed by anika teja reddy
     public String getCategory() {
         return category;
     }

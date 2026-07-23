@@ -60,6 +60,7 @@ Response follows reverse path.
 
 - Connection strings and environment-specific settings live in `appsettings.json` and `appsettings.Development.json`.
 - Keep secrets (production connection strings, keys) in secure stores (Azure Key Vault, environment variables) — do not commit secrets to git.
+<!--  -->
 
 ## Running the backend locally
 

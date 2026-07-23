@@ -41,6 +41,7 @@ CREATE TABLE ledger_entries (
     source_reference VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE
 );
+// developed by anika teja reddy
 
 CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY,
