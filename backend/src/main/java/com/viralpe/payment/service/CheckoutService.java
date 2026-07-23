@@ -100,17 +100,26 @@ public class CheckoutService {
                 walletService.creditReversalWallet(userId, usedFromReversal, null);
             }
         } else {
-            // On success: apply cashback and referral bonuses
-            cashbackService.applyCashback(userId, amount);
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null && user.getReferredByUserId() != null) {
-                double referralPercent = royaltyConfigRepo.findAll().stream().findFirst().map(r -> r.getReferralPercentage() == null ? 0.0 : r.getReferralPercentage()).orElse(0.0);
-                double bonus = amount * referralPercent / 100.0;
-                if (bonus > 0) referralService.creditReferral(user.getReferredByUserId(), bonus);
-            }
-            // vendor royalty requires vendorId in request/transaction; skipped if not present
-        }
+         // On success: apply cashback and referral bonuses
+cashbackService.applyCashback(userId, amount);
 
+User user = userRepository.findById(userId).orElse(null);
+
+if (user != null && user.getReferredByUserId() != null) {
+
+    double apiCost = amount * 0.95;
+
+    referralService.calculateAndCreditReferral(
+            user.getReferredByUserId(),
+            userId,
+            saved.getId(),
+            amount,
+            apiCost
+    );
+}
+
+// vendor royalty requires vendorId in request/transaction; skipped if not present
+        }
         return new CheckoutResponse(saved.getId(), saved.getStatus(), usedFromWallet + usedFromReversal, fromGateway);
     }
 }
