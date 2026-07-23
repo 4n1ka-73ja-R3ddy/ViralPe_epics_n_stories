@@ -42,6 +42,7 @@ public class Transaction {
         return transactionType;
     }
 
+// developed by anika teja reddy
     public void setTransactionType(String transactionType) {
         this.transactionType = transactionType;
     }

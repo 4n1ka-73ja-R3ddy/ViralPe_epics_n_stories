@@ -4,11 +4,12 @@ server:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/viralpe
-    username: viralpe
-    password: secret
+    username: postgres
+    password: postgress
   jpa:
     hibernate:
       ddl-auto: none
+# developed by anika teja reddy
     properties:
       hibernate:
         format_sql: true
@@ -20,10 +21,3 @@ logging:
   level:
     root: INFO
     org.springframework: INFO
-
-viralpe:
-  frontend:
-    url: ${VIRALPE_FRONTEND_URL:http://localhost:3000}
-  auth:
-    google:
-      client-id: ${GOOGLE_CLIENT_ID:}

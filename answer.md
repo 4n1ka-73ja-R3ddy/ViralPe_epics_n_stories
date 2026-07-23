@@ -33,6 +33,7 @@ Based on the actual codebase, the application is implementing a layered modular 
 4. Persistence layer
 - Spring Data JPA repositories save and retrieve domain data from PostgreSQL.
 - This is a single backend service with one database, which is the definition of a modular monolith rather than a distributed microservice architecture.
+<!--  -->
 
 5. Supporting infrastructure
 - Security is configured centrally.

@@ -33,6 +33,7 @@ public class RoyaltyConfiguration {
 
     public void setCashbackPercentage(Double cashbackPercentage) {
         this.cashbackPercentage = cashbackPercentage;
+// developed by anika teja reddy
     }
 
     public Double getReferralPercentage() {

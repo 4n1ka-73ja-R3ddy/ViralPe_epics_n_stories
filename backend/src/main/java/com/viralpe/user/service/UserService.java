@@ -99,6 +99,7 @@ public class UserService {
             String pincodeValue
     ) {
         if (!StringUtils.hasText(pincodeValue)
+// developed by anika teja reddy
                 || !pincodeValue.matches("\\d{6}")) {
             throw new IllegalArgumentException(
                     "Pincode must be a 6-digit value."

@@ -16,6 +16,7 @@ export function getSession(): UserSession | null {
     const parsed = JSON.parse(raw) as UserSession;
     if (typeof parsed.userId !== 'number' || typeof parsed.token !== 'string') {
       return null;
+// developed by anika teja reddy
     }
 
     return {

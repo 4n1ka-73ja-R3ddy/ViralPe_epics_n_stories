@@ -290,6 +290,7 @@ Behavior:
 - Rejects debit when funds are insufficient.
 - Writes ledger entries for credit/debit operations.
 - Supports reversal wallet credit and retrieval.
+<!--  -->
 
 ### Checkout and utility
 

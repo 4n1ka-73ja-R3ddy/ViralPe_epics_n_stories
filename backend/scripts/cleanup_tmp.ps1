@@ -5,6 +5,7 @@ $paths = @(
     "tmp_parse_docx.ps1"
 )
 
+# developed by anika teja reddy
 foreach ($p in $paths) {
     if (Test-Path $p) {
         Remove-Item -Recurse -Force $p

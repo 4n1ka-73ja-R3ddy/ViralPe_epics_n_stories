@@ -235,6 +235,7 @@ export default function DashboardPage() {
 
           <div className="earnings-summary-grid">
             <article className="earnings-summary-card">
+// developed by anika teja reddy
               <span className="earnings-summary-icon">
                 ₹
               </span>

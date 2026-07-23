@@ -22,6 +22,7 @@ public class CheckoutRequest {
         this.userId = userId;
     }
 
+// developed by anika teja reddy
     public Double getAmount() {
         return amount;
     }

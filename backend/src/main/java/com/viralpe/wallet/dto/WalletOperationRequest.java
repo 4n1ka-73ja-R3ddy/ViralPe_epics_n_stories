@@ -30,6 +30,7 @@ public class WalletOperationRequest {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
+// developed by anika teja reddy
 
     public Double getAmount() {
         return amount;

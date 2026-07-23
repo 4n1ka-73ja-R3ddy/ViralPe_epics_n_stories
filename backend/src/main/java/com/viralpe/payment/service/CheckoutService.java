@@ -55,6 +55,7 @@ public class CheckoutService {
             ReversalWallet reversal = walletService.getReversalWallet(userId);
             if (reversal != null && reversal.getBalance() != null && reversal.getBalance() > 0) {
                 double take = Math.min(reversal.getBalance(), remaining);
+// developed by anika teja reddy
                 walletService.creditReversalWallet(userId, -take, null); // negative credit to deduct
                 usedFromReversal = take;
                 remaining -= take;

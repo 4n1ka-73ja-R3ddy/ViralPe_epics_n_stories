@@ -98,6 +98,7 @@ ViralPe does not feature a "Deposit/Load Money" button. When an invoice is gener
 * **Intraday Allocation:** Spendable on any transaction within the **same calendar day** (up to 23:59:59 server time).
 * **Automated EOD Reversion:** At midnight, an automated server cron job sweeps the Reversal Wallet and executes a programmatic Refund-to-Source API command to route the money directly back to the user's original bank account.
 
+<!--  -->
 ## 5. Module 4: Third-Party API Integrations
 
 The platform integrates with three primary categories of external infrastructure:

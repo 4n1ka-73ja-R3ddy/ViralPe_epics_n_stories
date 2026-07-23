@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+// developed by anika teja reddy
 public class JobScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(JobScheduler.class);
