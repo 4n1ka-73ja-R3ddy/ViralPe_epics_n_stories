@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/checkout")
-// developed by anika teja reddy
 public class CheckoutController {
 
     private final CheckoutService checkoutService;

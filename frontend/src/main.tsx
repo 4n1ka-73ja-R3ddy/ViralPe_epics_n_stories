@@ -10,7 +10,6 @@ import './earnings.css';
 import './checkout.css';
 
 const googleClientId =
-// developed by anika teja reddy
   (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? '';
 
 ReactDOM.createRoot(

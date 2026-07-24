@@ -19,7 +19,6 @@ public class WalletBalance {
     public Long getId() {
         return id;
     }
-// developed by anika teja reddy
 
     public void setId(Long id) {
         this.id = id;

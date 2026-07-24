@@ -62,7 +62,6 @@ public class RechargeTransaction {
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
     }
-// developed by anika teja reddy
 
     public String getOperator() {
         return operator;

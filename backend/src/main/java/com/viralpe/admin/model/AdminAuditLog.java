@@ -29,7 +29,6 @@ public class AdminAuditLog {
 
     public Long getAdminUserId() {
         return adminUserId;
-// developed by anika teja reddy
     }
 
     public void setAdminUserId(Long adminUserId) {

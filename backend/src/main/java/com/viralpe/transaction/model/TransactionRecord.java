@@ -23,7 +23,6 @@ public class TransactionRecord {
 
     public void setId(Long id) {
         this.id = id;
-// developed by anika teja reddy
     }
 
     public Long getUserId() {

@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
-// developed by anika teja reddy
 public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)

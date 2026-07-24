@@ -30,7 +30,6 @@ public class CheckoutConfirmResponse {
         this.paymentGatewayAmount = paymentGatewayAmount;
         this.message = message;
     }
-// developed by anika teja reddy
 
     public Long getTransactionId() {
         return transactionId;

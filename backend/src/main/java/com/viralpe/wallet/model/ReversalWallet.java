@@ -25,7 +25,6 @@ public class ReversalWallet {
     }
 
     public void setId(Long id) {
-// developed by anika teja reddy
         this.id = id;
     }
 

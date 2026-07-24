@@ -23,7 +23,6 @@ public class RechargePlanResponse {
         this.amount = amount;
         this.validity = validity;
         this.description = description;
-// developed by anika teja reddy
     }
 
     public Long getId() {

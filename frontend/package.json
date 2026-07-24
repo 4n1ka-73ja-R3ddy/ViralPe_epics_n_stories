@@ -20,7 +20,5 @@
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.6.0",
     "vite": "^5.4.0"
-  },
-  "developedBy": "anika teja reddy",
-  "comment": "developed by anika teja reddy"
+  }
 }

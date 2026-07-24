@@ -13,7 +13,6 @@ public class ProfileCompletionResponse {
         this.warning = warning;
     }
 
-// developed by anika teja reddy
     public String getMessage() {
         return message;
     }

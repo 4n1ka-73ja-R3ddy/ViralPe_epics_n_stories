@@ -18,7 +18,6 @@ public class AuthRequest {
     public String getProviderId() {
         return providerId;
     }
-// developed by anika teja reddy
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;

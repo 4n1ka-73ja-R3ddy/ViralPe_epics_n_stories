@@ -15,7 +15,6 @@ public class BillFetchRequest {
 
     public void setCategory(String category) {
         this.category = category;
-// developed by anika teja reddy
     }
 
     public String getBillerId() {

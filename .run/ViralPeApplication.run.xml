@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ViralPeApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="backend" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.viralpe.ViralPeApplication" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/backend" />
+    <option name="ALTERNATE_JRE_PATH_ENABLED" value="true" />
+    <option name="ALTERNATE_JRE_PATH" value="C:\Users\anika_tywp\.jdks\corretto-24.0.2" />
+    <option name="SHORTEN_COMMAND_LINE" value="classpath_file" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

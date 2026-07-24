@@ -46,7 +46,6 @@ public class User {
     public void setAuthProviderId(String authProviderId) {
         this.authProviderId = authProviderId;
     }
-// developed by anika teja reddy
 
     public String getFullName() {
         return fullName;

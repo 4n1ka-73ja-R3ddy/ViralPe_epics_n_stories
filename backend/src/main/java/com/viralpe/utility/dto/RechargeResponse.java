@@ -13,7 +13,6 @@ public class RechargeResponse {
     }
 
     public String getStatus() {
-// developed by anika teja reddy
         return status;
     }
 

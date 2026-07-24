@@ -23,7 +23,6 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
-// developed by anika teja reddy
     }
 
     @GetMapping("/pincode/{pincode}")

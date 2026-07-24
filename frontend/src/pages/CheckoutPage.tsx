@@ -216,7 +216,6 @@ export default function CheckoutPage() {
               </label>
 
               <input
-// developed by anika teja reddy
                 id="invoiceAmount"
                 type="number"
                 min="0.01"

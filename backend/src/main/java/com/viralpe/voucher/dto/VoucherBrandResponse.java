@@ -13,7 +13,6 @@ public class VoucherBrandResponse {
         this.name = name;
     }
 
-// developed by anika teja reddy
     public String getId() {
         return id;
     }

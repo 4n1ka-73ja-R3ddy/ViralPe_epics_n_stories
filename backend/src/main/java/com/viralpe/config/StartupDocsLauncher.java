@@ -24,7 +24,6 @@ public class StartupDocsLauncher {
     @EventListener(ApplicationReadyEvent.class)
     public void openDocsPages() {
         if (!autoOpen) {
-// developed by anika teja reddy
             return;
         }
 

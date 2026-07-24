@@ -89,7 +89,6 @@ public class RechargeProviderService {
 
                         new RechargePlanResponse(
                                 3L,
-// developed by anika teja reddy
                                 "JIO",
                                 circle,
                                 749.0,

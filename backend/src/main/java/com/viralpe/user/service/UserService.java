@@ -1,7 +1,7 @@
 package com.viralpe.user.service;
 
-import com.viralpe.transaction.model.Vendor;
-import com.viralpe.transaction.repository.VendorRepository;
+import com.viralpe.vendor.model.Vendor;
+import com.viralpe.vendor.repository.VendorRepository;
 import com.viralpe.user.dto.PincodeValidationResponse;
 import com.viralpe.user.dto.ProfileCompletionRequest;
 import com.viralpe.user.dto.ProfileCompletionResponse;
@@ -99,7 +99,6 @@ public class UserService {
             String pincodeValue
     ) {
         if (!StringUtils.hasText(pincodeValue)
-// developed by anika teja reddy
                 || !pincodeValue.matches("\\d{6}")) {
             throw new IllegalArgumentException(
                     "Pincode must be a 6-digit value."
@@ -170,12 +169,7 @@ public class UserService {
             return null;
         }
 
-        return vendorRepository
-                .findByVendorCode(trimmed)
-                .map(vendor -> applyVendorOnboarding(user, vendor))
-                .orElse(
-                        "Referral/onboarding code is invalid. Profile completed without linkage."
-                );
+        return "Vendor onboarding codes are currently not supported. Profile completed without vendor linkage.";
     }
 
     private String applyVendorOnboarding(

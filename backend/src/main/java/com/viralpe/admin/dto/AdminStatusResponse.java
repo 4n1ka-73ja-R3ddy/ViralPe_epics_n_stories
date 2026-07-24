@@ -8,7 +8,6 @@ public class AdminStatusResponse {
 
     public AdminStatusResponse(String message) {
         this.message = message;
-// developed by anika teja reddy
     }
 
     public String getMessage() {

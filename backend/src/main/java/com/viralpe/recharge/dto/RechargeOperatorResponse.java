@@ -9,7 +9,6 @@ public class RechargeOperatorResponse {
             String code,
             String name
     ) {
-// developed by anika teja reddy
         this.code = code;
         this.name = name;
     }

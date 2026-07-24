@@ -29,7 +29,6 @@ public class AdminController {
 
     @PostMapping("/fund/{userId}")
     public ResponseEntity<String> fundUser(@PathVariable Long userId, @RequestParam Double amount) {
-// developed by anika teja reddy
         Optional<User> u = userRepository.findById(userId);
         if (u.isEmpty()) return ResponseEntity.notFound().build();
         walletService.creditWalletBalance(userId, amount, "admin_fund", "admin_fund");

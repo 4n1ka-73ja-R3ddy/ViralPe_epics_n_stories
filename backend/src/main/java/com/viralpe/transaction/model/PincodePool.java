@@ -18,7 +18,6 @@ public class PincodePool {
     public String getPincode() {
         return pincode;
     }
-// developed by anika teja reddy
 
     public void setPincode(String pincode) {
         this.pincode = pincode;

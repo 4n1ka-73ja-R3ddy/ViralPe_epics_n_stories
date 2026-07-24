@@ -13,7 +13,6 @@ public class WalletBalanceResponse {
         this.balance = balance;
     }
 
-// developed by anika teja reddy
     public Long getUserId() {
         return userId;
     }

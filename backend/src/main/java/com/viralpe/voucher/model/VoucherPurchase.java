@@ -64,7 +64,6 @@ public class VoucherPurchase {
 
     public void setBrand(String brand) {
         this.brand = brand;
-// developed by anika teja reddy
     }
 
     public Double getDenomination() {

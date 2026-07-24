@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/wallet/activity")
-// developed by anika teja reddy
 public class WalletActivityController {
 
     private final LedgerEntryRepository ledgerEntryRepository;

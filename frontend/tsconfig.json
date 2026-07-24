@@ -27,7 +27,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "developedBy": "anika teja reddy",
-  "comment": "developed by anika teja reddy"
+  ]
 }

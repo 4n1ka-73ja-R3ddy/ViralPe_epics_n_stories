@@ -63,7 +63,6 @@ public class BillPayment {
 
     public void setCategory(String category) {
         this.category = category;
-// developed by anika teja reddy
     }
 
     public String getBiller() {

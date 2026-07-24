@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-// developed by anika teja reddy
     @Bean
     public OpenAPI viralPeOpenApi() {
         return new OpenAPI().info(

@@ -34,7 +34,6 @@ public class BillController {
     ) {
         return ResponseEntity.ok(billService.getBillers(category));
     }
-// developed by anika teja reddy
 
     @PostMapping("/fetch")
     public ResponseEntity<BillFetchResponse> fetchBill(

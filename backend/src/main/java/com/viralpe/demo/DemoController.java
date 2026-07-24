@@ -15,7 +15,6 @@ public class DemoController {
     private final DemoService demoService;
 
     public DemoController(DemoService demoService) {
-// developed by anika teja reddy
         this.demoService = demoService;
     }
 

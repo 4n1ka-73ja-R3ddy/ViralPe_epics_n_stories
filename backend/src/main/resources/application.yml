@@ -9,13 +9,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-# developed by anika teja reddy
     properties:
       hibernate:
         format_sql: true
   flyway:
     enabled: true
     locations: classpath:db/migration
+    validate-on-migrate: false
 
 logging:
   level:

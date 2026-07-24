@@ -13,7 +13,6 @@ public class RoyaltyAdminController {
 
     private final RoyaltyConfigurationRepository royaltyConfigRepo;
 
-// developed by anika teja reddy
     public RoyaltyAdminController(RoyaltyConfigurationRepository royaltyConfigRepo) {
         this.royaltyConfigRepo = royaltyConfigRepo;
     }

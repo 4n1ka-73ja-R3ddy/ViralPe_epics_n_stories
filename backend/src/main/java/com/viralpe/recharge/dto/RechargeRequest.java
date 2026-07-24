@@ -31,7 +31,6 @@ public class RechargeRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
-// developed by anika teja reddy
     }
 
     public String getMobileNumber() {

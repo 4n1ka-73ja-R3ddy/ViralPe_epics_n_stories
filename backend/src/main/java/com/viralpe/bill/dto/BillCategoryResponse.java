@@ -13,7 +13,6 @@ public class BillCategoryResponse {
         this.name = name;
     }
 
-// developed by anika teja reddy
     public String getId() {
         return id;
     }

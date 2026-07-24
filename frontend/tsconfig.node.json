@@ -10,7 +10,5 @@
   },
   "include": [
     "vite.config.ts"
-  ],
-  "developedBy": "anika teja reddy",
-  "comment": "developed by anika teja reddy"
+  ]
 }

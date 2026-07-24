@@ -48,7 +48,6 @@ public class RechargePreviewResponse {
 
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
-// developed by anika teja reddy
     }
 
     public String getOperator() {

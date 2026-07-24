@@ -179,7 +179,6 @@ public class WalletService {
         ReversalWallet wallet =
                 reversalWalletRepository.findByUserId(userId)
                         .orElseGet(ReversalWallet::new);
-// developed by anika teja reddy
 
         wallet.setUserId(userId);
 

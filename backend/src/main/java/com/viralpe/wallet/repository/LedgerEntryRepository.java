@@ -9,7 +9,6 @@ import java.util.List;
 
 @Repository
 public interface LedgerEntryRepository
-// developed by anika teja reddy
         extends JpaRepository<LedgerEntry, Long> {
 
     List<LedgerEntry> findByUserIdOrderByCreatedAtDesc(

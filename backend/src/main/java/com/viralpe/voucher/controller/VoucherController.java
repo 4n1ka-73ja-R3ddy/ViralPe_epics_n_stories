@@ -30,7 +30,6 @@ public class VoucherController {
     public ResponseEntity<List<VoucherDenominationResponse>> getDenominations(
             @RequestParam String brandId) {
 
-// developed by anika teja reddy
         return ResponseEntity.ok(
                 voucherService.getDenominations(brandId)
         );

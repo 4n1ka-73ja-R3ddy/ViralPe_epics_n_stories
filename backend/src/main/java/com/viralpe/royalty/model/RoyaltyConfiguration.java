@@ -15,9 +15,25 @@ public class RoyaltyConfiguration {
     private Long id;
 
     private Double cashbackPercentage;
+
     private Double referralPercentage;
+
+    /**
+     * Percentage of profit shared with vendor.
+     */
     private Double vendorRoyaltyPercentage;
+
+    /**
+     * Profit margin percentage on every transaction.
+     * Example:
+     * Amount = 100
+     * Profit Margin = 20%
+     * Profit = 20
+     */
+    private Double profitMarginPercentage;
+
     private Double pincodeDeductionFraction;
+
     private Double pincodePercentage;
 
     public Long getId() {
@@ -27,13 +43,13 @@ public class RoyaltyConfiguration {
     public void setId(Long id) {
         this.id = id;
     }
+
     public Double getCashbackPercentage() {
         return cashbackPercentage;
     }
 
     public void setCashbackPercentage(Double cashbackPercentage) {
         this.cashbackPercentage = cashbackPercentage;
-// developed by anika teja reddy
     }
 
     public Double getReferralPercentage() {
@@ -52,14 +68,13 @@ public class RoyaltyConfiguration {
         this.vendorRoyaltyPercentage = vendorRoyaltyPercentage;
     }
 
-    public Double getPincodePercentage() {
-        return pincodePercentage;
+    public Double getProfitMarginPercentage() {
+        return profitMarginPercentage;
     }
 
-    public void setPincodePercentage(Double pincodePercentage) {
-        this.pincodePercentage = pincodePercentage;
+    public void setProfitMarginPercentage(Double profitMarginPercentage) {
+        this.profitMarginPercentage = profitMarginPercentage;
     }
-
 
     public Double getPincodeDeductionFraction() {
         return pincodeDeductionFraction;
@@ -67,5 +82,13 @@ public class RoyaltyConfiguration {
 
     public void setPincodeDeductionFraction(Double pincodeDeductionFraction) {
         this.pincodeDeductionFraction = pincodeDeductionFraction;
+    }
+
+    public Double getPincodePercentage() {
+        return pincodePercentage;
+    }
+
+    public void setPincodePercentage(Double pincodePercentage) {
+        this.pincodePercentage = pincodePercentage;
     }
 }

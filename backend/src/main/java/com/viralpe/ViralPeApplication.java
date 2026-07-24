@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-// developed by anika teja reddy
+
 @EnableScheduling
 @EnableJpaRepositories(basePackages = "com.viralpe")
 @EntityScan(basePackages = "com.viralpe")

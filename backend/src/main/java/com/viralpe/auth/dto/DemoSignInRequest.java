@@ -20,7 +20,6 @@ public class DemoSignInRequest {
     }
 
     public String getProvider() {
-// developed by anika teja reddy
         return provider;
     }
 

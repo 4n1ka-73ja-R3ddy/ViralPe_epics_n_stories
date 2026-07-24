@@ -48,7 +48,6 @@ public class BillReceiptResponse {
 
     public void setBiller(String biller) {
         this.biller = biller;
-// developed by anika teja reddy
     }
 
     public String getConsumerNumber() {

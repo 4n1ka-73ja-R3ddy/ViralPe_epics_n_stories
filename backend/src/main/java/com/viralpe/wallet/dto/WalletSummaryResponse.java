@@ -33,7 +33,6 @@ public class WalletSummaryResponse {
     }
 
     public void setCashback(Double cashback) {
-// developed by anika teja reddy
         this.cashback = cashback;
     }
 

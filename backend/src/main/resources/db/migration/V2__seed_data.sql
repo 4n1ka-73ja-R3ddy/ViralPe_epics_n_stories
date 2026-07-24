@@ -5,7 +5,6 @@ VALUES (2.5, 1.0, 5.0, 0.2, true);
 
 -- sample pincodes
 INSERT INTO pincodes (pincode, city, district, state, active) VALUES
-// developed by anika teja reddy
 ('560001', 'Bengaluru', 'Bengaluru Urban', 'Karnataka', true),
 ('110001', 'New Delhi', 'New Delhi', 'Delhi', true),
 ('400001', 'Mumbai', 'Mumbai', 'Maharashtra', true)

@@ -13,7 +13,6 @@ public class RechargeRequest {
         this.userId = userId;
     }
 
-// developed by anika teja reddy
     public String getMobileNumber() {
         return mobileNumber;
     }

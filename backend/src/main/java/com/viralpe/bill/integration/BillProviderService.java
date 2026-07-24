@@ -31,7 +31,6 @@ public class BillProviderService {
                 new BillerResponse("ACT", "ACT Broadband", "BROADBAND"),
                 new BillerResponse("AIRTEL_BB", "Airtel Broadband", "BROADBAND"),
                 new BillerResponse("INDANE", "Indane Gas", "GAS")
-// developed by anika teja reddy
         );
     }
 

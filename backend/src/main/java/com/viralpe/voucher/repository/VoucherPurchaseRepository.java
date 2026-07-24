@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-// developed by anika teja reddy
 public interface VoucherPurchaseRepository
         extends JpaRepository<VoucherPurchase, Long> {
 

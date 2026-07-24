@@ -5,6 +5,7 @@ import com.viralpe.payment.dto.CheckoutResponse;
 import com.viralpe.referral.service.ReferralService;
 import com.viralpe.royalty.repository.RoyaltyConfigurationRepository;
 import com.viralpe.royalty.service.CashbackService;
+import com.viralpe.royalty.service.VendorRoyaltyService;
 import com.viralpe.transaction.model.Transaction;
 import com.viralpe.transaction.repository.TransactionRepository;
 import com.viralpe.user.model.User;
@@ -25,6 +26,7 @@ public class CheckoutService {
     private final TransactionRepository transactionRepository;
     private final CashbackService cashbackService;
     private final ReferralService referralService;
+    private final VendorRoyaltyService vendorRoyaltyService;
     private final UserRepository userRepository;
     private final RoyaltyConfigurationRepository royaltyConfigRepo;
 
@@ -34,6 +36,7 @@ public class CheckoutService {
             TransactionRepository transactionRepository,
             CashbackService cashbackService,
             ReferralService referralService,
+            VendorRoyaltyService vendorRoyaltyService,
             UserRepository userRepository,
             RoyaltyConfigurationRepository royaltyConfigRepo
     ) {
@@ -42,6 +45,7 @@ public class CheckoutService {
         this.transactionRepository = transactionRepository;
         this.cashbackService = cashbackService;
         this.referralService = referralService;
+        this.vendorRoyaltyService = vendorRoyaltyService;
         this.userRepository = userRepository;
         this.royaltyConfigRepo = royaltyConfigRepo;
     }
@@ -50,6 +54,7 @@ public class CheckoutService {
     public CheckoutResponse processCheckout(CheckoutRequest request) {
 
         Long userId = request.getUserId();
+        Long vendorId = request.getVendorId();
         Double amount = request.getAmount();
 
         double remaining = amount == null ? 0.0 : amount;
@@ -68,7 +73,6 @@ public class CheckoutService {
                 double take =
                         Math.min(reversal.getBalance(), remaining);
 
-                // developed by anika teja reddy
                 walletService.creditReversalWallet(
                         userId,
                         -take,
@@ -159,19 +163,57 @@ public class CheckoutService {
                 );
             }
 
-                } else {
-                        // On success: apply cashback and referral bonuses
-                        // Use saved transaction id and pass apiCost as 0.0 when unknown
-                        cashbackService.applyCashback(userId, saved.getId(), "CHECKOUT", amount, 0.0);
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null && user.getReferredByUserId() != null) {
-                double referralPercent = royaltyConfigRepo.findAll().stream().findFirst().map(r -> r.getReferralPercentage() == null ? 0.0 : r.getReferralPercentage()).orElse(0.0);
-                double bonus = amount * referralPercent / 100.0;
-                if (bonus > 0) referralService.creditReferral(user.getReferredByUserId(), bonus);
+        } else {
+
+            cashbackService.applyCashback(
+                    userId,
+                    saved.getId(),
+                    "CHECKOUT",
+                    amount,
+                    0.0
+            );
+
+            User user =
+                    userRepository.findById(userId).orElse(null);
+
+            if (user != null &&
+                    user.getReferredByUserId() != null) {
+
+                double referralPercent =
+                        royaltyConfigRepo.findAll()
+                                .stream()
+                                .findFirst()
+                                .map(r ->
+                                        r.getReferralPercentage() == null
+                                                ? 0.0
+                                                : r.getReferralPercentage())
+                                .orElse(0.0);
+
+                double bonus =
+                        amount * referralPercent / 100.0;
+
+                if (bonus > 0) {
+
+                    referralService.creditReferral(
+                            user.getReferredByUserId(),
+                            bonus
+                    );
+                }
             }
-            // vendor royalty requires vendorId in request/transaction; skipped if not present
+
+            vendorRoyaltyService.creditRoyalty(
+                    vendorId,
+                    saved.getId(),
+                    amount,
+                    "CHECKOUT"
+            );
         }
 
-        return new CheckoutResponse(saved.getId(), saved.getStatus(), usedFromWallet + usedFromReversal, fromGateway);
+        return new CheckoutResponse(
+                saved.getId(),
+                saved.getStatus(),
+                usedFromWallet + usedFromReversal,
+                fromGateway
+        );
     }
 }

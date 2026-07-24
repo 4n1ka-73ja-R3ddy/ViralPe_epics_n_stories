@@ -39,7 +39,6 @@ public class UserProfileResponse {
     public void setEmail(String email) {
         this.email = email;
     }
-// developed by anika teja reddy
 
     public String getFullName() {
         return fullName;

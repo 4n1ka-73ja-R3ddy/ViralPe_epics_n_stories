@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-// developed by anika teja reddy
 @RequestMapping("/api/meta")
 public class MetaController {
 

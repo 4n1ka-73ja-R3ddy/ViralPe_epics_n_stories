@@ -96,7 +96,6 @@ public class RechargeService {
                 preview.getAmount()
         );
 
-// developed by anika teja reddy
         checkoutRequest.setProvider(
                 request.getOperator()
         );

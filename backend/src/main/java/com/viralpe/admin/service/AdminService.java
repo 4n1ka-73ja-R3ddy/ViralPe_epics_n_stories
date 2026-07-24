@@ -11,7 +11,6 @@ public class AdminService {
 
     private final AdminAuditLogRepository auditLogRepository;
 
-// developed by anika teja reddy
     public AdminService(AdminAuditLogRepository auditLogRepository) {
         this.auditLogRepository = auditLogRepository;
     }

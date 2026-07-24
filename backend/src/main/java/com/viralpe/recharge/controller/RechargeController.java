@@ -48,7 +48,6 @@ public class RechargeController {
         return ResponseEntity.ok(
                 rechargeService.getPlans(
                         operatorCode,
-// developed by anika teja reddy
                         circle
                 )
         );

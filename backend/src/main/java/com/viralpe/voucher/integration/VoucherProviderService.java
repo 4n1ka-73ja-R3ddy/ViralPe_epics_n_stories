@@ -25,7 +25,6 @@ public class VoucherProviderService {
                 new VoucherDenominationResponse(brandId, 100.0),
                 new VoucherDenominationResponse(brandId, 250.0),
                 new VoucherDenominationResponse(brandId, 500.0),
-// developed by anika teja reddy
                 new VoucherDenominationResponse(brandId, 1000.0)
         );
     }

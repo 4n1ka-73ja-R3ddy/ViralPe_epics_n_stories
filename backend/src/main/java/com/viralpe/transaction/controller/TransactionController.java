@@ -52,7 +52,6 @@ public class TransactionController {
     }
 
     @GetMapping
-// developed by anika teja reddy
     public ResponseEntity<List<Transaction>> list(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String type,

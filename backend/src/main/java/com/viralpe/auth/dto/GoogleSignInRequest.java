@@ -6,7 +6,6 @@ public class GoogleSignInRequest {
 
     @NotBlank
     private String idToken;
-// developed by anika teja reddy
 
     public String getIdToken() {
         return idToken;

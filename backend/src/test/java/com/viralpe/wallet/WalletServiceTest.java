@@ -35,7 +35,6 @@ public class WalletServiceTest {
     public void credit_increases_balance_and_creates_ledger() {
         when(balanceRepo.findByUserId(1L)).thenReturn(Optional.empty());
         when(balanceRepo.save(any())).thenAnswer(i -> i.getArguments()[0]);
-// developed by anika teja reddy
         when(ledgerRepo.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
         WalletBalance wb = walletService.creditWalletBalance(1L, 100.0, "test", "src");

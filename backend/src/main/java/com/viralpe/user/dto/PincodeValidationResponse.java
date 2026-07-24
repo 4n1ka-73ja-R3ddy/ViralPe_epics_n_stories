@@ -28,7 +28,6 @@ public class PincodeValidationResponse {
     }
 
     public String getCity() {
-// developed by anika teja reddy
         return city;
     }
 

@@ -43,7 +43,6 @@ public class VoucherPurchaseResponse {
 
     public Double getAmount() {
         return amount;
-// developed by anika teja reddy
     }
 
     public void setAmount(Double amount) {

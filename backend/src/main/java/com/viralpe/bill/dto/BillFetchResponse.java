@@ -33,7 +33,6 @@ public class BillFetchResponse {
         return consumerNumber;
     }
 
-// developed by anika teja reddy
     public void setConsumerNumber(String consumerNumber) {
         this.consumerNumber = consumerNumber;
     }

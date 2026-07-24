@@ -47,7 +47,6 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-<!-- developed by anika teja reddy -->
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 

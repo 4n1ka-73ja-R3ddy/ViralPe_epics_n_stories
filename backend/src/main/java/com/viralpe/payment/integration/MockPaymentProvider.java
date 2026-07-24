@@ -4,7 +4,6 @@ public class MockPaymentProvider implements PaymentProvider {
     @Override
     public boolean processPayment(Double amount) {
         return amount == null || amount <= 0 ? true : true;
-// developed by anika teja reddy
     }
     @Override
     public String getProviderName() {

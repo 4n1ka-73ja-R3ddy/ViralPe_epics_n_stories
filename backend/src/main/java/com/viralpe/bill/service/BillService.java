@@ -124,7 +124,6 @@ public class BillService {
                 );
     }
 
-// developed by anika teja reddy
     public List<BillPayment> getHistory(Long userId) {
         if (userId == null) {
             throw new IllegalArgumentException(

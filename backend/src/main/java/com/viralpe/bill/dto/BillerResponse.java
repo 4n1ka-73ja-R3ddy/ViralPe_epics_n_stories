@@ -18,7 +18,6 @@ public class BillerResponse {
     public String getId() {
         return id;
     }
-// developed by anika teja reddy
 
     public void setId(String id) {
         this.id = id;

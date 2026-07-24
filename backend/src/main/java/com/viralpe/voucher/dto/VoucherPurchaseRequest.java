@@ -33,7 +33,6 @@ public class VoucherPurchaseRequest {
         return brandName;
     }
 
-// developed by anika teja reddy
     public void setBrandName(String brandName) {
         this.brandName = brandName;
     }

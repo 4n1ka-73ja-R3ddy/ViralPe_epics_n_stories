@@ -13,7 +13,6 @@ public class VoucherDenominationResponse {
         this.denomination = denomination;
     }
 
-// developed by anika teja reddy
     public String getBrandId() {
         return brandId;
     }

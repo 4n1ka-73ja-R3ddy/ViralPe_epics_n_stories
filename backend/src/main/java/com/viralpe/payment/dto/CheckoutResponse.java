@@ -23,7 +23,6 @@ public class CheckoutResponse {
     public void setTransactionId(Long transactionId) {
         this.transactionId = transactionId;
     }
-// developed by anika teja reddy
 
     public String getStatus() {
         return status;

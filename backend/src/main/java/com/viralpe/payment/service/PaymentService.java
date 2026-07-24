@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
     // Mock payment provider integration
     public boolean processPayment(Double amount, String provider) {
-// developed by anika teja reddy
         // In real integration, route to UPI/Card/Gateway SDK
         return true; // always succeed in mock
     }

@@ -6,7 +6,6 @@ export default defineConfig(({ mode }) => {
   const backendTarget = env.VITE_BACKEND_TARGET || 'http://localhost:8081';
 
   return {
-// developed by anika teja reddy
     plugins: [react()],
     server: {
       port: 3000,

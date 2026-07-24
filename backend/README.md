@@ -32,7 +32,6 @@ This project is a Java Spring Boot backend skeleton for ViralPe, modeled from th
       - `service/`
       - `model/`
     - `admin/`
-<!-- developed by anika teja reddy -->
       - `controller/`
       - `service/`
       - `dto/`

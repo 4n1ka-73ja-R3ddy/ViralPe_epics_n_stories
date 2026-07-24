@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @Service
 public class UtilityService {
-// developed by anika teja reddy
 
     public UtilityService() {
     }

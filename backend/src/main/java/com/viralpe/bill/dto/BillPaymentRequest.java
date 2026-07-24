@@ -42,7 +42,6 @@ public class BillPaymentRequest {
     public String getBillerName() {
         return billerName;
     }
-// developed by anika teja reddy
 
     public void setBillerName(String billerName) {
         this.billerName = billerName;

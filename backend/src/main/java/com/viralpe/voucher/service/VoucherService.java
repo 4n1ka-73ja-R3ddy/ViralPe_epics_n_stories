@@ -111,7 +111,6 @@ public class VoucherService {
             voucherPurchase.setProviderReference(
                     voucherProviderService
                             .generateProviderReference()
-// developed by anika teja reddy
             );
         } else {
             voucherPurchase.setStatus("FAILED");

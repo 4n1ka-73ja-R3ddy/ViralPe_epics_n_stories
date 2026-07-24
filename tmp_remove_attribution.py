@@ -22,13 +22,10 @@ for rel in files:
     except UnicodeDecodeError:
         text = path.read_text(encoding='latin-1')
     orig = text
-    text = text.replace('developed by anika teja reddy', '')
     text = text.replace('"developedBy":"anika teja reddy"', '"developedBy":""')
-    text = text.replace('"comment":"developed by anika teja reddy"', '"comment":""')
     lines = [
         line for line in text.splitlines()
         if line.strip() not in {
-            '//', '#', '<!--', '-->', '<!-- developed by anika teja reddy -->', 'developed by anika teja reddy'
         }
     ]
     new_text = '\n'.join(lines)

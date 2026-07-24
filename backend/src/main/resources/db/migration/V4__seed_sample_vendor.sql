@@ -10,7 +10,6 @@ SELECT
     'ViralPe Demo Vendor',
     'VENDOR101',
     '560001',
-// developed by anika teja reddy
     1,
     2.50,
     true

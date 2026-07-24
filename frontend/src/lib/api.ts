@@ -97,7 +97,6 @@ async function apiRequest<T>(
   }
 
   if (!responseText) {
-// developed by anika teja reddy
     return {} as T;
   }
 

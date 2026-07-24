@@ -23,7 +23,6 @@ public class CheckoutPreviewResponse {
         this.availableWalletBalance = availableWalletBalance;
         this.walletAmountApplied = walletAmountApplied;
         this.paymentGatewayAmount = paymentGatewayAmount;
-// developed by anika teja reddy
     }
 
     public Double getInvoiceAmount() {

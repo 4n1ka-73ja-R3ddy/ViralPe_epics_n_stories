@@ -81,7 +81,6 @@ public class WalletController {
                         request.getCategory(),
                         request.getSourceReference()
                 );
-// developed by anika teja reddy
 
         return ResponseEntity.ok(
                 new WalletBalanceResponse(
