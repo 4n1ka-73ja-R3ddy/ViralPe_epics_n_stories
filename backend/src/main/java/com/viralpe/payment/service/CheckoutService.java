@@ -159,63 +159,19 @@ public class CheckoutService {
                 );
             }
 
-        } else {
-            /*
-             * Temporary placeholder until provider APIs
-             * return actual API cost.
-             */
-            double apiCost = amount == null ? 0.0 : amount * 0.95;
-
-            /*
-             * Epic 6 Cashback
-             */
-            cashbackService.applyCashback(
-                    userId,
-                    saved.getId(),
-                    saved.getTransactionType(),
-                    amount,
-                    apiCost
-            );
-
-            /*
-             * Epic 5 Referral
-             */
-            User user =
-                    userRepository.findById(userId)
-                            .orElse(null);
-
-            if (user != null &&
-                    user.getReferredByUserId() != null) {
-
-                double referralPercent = royaltyConfigRepo.findAll()
-                        .stream()
-                        .findFirst()
-                        .map(r -> r.getReferralPercentage() == null
-                                ? 0.0
-                                : r.getReferralPercentage())
-                        .orElse(0.0);
-
-                double bonus = amount == null ? 0.0 : amount * referralPercent / 100.0;
-
-                if (bonus > 0) {
-                    referralService.creditReferral(
-                            user.getReferredByUserId(),
-                            bonus
-                    );
-                }
+                } else {
+                        // On success: apply cashback and referral bonuses
+                        // Use saved transaction id and pass apiCost as 0.0 when unknown
+                        cashbackService.applyCashback(userId, saved.getId(), "CHECKOUT", amount, 0.0);
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null && user.getReferredByUserId() != null) {
+                double referralPercent = royaltyConfigRepo.findAll().stream().findFirst().map(r -> r.getReferralPercentage() == null ? 0.0 : r.getReferralPercentage()).orElse(0.0);
+                double bonus = amount * referralPercent / 100.0;
+                if (bonus > 0) referralService.creditReferral(user.getReferredByUserId(), bonus);
             }
-
-            /*
-             * Vendor Royalty
-             * (future implementation)
-             */
+            // vendor royalty requires vendorId in request/transaction; skipped if not present
         }
 
-        return new CheckoutResponse(
-                saved.getId(),
-                saved.getStatus(),
-                usedFromWallet + usedFromReversal,
-                fromGateway
-        );
+        return new CheckoutResponse(saved.getId(), saved.getStatus(), usedFromWallet + usedFromReversal, fromGateway);
     }
 }
