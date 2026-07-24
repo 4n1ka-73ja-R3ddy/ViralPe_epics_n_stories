@@ -18,4 +18,31 @@ public class ReferralService {
         if (bonusAmount == null || bonusAmount <= 0) return;
         walletService.creditWalletBalance(referrerUserId, bonusAmount, "referral_bonus", "referral");
     }
+
+    public void calculateAndCreditReferral(
+            Long referrerUserId,
+            Long referredUserId,
+            Long sourceTransactionId,
+            Double grossPaid,
+            Double apiCost
+    ) {
+        if (referrerUserId == null || grossPaid == null || grossPaid <= 0) {
+            return;
+        }
+
+        double profitMargin = grossPaid - (apiCost == null ? 0.0 : apiCost);
+        if (profitMargin <= 0) {
+            return;
+        }
+
+        double bonusAmount = profitMargin * 0.01;
+        if (bonusAmount > 0) {
+            walletService.creditWalletBalance(
+                    referrerUserId,
+                    bonusAmount,
+                    "REFERRAL",
+                    String.valueOf(sourceTransactionId)
+            );
+        }
+    }
 }

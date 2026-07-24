@@ -67,7 +67,13 @@ public class CheckoutServiceTest {
         verify(walletService).debitWalletBalance(10L, 40.0, "checkout", "checkout");
         // verify payment was processed for remaining 60
         verify(paymentService).processPayment(60.0, "UPI");
-        // verify cashback applied
-        verify(cashbackService).applyCashback(10L, 100.0);
+        // verify cashback applied with transaction context
+        verify(cashbackService).applyCashback(
+                10L,
+                anyLong(),
+                eq("CHECKOUT"),
+                100.0,
+                95.0
+        );
     }
 }

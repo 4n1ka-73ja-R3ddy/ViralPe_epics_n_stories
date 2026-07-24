@@ -312,7 +312,11 @@ public ReversalWallet debitReversalWallet(
         LedgerEntry entry = new LedgerEntry();
 
         entry.setUserId(userId);
-        entry.setCategory(category);
+        entry.setCategory(
+                category == null
+                        ? null
+                        : category.trim().toUpperCase(Locale.ROOT)
+        );
         entry.setAmount(amount);
         entry.setSourceReference(sourceReference);
         entry.setCreatedAt(OffsetDateTime.now());

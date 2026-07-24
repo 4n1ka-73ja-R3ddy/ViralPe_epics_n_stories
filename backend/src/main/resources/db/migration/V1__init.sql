@@ -79,6 +79,19 @@ CREATE TABLE royalty_configuration (
     active BOOLEAN DEFAULT true
 );
 
+CREATE TABLE cashback_ledger (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    source_transaction_id BIGINT,
+    transaction_type VARCHAR(100),
+    gross_cashback DOUBLE PRECISION,
+    pincode_deduction DOUBLE PRECISION,
+    net_cashback DOUBLE PRECISION,
+    cashback_percentage DOUBLE PRECISION,
+    pincode_percentage DOUBLE PRECISION,
+    created_at TIMESTAMP WITH TIME ZONE
+);
+
 CREATE TABLE admin_audit_log (
     id BIGSERIAL PRIMARY KEY,
     admin_user_id BIGINT,
