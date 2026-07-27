@@ -222,6 +222,24 @@ p {
   color: #1f2933;
 }
 
+.button-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(15, 118, 110, 0.34);
+  box-shadow: none;
+}
+
+.button-secondary:hover:enabled {
+  background: rgba(15, 118, 110, 0.08);
+  box-shadow: none;
+}
+
+.demo-login-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 .button-small {
   width: auto;
   min-width: 112px;
@@ -1040,20 +1058,40 @@ p {
   font-size: 0.88rem;
 }
 
-.demo-sample-button {
-  width: 100%;
-  margin-top: 24px;
-  padding: 12px 14px;
-  border: 1px dashed rgba(15, 118, 110, 0.32);
-  border-radius: 13px;
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.06);
-  font-weight: 800;
-  cursor: pointer;
+.stage-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.demo-sample-button:hover {
-  background: rgba(15, 118, 110, 0.1);
+.stage-pill {
+  border-radius: 999px;
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.stage-pill.active {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.12);
+}
+
+.stage-card {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(15, 118, 110, 0.04);
+  border: 1px solid rgba(15, 118, 110, 0.14);
+}
+
+.stage-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .onboarding-form {
@@ -1643,6 +1681,52 @@ p {
   background: transparent;
   font-weight: 800;
   cursor: pointer;
+}
+
+.history-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.history-filter-field {
+  display: grid;
+  gap: 6px;
+}
+
+.history-filter-field span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.history-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.history-card {
+  margin-bottom: 0;
+}
+
+.activity-amount {
+  display: grid;
+  text-align: right;
+  gap: 3px;
+}
+
+.activity-amount strong {
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.activity-amount span {
+  color: #64748b;
+  font-size: 0.72rem;
 }
 
 .dashboard-empty-state {

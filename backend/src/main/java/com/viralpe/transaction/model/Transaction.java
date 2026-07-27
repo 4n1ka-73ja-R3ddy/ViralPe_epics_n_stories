@@ -22,6 +22,11 @@ public class Transaction {
     private String reference;
     private OffsetDateTime createdAt;
 
+    private Double reversalAmountApplied = 0.0;
+    private Double walletAmountApplied = 0.0;
+    private Double paymentGatewayAmount = 0.0;
+    private Double refundToReversal = 0.0;
+
     public Long getId() {
         return id;
     }
@@ -84,5 +89,37 @@ public class Transaction {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getReversalAmountApplied() {
+        return reversalAmountApplied;
+    }
+
+    public void setReversalAmountApplied(Double reversalAmountApplied) {
+        this.reversalAmountApplied = reversalAmountApplied;
+    }
+
+    public Double getWalletAmountApplied() {
+        return walletAmountApplied;
+    }
+
+    public void setWalletAmountApplied(Double walletAmountApplied) {
+        this.walletAmountApplied = walletAmountApplied;
+    }
+
+    public Double getPaymentGatewayAmount() {
+        return paymentGatewayAmount;
+    }
+
+    public void setPaymentGatewayAmount(Double paymentGatewayAmount) {
+        this.paymentGatewayAmount = paymentGatewayAmount;
+    }
+
+    public Double getRefundToReversal() {
+        return refundToReversal;
+    }
+
+    public void setRefundToReversal(Double refundToReversal) {
+        this.refundToReversal = refundToReversal;
     }
 }

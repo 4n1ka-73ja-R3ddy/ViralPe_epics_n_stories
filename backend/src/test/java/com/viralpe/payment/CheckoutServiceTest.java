@@ -7,6 +7,7 @@ import com.viralpe.referral.service.ReferralService;
 import com.viralpe.royalty.repository.RoyaltyConfigurationRepository;
 import com.viralpe.royalty.service.CashbackService;
 import com.viralpe.royalty.service.VendorRoyaltyService;
+import com.viralpe.royalty.service.VerticalRoyaltyService;
 import com.viralpe.transaction.model.Transaction;
 import com.viralpe.transaction.repository.TransactionRepository;
 import com.viralpe.user.repository.UserRepository;
@@ -32,6 +33,7 @@ public class CheckoutServiceTest {
     private VendorRoyaltyService vendorRoyaltyService;
     private UserRepository userRepository;
     private RoyaltyConfigurationRepository royaltyConfigRepo;
+    private VerticalRoyaltyService verticalRoyaltyService;
 
     private CheckoutService checkoutService;
 
@@ -46,6 +48,7 @@ public class CheckoutServiceTest {
         vendorRoyaltyService = mock(VendorRoyaltyService.class);
         userRepository = mock(UserRepository.class);
         royaltyConfigRepo = mock(RoyaltyConfigurationRepository.class);
+        verticalRoyaltyService = new VerticalRoyaltyService(royaltyConfigRepo);
 
         checkoutService = new CheckoutService(
                 walletService,
@@ -55,7 +58,8 @@ public class CheckoutServiceTest {
                 referralService,
                 vendorRoyaltyService,
                 userRepository,
-                royaltyConfigRepo
+                royaltyConfigRepo,
+                verticalRoyaltyService
         );
     }
 

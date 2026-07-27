@@ -3,16 +3,15 @@ package com.viralpe.royalty.service;
 import com.viralpe.royalty.dto.CashbackHistoryItemResponse;
 import com.viralpe.royalty.dto.CashbackHistoryResponse;
 import com.viralpe.royalty.model.CashbackLedger;
-import com.viralpe.royalty.model.PincodePool;
 import com.viralpe.royalty.model.RoyaltyConfiguration;
 import com.viralpe.royalty.repository.CashbackLedgerRepository;
-import com.viralpe.royalty.repository.PincodePoolRepository;
 import com.viralpe.royalty.repository.RoyaltyConfigurationRepository;
 import com.viralpe.user.model.User;
 import com.viralpe.user.repository.UserRepository;
 import com.viralpe.wallet.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -24,21 +23,24 @@ public class CashbackService {
     private final RoyaltyConfigurationRepository royaltyConfigRepo;
     private final WalletService walletService;
     private final UserRepository userRepository;
-    private final PincodePoolRepository pincodePoolRepository;
     private final CashbackLedgerRepository cashbackLedgerRepository;
+    private final PincodeChampionshipService pincodeChampionshipService;
+    private final VerticalRoyaltyService verticalRoyaltyService;
 
     public CashbackService(
             RoyaltyConfigurationRepository royaltyConfigRepo,
             WalletService walletService,
             UserRepository userRepository,
-            PincodePoolRepository pincodePoolRepository,
-            CashbackLedgerRepository cashbackLedgerRepository
+            CashbackLedgerRepository cashbackLedgerRepository,
+            PincodeChampionshipService pincodeChampionshipService,
+            VerticalRoyaltyService verticalRoyaltyService
     ) {
         this.royaltyConfigRepo = royaltyConfigRepo;
         this.walletService = walletService;
         this.userRepository = userRepository;
-        this.pincodePoolRepository = pincodePoolRepository;
         this.cashbackLedgerRepository = cashbackLedgerRepository;
+        this.pincodeChampionshipService = pincodeChampionshipService;
+        this.verticalRoyaltyService = verticalRoyaltyService;
     }
 
     @Transactional
@@ -52,16 +54,23 @@ public class CashbackService {
 
         if (userId == null ||
                 grossPaid == null ||
-                apiCost == null ||
                 grossPaid <= 0) {
             return;
         }
 
-        RoyaltyConfiguration cfg =
-                royaltyConfigRepo.findAll()
-                        .stream()
-                        .findFirst()
-                        .orElse(null);
+        var marginResult = verticalRoyaltyService.calculateEffectiveMargin(
+                transactionType,
+                grossPaid,
+                apiCost
+        );
+
+        double effectiveMargin = marginResult.getEffectiveProfitMargin();
+
+        if (effectiveMargin <= 0) {
+            return;
+        }
+
+        RoyaltyConfiguration cfg = verticalRoyaltyService.resolveConfiguration(transactionType);
 
         if (cfg == null) {
             return;
@@ -79,14 +88,8 @@ public class CashbackService {
                                 : cfg.getPincodePercentage())
                         : cfg.getPincodeDeductionFraction();
 
-        double profitMargin = grossPaid - apiCost;
-
-        if (profitMargin <= 0) {
-            return;
-        }
-
         double grossCashback =
-                profitMargin * cashbackPercentage / 100.0;
+                effectiveMargin * cashbackPercentage / 100.0;
 
         double pincodeDeduction =
                 grossCashback * pincodeDeductionFraction;
@@ -108,33 +111,16 @@ public class CashbackService {
                         .orElse(null);
 
         if (user != null &&
-                user.getRegisteredPincode() != null &&
+                StringUtils.hasText(user.getRegisteredPincode()) &&
                 pincodeDeduction > 0) {
 
-            String pincode =
-                    user.getRegisteredPincode();
-
-            PincodePool pool =
-                    pincodePoolRepository
-                            .findByPincode(pincode)
-                            .orElseGet(() -> {
-                                PincodePool newPool =
-                                        new PincodePool();
-                                newPool.setPincode(pincode);
-                                newPool.setPoolBalance(0.0);
-                                return newPool;
-                            });
-
-            double currentBalance =
-                    pool.getPoolBalance() == null
-                            ? 0.0
-                            : pool.getPoolBalance();
-
-            pool.setPoolBalance(
-                    currentBalance + pincodeDeduction
+            pincodeChampionshipService.recordContribution(
+                    user.getRegisteredPincode(),
+                    sourceTransactionId,
+                    userId,
+                    "CASHBACK",
+                    pincodeDeduction
             );
-
-            pincodePoolRepository.save(pool);
         }
 
         CashbackLedger ledger =

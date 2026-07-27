@@ -149,6 +149,16 @@ public class WalletController {
         return ResponseEntity.ok(wallet);
     }
 
+    @GetMapping("/activity/{userId}")
+    public ResponseEntity<List<com.viralpe.wallet.dto.WalletActivityEntryResponse>> getActivityLog(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String category
+    ) {
+        return ResponseEntity.ok(walletService.getConsolidatedWalletActivityLog(userId, startDate, endDate, category));
+    }
+
     private List<LedgerEntryResponse> toLedgerResponse(
             List<LedgerEntry> entries
     ) {

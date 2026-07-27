@@ -136,22 +136,86 @@ public class WalletService {
                 .findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-   public List<LedgerEntry> getEarningsLedger(Long userId) {
-    validateUserId(userId);
+    public List<LedgerEntry> getEarningsLedger(Long userId) {
+        validateUserId(userId);
 
-    return ledgerEntryRepository
-            .findByUserIdAndCategoryInOrderByCreatedAtDesc(
-                    userId,
-                    List.of(
-                            "CASHBACK",
-                            "REFERRAL",
-                            "REFERRAL_BONUS",
-                            "VENDOR_ROYALTY",
-                            "PINCODE_ROYALTY",
-                            "PINCODE_CHAMPIONSHIP"
-                    )
-            );
-}
+        return ledgerEntryRepository
+                .findByUserIdAndCategoryInOrderByCreatedAtDesc(
+                        userId,
+                        List.of(
+                                "CASHBACK",
+                                "REFERRAL",
+                                "REFERRAL_BONUS",
+                                "VENDOR_ROYALTY",
+                                "PINCODE_ROYALTY",
+                                "PINCODE_CHAMPIONSHIP"
+                        )
+                );
+    }
+
+    public List<com.viralpe.wallet.dto.WalletActivityEntryResponse> getConsolidatedWalletActivityLog(
+            Long userId,
+            String startDate,
+            String endDate,
+            String categoryFilter
+    ) {
+        validateUserId(userId);
+
+        List<LedgerEntry> allEntries = ledgerEntryRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        // Sort chronologically (earliest to latest) to compute running balances correctly
+        List<LedgerEntry> chronological = allEntries.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return -1;
+                    if (b.getCreatedAt() == null) return 1;
+                    return a.getCreatedAt().compareTo(b.getCreatedAt());
+                })
+                .toList();
+
+        List<com.viralpe.wallet.dto.WalletActivityEntryResponse> activityList = new java.util.ArrayList<>();
+        double runningBalance = 0.0;
+
+        for (LedgerEntry entry : chronological) {
+            double amt = entry.getAmount() == null ? 0.0 : entry.getAmount();
+            runningBalance += amt;
+
+            com.viralpe.wallet.dto.WalletActivityEntryResponse res = new com.viralpe.wallet.dto.WalletActivityEntryResponse();
+            res.setId(entry.getId());
+            res.setUserId(entry.getUserId());
+            res.setCategory(entry.getCategory());
+            res.setAmount(amt);
+            res.setSourceReference(entry.getSourceReference());
+            res.setCreatedAt(entry.getCreatedAt());
+            res.setRunningBalance(runningBalance);
+
+            activityList.add(res);
+        }
+
+        // Apply filters
+        java.time.LocalDate start = StringUtils.hasText(startDate) ? java.time.LocalDate.parse(startDate) : null;
+        java.time.LocalDate end = StringUtils.hasText(endDate) ? java.time.LocalDate.parse(endDate) : null;
+
+        return activityList.stream()
+                .filter(item -> {
+                    if (StringUtils.hasText(categoryFilter) && !"ALL".equalsIgnoreCase(categoryFilter)) {
+                        if (item.getCategory() == null || !item.getCategory().equalsIgnoreCase(categoryFilter.trim())) {
+                            return false;
+                        }
+                    }
+                    if (start != null && item.getCreatedAt() != null && item.getCreatedAt().toLocalDate().isBefore(start)) {
+                        return false;
+                    }
+                    if (end != null && item.getCreatedAt() != null && item.getCreatedAt().toLocalDate().isAfter(end)) {
+                        return false;
+                    }
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .toList();
+    }
    
     public ReversalWallet getReversalWallet(Long userId) {
         validateUserId(userId);

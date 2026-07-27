@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NavigationHeader from '../components/NavigationHeader';
 import { getSession } from '../lib/session';
 
 interface CheckoutPreviewResponse {
@@ -181,38 +182,27 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="checkout-page">
-      <header className="checkout-topbar">
-        <button
-          type="button"
-          className="checkout-back-button"
-          onClick={() => navigate('/dashboard')}
-        >
-          ← Back to Dashboard
-        </button>
+    <div style={{ minHeight: '100vh', background: '#f4f8f7', color: '#0d2b26' }}>
+      <NavigationHeader />
 
-        <div>
-          <strong>ViralPe Checkout</strong>
-          <span>Zero-load mixed-mode payment</span>
-        </div>
-      </header>
+      <main style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
+        <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
+          <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#00685b', fontWeight: 700 }}>
+            PAYMENT SETUP
+          </span>
 
-      <main className="checkout-main">
-        <section className="checkout-form-card">
-          <p className="login-eyebrow">Payment setup</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.3rem 0 0.5rem 0', color: '#0d2b26' }}>
+            Preview your payment split
+          </h1>
 
-          <h1>Preview your payment split</h1>
-
-          <p>
-            Reversal Wallet is applied first. Wallet Balance is
-            applied next. The remaining amount goes to the payment
-            gateway.
+          <p style={{ color: '#5b706c', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            Reversal Wallet is applied first. Wallet Balance is applied next. The remaining amount goes to the payment gateway.
           </p>
 
-          <form onSubmit={handlePreview} className="checkout-form">
-            <div className="checkout-field">
-              <label htmlFor="invoiceAmount">
-                Invoice Amount
+          <form onSubmit={handlePreview} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <label htmlFor="invoiceAmount" style={{ display: 'block', fontSize: '0.85rem', color: '#5b706c', marginBottom: '0.4rem', fontWeight: 600 }}>
+                Invoice Amount (₹)
               </label>
 
               <input
@@ -228,25 +218,34 @@ export default function CheckoutPage() {
                 }}
                 placeholder="Enter invoice amount"
                 required
+                style={{ width: '100%', padding: '0.75rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '10px', color: '#0d2b26', fontSize: '1rem', fontWeight: 700 }}
               />
             </div>
 
             {!preview ? (
               <button
                 type="submit"
-                className="checkout-primary-button"
                 disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '0.85rem',
+                  background: 'linear-gradient(135deg, #00685b, #047857)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
               >
-                {loading
-                  ? 'Calculating...'
-                  : 'Show Payment Breakdown'}
+                {loading ? 'Calculating...' : 'Show Payment Breakdown'}
               </button>
             ) : (
               <>
-                <label className="checkout-wallet-toggle">
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f4f8f7', padding: '1rem', borderRadius: '10px', border: '1px solid #e2ece9', cursor: 'pointer' }}>
                   <div>
-                    <strong>Use Wallet Balance</strong>
-                    <span>
+                    <strong style={{ display: 'block', fontSize: '0.9rem', color: '#0d2b26' }}>Use Wallet Balance</strong>
+                    <span style={{ fontSize: '0.75rem', color: '#5b706c' }}>
                       Choose how much wallet balance to apply.
                     </span>
                   </div>
@@ -257,18 +256,16 @@ export default function CheckoutPage() {
                     onChange={(event) =>
                       handleWalletToggle(event.target.checked)
                     }
+                    style={{ width: '18px', height: '18px', accentColor: '#00685b' }}
                   />
                 </label>
 
-                <div className="checkout-slider-section">
-                  <div className="checkout-slider-heading">
-                    <span>Wallet amount</span>
+                <div style={{ background: '#f4f8f7', padding: '1rem', borderRadius: '10px', border: '1px solid #e2ece9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#5b706c' }}>Wallet Amount</span>
 
-                    <strong>
-                      ₹
-                      {useWallet
-                        ? requestedWalletAmount.toFixed(2)
-                        : '0.00'}
+                    <strong style={{ color: '#00685b', fontWeight: 800 }}>
+                      ₹{useWallet ? requestedWalletAmount.toFixed(2) : '0.00'}
                     </strong>
                   </div>
 
@@ -278,157 +275,114 @@ export default function CheckoutPage() {
                     min="0"
                     max={maximumWalletAmount}
                     step="1"
-                    value={
-                      useWallet
-                        ? requestedWalletAmount
-                        : 0
-                    }
+                    value={useWallet ? requestedWalletAmount : 0}
                     onChange={(event) =>
-                      handleWalletSlider(
-                        Number(event.target.value)
-                      )
+                      handleWalletSlider(Number(event.target.value))
                     }
                     disabled={!useWallet || loading}
+                    style={{ width: '100%', accentColor: '#00685b' }}
                   />
 
-                  <div className="checkout-slider-labels">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#5b706c', marginTop: '0.25rem' }}>
                     <span>₹0</span>
-
-                    <span>
-                      Maximum ₹
-                      {maximumWalletAmount.toFixed(2)}
-                    </span>
+                    <span>Max ₹{maximumWalletAmount.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  className="checkout-primary-button"
                   onClick={() =>
                     void requestPreview(
-                      useWallet
-                        ? requestedWalletAmount
-                        : 0
+                      useWallet ? requestedWalletAmount : 0
                     )
                   }
                   disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    background: 'linear-gradient(135deg, #00685b, #047857)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
                 >
-                  {loading
-                    ? 'Updating...'
-                    : 'Refresh Breakdown'}
+                  {loading ? 'Updating...' : 'Refresh Breakdown'}
                 </button>
               </>
             )}
           </form>
 
           {error ? (
-            <p className="checkout-error" role="alert">
+            <p style={{ color: '#dc2626', marginTop: '1rem', fontSize: '0.85rem', fontWeight: 600 }}>
               {error}
             </p>
           ) : null}
         </section>
 
-        <section className="checkout-breakdown-card">
-          <div className="checkout-breakdown-heading">
-            <div>
-              <p className="login-eyebrow">
-                Checkout priority ladder
-              </p>
+        <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#00685b', fontWeight: 700 }}>
+                  PRIORITY LADDER
+                </span>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.2rem 0', color: '#0d2b26' }}>
+                  Payment Breakdown
+                </h2>
+              </div>
 
-              <h2>Payment Breakdown</h2>
+              <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', background: '#e6f4f1', color: '#00685b', fontSize: '0.75rem', fontWeight: 700 }}>
+                PREVIEW
+              </span>
             </div>
 
-            <span className="checkout-status-pill">
-              Preview
-            </span>
+            {!preview ? (
+              <div style={{ textAlign: 'center', padding: '4rem 1rem', border: '2px dashed #e2ece9', borderRadius: '12px', color: '#5b706c' }}>
+                <strong style={{ fontSize: '1.1rem', color: '#0d2b26', display: 'block', marginBottom: '0.3rem' }}>No preview calculated yet</strong>
+                <p style={{ fontSize: '0.85rem' }}>Enter the invoice amount on the left to compute the priority split.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f4f8f7', borderRadius: '8px' }}>
+                  <span style={{ color: '#5b706c' }}>Invoice Amount</span>
+                  <strong style={{ color: '#0d2b26' }}>₹{preview.invoiceAmount.toFixed(2)}</strong>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f4f8f7', borderRadius: '8px' }}>
+                  <div>
+                    <span style={{ color: '#5b706c', display: 'block' }}>Reversal Wallet Applied</span>
+                    <small style={{ color: '#5b706c', fontSize: '0.75rem' }}>Available: ₹{preview.availableReversalBalance.toFixed(2)}</small>
+                  </div>
+                  <strong style={{ color: '#00685b' }}>-₹{preview.reversalAmountApplied.toFixed(2)}</strong>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f4f8f7', borderRadius: '8px' }}>
+                  <div>
+                    <span style={{ color: '#5b706c', display: 'block' }}>Wallet Balance Applied</span>
+                    <small style={{ color: '#5b706c', fontSize: '0.75rem' }}>Available: ₹{preview.availableWalletBalance.toFixed(2)}</small>
+                  </div>
+                  <strong style={{ color: '#059669' }}>-₹{preview.walletAmountApplied.toFixed(2)}</strong>
+                </div>
+
+                <div style={{ borderTop: '1px solid #e2ece9', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#0d2b26', fontWeight: 700 }}>Payment Gateway Amount</span>
+                  <strong style={{ fontSize: '1.4rem', color: '#d97706', fontWeight: 800 }}>₹{preview.paymentGatewayAmount.toFixed(2)}</strong>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button type="button" disabled style={{ flex: 1, padding: '0.6rem', background: '#e2ece9', color: '#5b706c', border: 'none', borderRadius: '6px', fontWeight: 700 }}>UPI</button>
+                  <button type="button" disabled style={{ flex: 1, padding: '0.6rem', background: '#e2ece9', color: '#5b706c', border: 'none', borderRadius: '6px', fontWeight: 700 }}>Card</button>
+                  <button type="button" disabled style={{ flex: 1, padding: '0.6rem', background: '#e2ece9', color: '#5b706c', border: 'none', borderRadius: '6px', fontWeight: 700 }}>Net Banking</button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {!preview ? (
-            <div className="checkout-empty-state">
-              <strong>No preview yet</strong>
-
-              <p>
-                Enter the invoice amount to calculate the payment
-                split.
-              </p>
-            </div>
-          ) : (
-            <div className="checkout-breakdown-list">
-              <div className="checkout-breakdown-row">
-                <span>Invoice Amount</span>
-
-                <strong>
-                  ₹{preview.invoiceAmount.toFixed(2)}
-                </strong>
-              </div>
-
-              <div className="checkout-breakdown-row">
-                <div>
-                  <span>Reversal Wallet</span>
-
-                  <small>
-                    Available: ₹
-                    {preview.availableReversalBalance.toFixed(2)}
-                  </small>
-                </div>
-
-                <strong className="checkout-deduction">
-                  −₹{preview.reversalAmountApplied.toFixed(2)}
-                </strong>
-              </div>
-
-              <div className="checkout-breakdown-row">
-                <div>
-                  <span>Wallet Balance</span>
-
-                  <small>
-                    Available: ₹
-                    {preview.availableWalletBalance.toFixed(2)}
-                  </small>
-                </div>
-
-                <strong className="checkout-deduction">
-                  −₹{preview.walletAmountApplied.toFixed(2)}
-                </strong>
-              </div>
-
-              <div className="checkout-breakdown-divider" />
-
-              <div className="checkout-breakdown-row checkout-total-row">
-                <span>Payment Gateway Amount</span>
-
-                <strong>
-                  ₹{preview.paymentGatewayAmount.toFixed(2)}
-                </strong>
-              </div>
-
-              <div className="checkout-payment-options">
-                <button type="button" disabled>
-                  UPI
-                </button>
-
-                <button type="button" disabled>
-                  Card
-                </button>
-
-                <button type="button" disabled>
-                  Net Banking
-                </button>
-              </div>
-
-              <button
-                type="button"
-                className="checkout-confirm-button"
-                disabled
-              >
-                Proceed to Pay
-              </button>
-
-              <p className="checkout-note">
-                Payment confirmation will be enabled in Story 3.3.
-              </p>
-            </div>
-          )}
+          <p style={{ color: '#5b706c', fontSize: '0.8rem', marginTop: '1.5rem', textAlign: 'center' }}>
+            Select a payment gateway option above to proceed.
+          </p>
         </section>
       </main>
     </div>

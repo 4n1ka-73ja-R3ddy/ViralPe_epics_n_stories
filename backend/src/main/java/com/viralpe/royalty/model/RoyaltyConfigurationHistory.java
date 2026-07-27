@@ -1,52 +1,39 @@
 package com.viralpe.royalty.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "royalty_configuration")
-public class RoyaltyConfiguration {
+@Table(name = "royalty_configuration_history")
+public class RoyaltyConfigurationHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String category;
+
     private Double cashbackPercentage;
 
     private Double referralPercentage;
 
-    /**
-     * Percentage of profit shared with vendor.
-     */
     private Double vendorRoyaltyPercentage;
 
-    /**
-     * Profit margin percentage on every transaction.
-     */
     private Double profitMarginPercentage;
 
-    private String category;
-
-    /**
-     * Vertical royalty percentage deducted at root level before individual splits.
-     */
     private Double verticalRoyaltyPercentage;
 
-    private Double pincodeDeductionFraction;
+    private Double pincodeCashbackFraction;
 
-    private Double pincodeCashbackFraction = 0.10;
-
-    private Double pincodeVendorFraction = 0.10;
-
-    private Double pincodePercentage;
+    private Double pincodeVendorFraction;
 
     private OffsetDateTime effectiveFrom;
 
-    private OffsetDateTime updatedAt;
+    private OffsetDateTime createdAt;
+
+    private Long adminUserId;
+
+    private String changeReason;
 
     public Long getId() {
         return id;
@@ -62,14 +49,6 @@ public class RoyaltyConfiguration {
 
     public void setCategory(String category) {
         this.category = category;
-    }
-
-    public Double getVerticalRoyaltyPercentage() {
-        return verticalRoyaltyPercentage;
-    }
-
-    public void setVerticalRoyaltyPercentage(Double verticalRoyaltyPercentage) {
-        this.verticalRoyaltyPercentage = verticalRoyaltyPercentage;
     }
 
     public Double getCashbackPercentage() {
@@ -104,12 +83,12 @@ public class RoyaltyConfiguration {
         this.profitMarginPercentage = profitMarginPercentage;
     }
 
-    public Double getPincodeDeductionFraction() {
-        return pincodeDeductionFraction;
+    public Double getVerticalRoyaltyPercentage() {
+        return verticalRoyaltyPercentage;
     }
 
-    public void setPincodeDeductionFraction(Double pincodeDeductionFraction) {
-        this.pincodeDeductionFraction = pincodeDeductionFraction;
+    public void setVerticalRoyaltyPercentage(Double verticalRoyaltyPercentage) {
+        this.verticalRoyaltyPercentage = verticalRoyaltyPercentage;
     }
 
     public Double getPincodeCashbackFraction() {
@@ -128,14 +107,6 @@ public class RoyaltyConfiguration {
         this.pincodeVendorFraction = pincodeVendorFraction;
     }
 
-    public Double getPincodePercentage() {
-        return pincodePercentage;
-    }
-
-    public void setPincodePercentage(Double pincodePercentage) {
-        this.pincodePercentage = pincodePercentage;
-    }
-
     public OffsetDateTime getEffectiveFrom() {
         return effectiveFrom;
     }
@@ -144,11 +115,27 @@ public class RoyaltyConfiguration {
         this.effectiveFrom = effectiveFrom;
     }
 
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getAdminUserId() {
+        return adminUserId;
+    }
+
+    public void setAdminUserId(Long adminUserId) {
+        this.adminUserId = adminUserId;
+    }
+
+    public String getChangeReason() {
+        return changeReason;
+    }
+
+    public void setChangeReason(String changeReason) {
+        this.changeReason = changeReason;
     }
 }

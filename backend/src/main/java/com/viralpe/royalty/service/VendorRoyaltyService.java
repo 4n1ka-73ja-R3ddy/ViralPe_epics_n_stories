@@ -9,6 +9,7 @@ import com.viralpe.vendor.repository.VendorRepository;
 import com.viralpe.wallet.service.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,17 +23,23 @@ public class VendorRoyaltyService {
     private final VendorRoyaltyLedgerRepository ledgerRepository;
     private final RoyaltyConfigurationRepository royaltyConfigurationRepository;
     private final WalletService walletService;
+    private final PincodeChampionshipService pincodeChampionshipService;
+    private final VerticalRoyaltyService verticalRoyaltyService;
 
     public VendorRoyaltyService(
             VendorRepository vendorRepository,
             VendorRoyaltyLedgerRepository ledgerRepository,
             RoyaltyConfigurationRepository royaltyConfigurationRepository,
-            WalletService walletService) {
+            WalletService walletService,
+            PincodeChampionshipService pincodeChampionshipService,
+            VerticalRoyaltyService verticalRoyaltyService) {
 
         this.vendorRepository = vendorRepository;
         this.ledgerRepository = ledgerRepository;
         this.royaltyConfigurationRepository = royaltyConfigurationRepository;
         this.walletService = walletService;
+        this.pincodeChampionshipService = pincodeChampionshipService;
+        this.verticalRoyaltyService = verticalRoyaltyService;
     }
 
     @Transactional
@@ -46,20 +53,19 @@ public class VendorRoyaltyService {
                 .orElseThrow(() ->
                         new IllegalArgumentException("Vendor not found"));
 
-        RoyaltyConfiguration configuration =
-                royaltyConfigurationRepository.findAll()
-                        .stream()
-                        .findFirst()
-                        .orElseThrow(() ->
-                                new IllegalStateException("Royalty configuration not found"));
+        var marginResult = verticalRoyaltyService.calculateEffectiveMargin(
+                transactionType,
+                transactionAmount,
+                null
+        );
 
-        BigDecimal amount = BigDecimal.valueOf(transactionAmount);
+        RoyaltyConfiguration configuration = verticalRoyaltyService.resolveConfiguration(transactionType);
 
-        BigDecimal profitMarginPercent =
-                BigDecimal.valueOf(
-                        configuration.getProfitMarginPercentage() == null
-                                ? 0.0
-                                : configuration.getProfitMarginPercentage());
+        if (configuration == null) {
+            throw new IllegalStateException("Royalty configuration not found");
+        }
+
+        BigDecimal effectiveProfit = BigDecimal.valueOf(marginResult.getEffectiveProfitMargin());
 
         BigDecimal vendorRoyaltyPercent =
                 BigDecimal.valueOf(
@@ -73,11 +79,7 @@ public class VendorRoyaltyService {
                                 ? 0.0
                                 : configuration.getPincodeDeductionFraction());
 
-        BigDecimal profit = amount
-                .multiply(profitMarginPercent)
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
-        BigDecimal royalty = profit
+        BigDecimal royalty = effectiveProfit
                 .multiply(vendorRoyaltyPercent)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
@@ -88,6 +90,16 @@ public class VendorRoyaltyService {
 
         if (royalty.compareTo(BigDecimal.ZERO) < 0) {
             royalty = BigDecimal.ZERO;
+        }
+
+        if (StringUtils.hasText(vendor.getBusinessPincode()) && deduction.compareTo(BigDecimal.ZERO) > 0) {
+            pincodeChampionshipService.recordContribution(
+                    vendor.getBusinessPincode(),
+                    transactionId,
+                    vendor.getOnboardedByUserId(),
+                    "VENDOR_ROYALTY",
+                    deduction.doubleValue()
+            );
         }
 
         List<VendorRoyaltyLedger> history =

@@ -12,7 +12,14 @@ public class AdminAuditLog {
     private Long id;
 
     private Long adminUserId;
+
+    private Long targetUserId;
+
     private String action;
+
+    private Double amount;
+
+    private String reason;
 
     @Column(columnDefinition = "TEXT")
     private String details;
@@ -35,12 +42,36 @@ public class AdminAuditLog {
         this.adminUserId = adminUserId;
     }
 
+    public Long getTargetUserId() {
+        return targetUserId;
+    }
+
+    public void setTargetUserId(Long targetUserId) {
+        this.targetUserId = targetUserId;
+    }
+
     public String getAction() {
         return action;
     }
 
     public void setAction(String action) {
         this.action = action;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public String getDetails() {
@@ -59,4 +90,3 @@ public class AdminAuditLog {
         this.createdAt = createdAt;
     }
 }
-

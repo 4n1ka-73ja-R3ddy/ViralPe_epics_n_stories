@@ -6,6 +6,7 @@ import com.viralpe.referral.service.ReferralService;
 import com.viralpe.royalty.repository.RoyaltyConfigurationRepository;
 import com.viralpe.royalty.service.CashbackService;
 import com.viralpe.royalty.service.VendorRoyaltyService;
+import com.viralpe.royalty.service.VerticalRoyaltyService;
 import com.viralpe.transaction.model.Transaction;
 import com.viralpe.transaction.repository.TransactionRepository;
 import com.viralpe.user.model.User;
@@ -29,6 +30,7 @@ public class CheckoutService {
     private final VendorRoyaltyService vendorRoyaltyService;
     private final UserRepository userRepository;
     private final RoyaltyConfigurationRepository royaltyConfigRepo;
+    private final VerticalRoyaltyService verticalRoyaltyService;
 
     public CheckoutService(
             WalletService walletService,
@@ -38,7 +40,8 @@ public class CheckoutService {
             ReferralService referralService,
             VendorRoyaltyService vendorRoyaltyService,
             UserRepository userRepository,
-            RoyaltyConfigurationRepository royaltyConfigRepo
+            RoyaltyConfigurationRepository royaltyConfigRepo,
+            VerticalRoyaltyService verticalRoyaltyService
     ) {
         this.walletService = walletService;
         this.paymentService = paymentService;
@@ -48,6 +51,7 @@ public class CheckoutService {
         this.vendorRoyaltyService = vendorRoyaltyService;
         this.userRepository = userRepository;
         this.royaltyConfigRepo = royaltyConfigRepo;
+        this.verticalRoyaltyService = verticalRoyaltyService;
     }
 
     @Transactional
@@ -137,6 +141,10 @@ public class CheckoutService {
         );
         transaction.setProvider(request.getProvider());
         transaction.setReference("AUTO");
+        transaction.setReversalAmountApplied(usedFromReversal);
+        transaction.setWalletAmountApplied(usedFromWallet);
+        transaction.setPaymentGatewayAmount(fromGateway);
+        transaction.setRefundToReversal(!gatewaySuccess ? (usedFromWallet + usedFromReversal) : 0.0);
         transaction.setCreatedAt(OffsetDateTime.now());
 
         Transaction saved =
@@ -176,21 +184,20 @@ public class CheckoutService {
             User user =
                     userRepository.findById(userId).orElse(null);
 
+            var marginResult = verticalRoyaltyService.calculateEffectiveMargin("CHECKOUT", amount, 0.0);
+            var categoryConfig = verticalRoyaltyService.resolveConfiguration("CHECKOUT");
+
             if (user != null &&
-                    user.getReferredByUserId() != null) {
+                    user.getReferredByUserId() != null &&
+                    categoryConfig != null) {
 
                 double referralPercent =
-                        royaltyConfigRepo.findAll()
-                                .stream()
-                                .findFirst()
-                                .map(r ->
-                                        r.getReferralPercentage() == null
-                                                ? 0.0
-                                                : r.getReferralPercentage())
-                                .orElse(0.0);
+                        categoryConfig.getReferralPercentage() == null
+                                ? 0.0
+                                : categoryConfig.getReferralPercentage();
 
                 double bonus =
-                        amount * referralPercent / 100.0;
+                        marginResult.getEffectiveProfitMargin() * referralPercent / 100.0;
 
                 if (bonus > 0) {
 

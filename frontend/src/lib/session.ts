@@ -2,6 +2,9 @@ export interface UserSession {
   userId: number;
   token: string;
   profileComplete: boolean;
+  fullName?: string;
+  registeredPincode?: string;
+  email?: string;
 }
 
 const SESSION_KEY = 'viralpe.session';
@@ -21,7 +24,10 @@ export function getSession(): UserSession | null {
     return {
       userId: parsed.userId,
       token: parsed.token,
-      profileComplete: Boolean(parsed.profileComplete)
+      profileComplete: Boolean(parsed.profileComplete),
+      fullName: parsed.fullName,
+      registeredPincode: parsed.registeredPincode,
+      email: parsed.email
     };
   } catch {
     return null;
