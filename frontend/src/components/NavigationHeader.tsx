@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getProfile, UserProfileResponse } from '../lib/api';
 import { clearSession, getSession, setSession } from '../lib/session';
+import { getStoredTheme, initTheme, setStoredTheme, ThemeMode } from '../lib/theme';
 
 export default function NavigationHeader() {
   const navigate = useNavigate();
@@ -10,10 +11,23 @@ export default function NavigationHeader() {
 
   const isDashboard = location.pathname === '/dashboard';
 
+  const [theme, setTheme] = useState<ThemeMode>('light');
   const [userInfo, setUserInfo] = useState<{ fullName: string; email: string }>({
     fullName: session?.fullName || 'User',
     email: session?.email || ''
   });
+
+  useEffect(() => {
+    const currentTheme = initTheme();
+    setTheme(currentTheme);
+
+    const handleThemeChange = () => {
+      setTheme(getStoredTheme());
+    };
+
+    window.addEventListener('theme-change', handleThemeChange);
+    return () => window.removeEventListener('theme-change', handleThemeChange);
+  }, []);
 
   useEffect(() => {
     if (session?.userId) {
@@ -23,7 +37,6 @@ export default function NavigationHeader() {
           const mail = prof.email || '';
           setUserInfo({ fullName: name, email: mail });
 
-          // Update session cache with latest profile fields
           setSession({
             ...session,
             fullName: name,
@@ -40,16 +53,22 @@ export default function NavigationHeader() {
     navigate('/', { replace: true });
   };
 
+  const toggleTheme = () => {
+    const nextTheme: ThemeMode = theme === 'light' ? 'dark' : 'light';
+    setStoredTheme(nextTheme);
+  };
+
   return (
     <header
       style={{
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        background: '#ffffff',
-        borderBottom: '1px solid #e2ece9',
-        boxShadow: '0 2px 10px rgba(0, 104, 91, 0.03)',
+        background: 'var(--bg-card)',
+        borderBottom: '1px solid var(--border-color)',
+        boxShadow: '0 2px 10px var(--shadow-color)',
         padding: '0.85rem 2rem',
+        transition: 'all 0.2s ease-in-out'
       }}
     >
       <div
@@ -78,14 +97,14 @@ export default function NavigationHeader() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #00685b, #047857)',
+                background: 'var(--accent-gradient)',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 800,
                 fontSize: '1.25rem',
-                boxShadow: '0 4px 12px rgba(0, 104, 91, 0.15)',
+                boxShadow: '0 4px 12px rgba(0, 104, 91, 0.2)',
               }}
             >
               V
@@ -94,7 +113,7 @@ export default function NavigationHeader() {
               <strong
                 style={{
                   fontSize: '1.2rem',
-                  color: '#0d2b26',
+                  color: 'var(--text-primary)',
                   fontWeight: 800,
                   letterSpacing: '-0.02em',
                   display: 'block',
@@ -106,7 +125,7 @@ export default function NavigationHeader() {
               <span
                 style={{
                   fontSize: '0.68rem',
-                  color: '#5b706c',
+                  color: 'var(--text-secondary)',
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
@@ -126,9 +145,9 @@ export default function NavigationHeader() {
                 gap: '0.4rem',
                 padding: '0.45rem 0.85rem',
                 borderRadius: '8px',
-                border: '1px solid #e2ece9',
-                background: '#e6f4f1',
-                color: '#00685b',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-highlight)',
+                color: 'var(--accent-primary)',
                 fontSize: '0.82rem',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -140,14 +159,35 @@ export default function NavigationHeader() {
           )}
         </div>
 
-        {/* Right Side: User Name + Gmail + Sign Out Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Right Side: Theme Toggle Switch + User Name + Gmail + Sign Out Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '999px',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-highlight)',
+              color: 'var(--text-primary)',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          </button>
+
           <div style={{ textAlign: 'right' }}>
             <strong
               style={{
                 fontSize: '0.9rem',
                 fontWeight: 700,
-                color: '#0d2b26',
+                color: 'var(--text-primary)',
                 display: 'block',
                 lineHeight: 1.2,
               }}
@@ -157,7 +197,7 @@ export default function NavigationHeader() {
             <span
               style={{
                 fontSize: '0.78rem',
-                color: '#5b706c',
+                color: 'var(--text-secondary)',
                 fontWeight: 500,
                 display: 'block',
               }}
@@ -171,13 +211,13 @@ export default function NavigationHeader() {
             style={{
               padding: '0.5rem 1.1rem',
               borderRadius: '10px',
-              border: '1px solid #e2ece9',
-              background: '#ffffff',
-              color: '#0d2b26',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
               fontSize: '0.85rem',
               fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
+              boxShadow: '0 2px 6px var(--shadow-color)',
               transition: 'all 0.15s',
             }}
           >

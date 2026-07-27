@@ -151,16 +151,20 @@ public class DemoService {
             Double bonusAmount,
             OffsetDateTime createdAt
     ) {
-        ReferralBonus rb = new ReferralBonus();
-        rb.setReferrerUserId(referrerId);
-        rb.setRefereeUserId(refereeId);
-        rb.setSourceTransactionId(txId);
-        rb.setTransactionAmount(txAmount);
-        rb.setApiCost(apiCost);
-        rb.setProfitMargin(profitMargin);
-        rb.setReferralPercentage(referralPct);
-        rb.setReferralBonus(bonusAmount);
-        rb.setCreatedAt(createdAt);
-        referralBonusRepository.save(rb);
+        try {
+            ReferralBonus rb = new ReferralBonus();
+            rb.setReferrerUserId(referrerId);
+            rb.setRefereeUserId(refereeId);
+            rb.setSourceTransactionId(txId);
+            rb.setTransactionAmount(txAmount);
+            rb.setApiCost(apiCost);
+            rb.setProfitMargin(profitMargin);
+            rb.setReferralPercentage(referralPct);
+            rb.setReferralBonus(bonusAmount);
+            rb.setCreatedAt(createdAt);
+            referralBonusRepository.save(rb);
+        } catch (Exception e) {
+            System.err.println("Warning: Could not seed referral_bonus record: " + e.getMessage());
+        }
     }
 }

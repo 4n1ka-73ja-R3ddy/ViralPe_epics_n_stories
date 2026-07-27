@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
-:root {
+:root, [data-theme="light"] {
   --bg-1: #f4f1ea;
   --bg-2: #dae8f4;
   --surface: rgba(255, 255, 255, 0.86);
@@ -12,6 +12,46 @@
   --danger: #b42318;
   --line: rgba(15, 23, 42, 0.12);
   --shadow: 0 22px 44px rgba(11, 79, 108, 0.16);
+
+  --bg-canvas: #f4f8f7;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f8faf9;
+  --bg-highlight: #e6f4f1;
+  --border-color: #e2ece9;
+  --text-primary: #0d2b26;
+  --text-secondary: #5b706c;
+  --accent-primary: #00685b;
+  --accent-gradient: linear-gradient(135deg, #00685b, #047857);
+  --shadow-color: rgba(0, 104, 91, 0.04);
+  --input-bg: #ffffff;
+  --pill-active-bg: #e6f4f1;
+  --pill-active-color: #00685b;
+
+  --badge-credit-bg: #dcfce7;
+  --badge-credit-text: #15803d;
+  --badge-debit-bg: #fee2e2;
+  --badge-debit-text: #b91c1c;
+}
+
+[data-theme="dark"] {
+  --bg-canvas: #040d0a;
+  --bg-card: #0a1f19;
+  --bg-card-subtle: #0f2b23;
+  --bg-highlight: #14362c;
+  --border-color: #1c4d40;
+  --text-primary: #f0fdfa;
+  --text-secondary: #99f6e4;
+  --accent-primary: #2dd4bf;
+  --accent-gradient: linear-gradient(135deg, #2dd4bf, #14b8a6);
+  --shadow-color: rgba(0, 0, 0, 0.7);
+  --input-bg: #071713;
+  --pill-active-bg: #14362c;
+  --pill-active-color: #2dd4bf;
+
+  --badge-credit-bg: #064e3b;
+  --badge-credit-text: #34d399;
+  --badge-debit-bg: #7f1d1d;
+  --badge-debit-text: #fca5a5;
 }
 
 * {
@@ -1989,3 +2029,136 @@ p {
     min-height: auto;
   }
 }
+
+/* ==========================================================================
+   GLOBAL DARK MODE OVERRIDES (Deep Dark Green Canvas + Light Mint Accents)
+   ========================================================================== */
+
+[data-theme="dark"] body,
+[data-theme="dark"] #root,
+[data-theme="dark"] main,
+[data-theme="dark"] .fintech-dashboard-page {
+  background: var(--bg-canvas) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force dark dark green canvas on top page container divs */
+[data-theme="dark"] div[style*="minHeight: 100vh"],
+[data-theme="dark"] div[style*="min-height: 100vh"] {
+  background: var(--bg-canvas) !important;
+}
+
+/* Force dark green background on header bar */
+[data-theme="dark"] header,
+[data-theme="dark"] nav {
+  background: #061511 !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+/* Cards, sections, containers, popups, and stat boxes */
+[data-theme="dark"] div[style*="background: #ffffff"],
+[data-theme="dark"] div[style*="background:#ffffff"],
+[data-theme="dark"] div[style*="background: rgb(255, 255, 255)"],
+[data-theme="dark"] div[style*="background: #f4f8f7"],
+[data-theme="dark"] div[style*="background:#f4f8f7"],
+[data-theme="dark"] section[style*="background: #ffffff"],
+[data-theme="dark"] section[style*="background:#ffffff"],
+[data-theme="dark"] section[style*="background: #f4f8f7"],
+[data-theme="dark"] section[style*="background:#f4f8f7"],
+[data-theme="dark"] section[style*="background: rgb(255, 255, 255)"],
+[data-theme="dark"] .fintech-header-card,
+[data-theme="dark"] .earnings-summary-card,
+[data-theme="dark"] .quick-feature-card,
+[data-theme="dark"] .dashboard-section-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 32px var(--shadow-color) !important;
+}
+
+/* Highlight boxes & badge pills */
+[data-theme="dark"] div[style*="background: #e6f4f1"],
+[data-theme="dark"] div[style*="background:#e6f4f1"],
+[data-theme="dark"] section[style*="background: #e6f4f1"],
+[data-theme="dark"] section[style*="background:#e6f4f1"] {
+  background: var(--bg-highlight) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Form input, select, textarea styling */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Headings and Titles in crisp light mint white */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] strong,
+[data-theme="dark"] b,
+[data-theme="dark"] th {
+  color: var(--text-primary) !important;
+}
+
+/* Subtext, paragraphs, dates, labels in soft light mint green */
+[data-theme="dark"] p,
+[data-theme="dark"] label,
+[data-theme="dark"] small,
+[data-theme="dark"] td {
+  color: var(--text-secondary) !important;
+}
+
+/* Table cells specific formatting */
+[data-theme="dark"] td {
+  color: #a3e6d5 !important;
+}
+
+/* Accent texts, total numbers, currency indicators */
+[data-theme="dark"] span[style*="color: #059669"],
+[data-theme="dark"] span[style*="color: #00685b"],
+[data-theme="dark"] h2[style*="color: #059669"],
+[data-theme="dark"] h2[style*="color: #00685b"],
+[data-theme="dark"] h3[style*="color: #00685b"],
+[data-theme="dark"] strong[style*="color: #00685b"],
+[data-theme="dark"] strong[style*="color: #059669"] {
+  color: var(--accent-primary) !important;
+}
+
+/* Badges High-Contrast Override for Dark Mode */
+[data-theme="dark"] span[style*="background: #dcfce7"],
+[data-theme="dark"] span[style*="background:#dcfce7"] {
+  background: var(--badge-credit-bg) !important;
+  color: var(--badge-credit-text) !important;
+  border: 1px solid #059669 !important;
+}
+
+[data-theme="dark"] span[style*="background: #fee2e2"],
+[data-theme="dark"] span[style*="background:#fee2e2"] {
+  background: var(--badge-debit-bg) !important;
+  color: var(--badge-debit-text) !important;
+  border: 1px solid #dc2626 !important;
+}
+
+[data-theme="dark"] span[style*="background: #fef3c7"],
+[data-theme="dark"] span[style*="background:#fef3c7"] {
+  background: #451a03 !important;
+  color: #fde047 !important;
+  border: 1px solid #d97706 !important;
+}
+
+/* Tables and Borders */
+[data-theme="dark"] table,
+[data-theme="dark"] tr,
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+  border-color: var(--border-color) !important;
+}
+
+
+

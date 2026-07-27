@@ -95,58 +95,58 @@ export default function ReferralPage() {
 
         {/* Summary Stat Card */}
         {history && (
-          <div style={{ background: '#ffffff', border: '1px solid #00685b', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)', maxWidth: '400px' }}>
-            <span style={{ fontSize: '0.8rem', color: '#00685b', textTransform: 'uppercase', fontWeight: 700 }}>Total Referral Earnings</span>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#00685b', margin: '0.3rem 0' }}>₹{totalReferral.toFixed(2)}</h2>
-            <span style={{ fontSize: '0.8rem', color: '#5b706c' }}>Total credited from referred user transactions</span>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 4px 20px var(--shadow-color)', maxWidth: '400px' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Referral Earnings</span>
+            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0.3rem 0' }}>₹{totalReferral.toFixed(2)}</h2>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total credited from referred user transactions</span>
           </div>
         )}
 
         {/* Filter Toolbar */}
-        <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
+        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', boxShadow: '0 4px 20px var(--shadow-color)' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: '#5b706c', marginBottom: '0.3rem', fontWeight: 600 }}>Start Date</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Start Date</label>
             <input
               type="datetime-local"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              style={{ padding: '0.45rem 0.8rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26', fontSize: '0.85rem' }}
+              style={{ padding: '0.45rem 0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: '#5b706c', marginBottom: '0.3rem', fontWeight: 600 }}>End Date</label>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>End Date</label>
             <input
               type="datetime-local"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              style={{ padding: '0.45rem 0.8rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26', fontSize: '0.85rem' }}
+              style={{ padding: '0.45rem 0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.85rem' }}
             />
           </div>
 
           <button
             onClick={applyFilter}
             disabled={filtering}
-            style={{ padding: '0.55rem 1.25rem', background: '#00685b', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', marginTop: 'auto' }}
+            style={{ padding: '0.55rem 1.25rem', background: 'var(--accent-gradient)', color: '#030c09', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', marginTop: 'auto' }}
           >
             {filtering ? 'Applying...' : 'Apply Filter'}
           </button>
         </section>
 
-        {loading && <p style={{ color: '#5b706c' }}>Loading referral history...</p>}
-        {error && <p style={{ color: '#b91c1c' }}>{error}</p>}
+        {loading && <p style={{ color: 'var(--text-secondary)' }}>Loading referral history...</p>}
+        {error && <p style={{ color: '#fca5a5' }}>{error}</p>}
 
         {/* History List */}
         {!loading && history?.earnings.length ? (
-          <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-            <h3 style={{ fontSize: '1.1rem', color: '#0d2b26', marginBottom: '1.25rem', fontWeight: 800 }}>Detailed Referral Earnings</h3>
+          <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+            <h3 style={{ fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '1.25rem', fontWeight: 800 }}>Detailed Referral Earnings</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {history.earnings.map((entry) => (
                 <div
                   key={entry.referralBonusId}
                   style={{
-                    background: '#f4f8f7',
-                    border: '1px solid #e2ece9',
+                    background: 'var(--bg-card-subtle)',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '12px',
                     padding: '1.25rem',
                     display: 'flex',
@@ -157,22 +157,22 @@ export default function ReferralPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e6f4f1', color: '#00685b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
                       ◎
                     </div>
                     <div>
-                      <strong style={{ fontSize: '1rem', color: '#0d2b26', display: 'block' }}>Referral Bonus</strong>
-                      <span style={{ fontSize: '0.8rem', color: '#5b706c' }}>
+                      <strong style={{ fontSize: '1rem', color: 'var(--text-primary)', display: 'block' }}>Referral Bonus</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         Referee #{entry.refereeUserId} · Tx #{entry.sourceTransactionId} · {new Date(entry.createdAt).toLocaleString()}
                       </span>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <strong style={{ color: '#059669', fontSize: '1.2rem', fontWeight: 800, display: 'block' }}>
+                    <strong style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 800, display: 'block' }}>
                       +₹{entry.referralBonus.toFixed(2)}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: '#5b706c' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                       {entry.referralPercentage}% margin bonus
                     </span>
                   </div>
@@ -183,10 +183,10 @@ export default function ReferralPage() {
         ) : null}
 
         {!loading && history?.earnings.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 1rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', color: '#5b706c', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
+          <div style={{ textAlign: 'center', padding: '4rem 1rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', color: 'var(--text-secondary)', boxShadow: '0 4px 20px var(--shadow-color)' }}>
             <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '0.5rem' }}>👥</span>
-            <strong style={{ fontSize: '1.1rem', color: '#0d2b26' }}>No referral earnings yet</strong>
-            <p style={{ fontSize: '0.85rem' }}>Refer friends using your referral code to start earning bonuses automatically.</p>
+            <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>No referral earnings yet</strong>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Refer friends using your referral code to start earning bonuses automatically.</p>
           </div>
         ) : null}
       </main>
