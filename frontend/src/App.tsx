@@ -9,6 +9,9 @@ import PincodeChampionshipPage from './pages/PincodeChampionshipPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import AdminRoyaltyPage from './pages/AdminRoyaltyPage';
 import AdminPlatformPage from './pages/AdminPlatformPage';
+import RechargePage from './pages/RechargePage';
+import BillPaymentPage from './pages/BillPaymentPage';
+import VoucherPage from './pages/VoucherPage';
 import { getSession } from './lib/session';
 
 function RequireSession({ children }: { children: JSX.Element }) {
@@ -61,6 +64,33 @@ function App() {
         element={
           <RequireCompletedProfile>
             <DashboardPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/recharge"
+        element={
+          <RequireCompletedProfile>
+            <RechargePage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/bills"
+        element={
+          <RequireCompletedProfile>
+            <BillPaymentPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/vouchers"
+        element={
+          <RequireCompletedProfile>
+            <VoucherPage />
           </RequireCompletedProfile>
         }
       />

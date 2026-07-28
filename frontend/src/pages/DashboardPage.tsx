@@ -280,6 +280,87 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+            {/* Card 0A: Mobile Recharge */}
+            <div
+              onClick={() => navigate('/recharge')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 20px var(--shadow-color)'
+              }}
+            >
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
+                📱
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
+                Mobile Recharge
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
+                Auto-detect MNP operator, browse Cyrus API plans, & recharge with cashback.
+              </p>
+              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
+                Recharge Mobile →
+              </span>
+            </div>
+
+            {/* Card 0B: Bill Payments */}
+            <div
+              onClick={() => navigate('/bills')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 20px var(--shadow-color)'
+              }}
+            >
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
+                ⚡
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
+                Bill Payments (BBPS)
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
+                Fetch & pay Electricity, Water, Gas, and Broadband bills via Cyrus BBPS.
+              </p>
+              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
+                Pay Utility Bills →
+              </span>
+            </div>
+
+            {/* Card 0C: Gift Cards */}
+            <div
+              onClick={() => navigate('/vouchers')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 20px var(--shadow-color)'
+              }}
+            >
+              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
+                🎁
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
+                Digital Gift Cards
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
+                Buy Amazon, Flipkart, Myntra, Swiggy & Uber gift cards with instant PINs.
+              </p>
+              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
+                Browse Gift Vouchers →
+              </span>
+            </div>
+
             {/* Card 1: Checkout */}
             <div
               onClick={() => navigate('/checkout')}

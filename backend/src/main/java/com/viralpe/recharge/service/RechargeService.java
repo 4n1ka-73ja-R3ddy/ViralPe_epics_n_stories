@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RechargeService {
@@ -30,6 +31,10 @@ public class RechargeService {
         this.providerService = providerService;
         this.rechargeRepository = rechargeRepository;
         this.checkoutService = checkoutService;
+    }
+
+    public Map<String, String> lookupMnp(String mobileNumber) {
+        return providerService.lookupMnp(mobileNumber);
     }
 
     public List<RechargeOperatorResponse> getOperators() {

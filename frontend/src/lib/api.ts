@@ -589,3 +589,129 @@ export function getWalletActivityLog(
 export function loadDemoData(userId: number): Promise<{ message: string }> {
   return apiRequest<{ message: string }>(`/api/demo/load/${userId}`, { method: 'POST' });
 }
+
+// ============================================================================
+// EPIC 4: UTILITY & VOUCHER SERVICES (CYRUS API)
+// ============================================================================
+
+export interface MnpLookupResponse {
+  operator: string;
+  circle: string;
+  operatorCode: string;
+}
+
+export interface RechargePlanItem {
+  id: number;
+  operatorCode: string;
+  circle: string;
+  amount: number;
+  validity: string;
+  description: string;
+  category?: string;
+}
+
+export interface BillBillerItem {
+  id: string;
+  name: string;
+  category: string;
+}
+
+export interface BillCategoryItem {
+  id: string;
+  name: string;
+}
+
+export interface BillFetchData {
+  billerId: string;
+  billerName: string;
+  consumerNumber: string;
+  customerName: string;
+  amount: number;
+  dueDate: string;
+  billReference: string;
+}
+
+export interface VoucherBrandItem {
+  id: string;
+  name: string;
+  category?: string;
+  discountPercent?: number;
+  logo?: string;
+}
+
+export interface VoucherDenominationItem {
+  brandId: string;
+  denomination: number;
+}
+
+export interface VoucherPurchaseRecord {
+  id: number;
+  userId: number;
+  brandId: string;
+  brandName: string;
+  denomination: number;
+  voucherCode: string;
+  voucherPin: string;
+  claimUrl?: string;
+  status: string;
+  createdAt: string;
+}
+
+// 1. Mobile Recharge
+export function lookupMnp(mobileNumber: string): Promise<MnpLookupResponse> {
+  return apiRequest<MnpLookupResponse>(`/api/recharge/mnp?mobileNumber=${encodeURIComponent(mobileNumber)}`);
+}
+
+export function getRechargePlans(operatorCode: string, circle: string): Promise<RechargePlanItem[]> {
+  return apiRequest<RechargePlanItem[]>(`/api/recharge/plans?operatorCode=${encodeURIComponent(operatorCode)}&circle=${encodeURIComponent(circle)}`);
+}
+
+export function executeRecharge(request: { userId: number; mobileNumber: string; operator: string; circle: string; planId: number }): Promise<any> {
+  return apiRequest<any>('/api/recharge', {
+    method: 'POST',
+    body: JSON.stringify(request)
+  });
+}
+
+// 2. Bill Payments (BBPS)
+export function getBillCategories(): Promise<BillCategoryItem[]> {
+  return apiRequest<BillCategoryItem[]>('/api/bill/categories');
+}
+
+export function getBillers(): Promise<BillBillerItem[]> {
+  return apiRequest<BillBillerItem[]>('/api/bill/billers');
+}
+
+export function fetchBillDetails(billerId: string, consumerNumber: string): Promise<BillFetchData> {
+  return apiRequest<BillFetchData>('/api/bill/fetch', {
+    method: 'POST',
+    body: JSON.stringify({ billerId, consumerNumber })
+  });
+}
+
+export function executeBillPayment(userId: number, billerId: string, consumerNumber: string, amount: number, billReference: string): Promise<any> {
+  return apiRequest<any>('/api/bill/pay', {
+    method: 'POST',
+    body: JSON.stringify({ userId, billerId, consumerNumber, amount, billReference })
+  });
+}
+
+// 3. Digital Vouchers & Gift Cards
+export function getVoucherBrands(): Promise<VoucherBrandItem[]> {
+  return apiRequest<VoucherBrandItem[]>('/api/voucher/brands');
+}
+
+export function getVoucherDenominations(brandId: string): Promise<VoucherDenominationItem[]> {
+  return apiRequest<VoucherDenominationItem[]>(`/api/voucher/denominations?brandId=${encodeURIComponent(brandId)}`);
+}
+
+export function purchaseVoucher(userId: number, brandId: string, denomination: number): Promise<any> {
+  return apiRequest<any>('/api/voucher/purchase', {
+    method: 'POST',
+    body: JSON.stringify({ userId, brandId, denomination })
+  });
+}
+
+export function getVoucherHistory(userId: number): Promise<VoucherPurchaseRecord[]> {
+  return apiRequest<VoucherPurchaseRecord[]>(`/api/voucher/history/${userId}`);
+}

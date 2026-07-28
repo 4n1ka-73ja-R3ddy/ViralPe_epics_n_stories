@@ -131,11 +131,17 @@ public class UserService {
 
         return userRepository
                 .findById(userId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "User not found."
-                        )
-                );
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setId(userId);
+                    newUser.setEmail("user" + userId + "@gmail.com");
+                    newUser.setFullName("Anika Teja Reddy");
+                    newUser.setProfileComplete(true);
+                    newUser.setRegisteredPincode("560001");
+                    newUser.setAuthProvider("DEMO");
+                    newUser.setAuthProviderId("demo-" + userId);
+                    return userRepository.save(newUser);
+                });
     }
 
     private String applyReferralOrOnboardingCode(

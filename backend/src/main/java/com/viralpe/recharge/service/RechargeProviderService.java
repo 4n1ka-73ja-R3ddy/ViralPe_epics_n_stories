@@ -1,42 +1,36 @@
 package com.viralpe.recharge.service;
 
+import com.viralpe.integration.cyrus.CyrusApiClient;
 import com.viralpe.recharge.dto.RechargeOperatorResponse;
 import com.viralpe.recharge.dto.RechargePlanResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RechargeProviderService {
 
+    private final CyrusApiClient cyrusApiClient;
+
+    public RechargeProviderService(CyrusApiClient cyrusApiClient) {
+        this.cyrusApiClient = cyrusApiClient;
+    }
+
+    public Map<String, String> lookupMnp(String mobileNumber) {
+        return cyrusApiClient.fetchOperatorCircle(mobileNumber);
+    }
+
     public List<RechargeOperatorResponse> getOperators() {
-
         return List.of(
-
-                new RechargeOperatorResponse(
-                        "JIO",
-                        "Reliance Jio"
-                ),
-
-                new RechargeOperatorResponse(
-                        "AIRTEL",
-                        "Airtel"
-                ),
-
-                new RechargeOperatorResponse(
-                        "VI",
-                        "Vodafone Idea"
-                ),
-
-                new RechargeOperatorResponse(
-                        "BSNL",
-                        "BSNL"
-                )
+                new RechargeOperatorResponse("JIO", "Reliance Jio"),
+                new RechargeOperatorResponse("AIRTEL", "Airtel"),
+                new RechargeOperatorResponse("VI", "Vodafone Idea"),
+                new RechargeOperatorResponse("BSNL", "BSNL")
         );
     }
 
     public List<String> getCircles() {
-
         return List.of(
                 "Andhra Pradesh",
                 "Telangana",
@@ -49,135 +43,31 @@ public class RechargeProviderService {
         );
     }
 
-    public List<RechargePlanResponse> getPlans(
-            String operatorCode,
-            String circle
-    ) {
-
+    public List<RechargePlanResponse> getPlans(String operatorCode, String circle) {
         if (operatorCode == null || operatorCode.isBlank()) {
             throw new IllegalArgumentException("Operator code is required.");
         }
-
         if (circle == null || circle.isBlank()) {
             throw new IllegalArgumentException("Circle is required.");
         }
 
-        String operator = operatorCode.trim().toUpperCase();
-
-        switch (operator) {
-
-            case "JIO":
-                return List.of(
-
-                        new RechargePlanResponse(
-                                1L,
-                                "JIO",
-                                circle,
-                                239.0,
-                                "22 Days",
-                                "1.5 GB/day + Unlimited Calls"
-                        ),
-
-                        new RechargePlanResponse(
-                                2L,
-                                "JIO",
-                                circle,
-                                299.0,
-                                "28 Days",
-                                "2 GB/day + Unlimited Calls"
-                        ),
-
-                        new RechargePlanResponse(
-                                3L,
-                                "JIO",
-                                circle,
-                                749.0,
-                                "72 Days",
-                                "2 GB/day + Unlimited Calls"
-                        )
-                );
-
-            case "AIRTEL":
-                return List.of(
-
-                        new RechargePlanResponse(
-                                4L,
-                                "AIRTEL",
-                                circle,
-                                199.0,
-                                "28 Days",
-                                "2 GB Total + Unlimited Calls"
-                        ),
-
-                        new RechargePlanResponse(
-                                5L,
-                                "AIRTEL",
-                                circle,
-                                349.0,
-                                "28 Days",
-                                "1.5 GB/day + Unlimited Calls"
-                        )
-                );
-
-            case "VI":
-                return List.of(
-
-                        new RechargePlanResponse(
-                                6L,
-                                "VI",
-                                circle,
-                                299.0,
-                                "28 Days",
-                                "1 GB/day + Unlimited Calls"
-                        ),
-
-                        new RechargePlanResponse(
-                                7L,
-                                "VI",
-                                circle,
-                                365.0,
-                                "28 Days",
-                                "2 GB/day + Unlimited Calls"
-                        )
-                );
-
-            case "BSNL":
-                return List.of(
-
-                        new RechargePlanResponse(
-                                8L,
-                                "BSNL",
-                                circle,
-                                107.0,
-                                "35 Days",
-                                "3 GB Total + 200 Minutes"
-                        ),
-
-                        new RechargePlanResponse(
-                                9L,
-                                "BSNL",
-                                circle,
-                                199.0,
-                                "30 Days",
-                                "2 GB/day + Unlimited Calls"
-                        )
-                );
-
-            default:
-                throw new IllegalArgumentException(
-                        "Unsupported operator."
-                );
-
-        }
-
+        List<Map<String, Object>> cyrusPlans = cyrusApiClient.fetchRechargePlans(operatorCode, circle, "9876543210");
+        return cyrusPlans.stream().map(p -> new RechargePlanResponse(
+                ((Number) p.get("id")).longValue(),
+                operatorCode,
+                circle,
+                ((Number) p.get("amount")).doubleValue(),
+                (String) p.get("validity"),
+                (String) p.get("description")
+        )).toList();
     }
 
-    public String performRecharge(
-            String mobileNumber,
-            Double amount
-    ) {
-
-        return "RCHG-" + System.currentTimeMillis();
+    public String performRecharge(String mobileNumber, Double amount) {
+        Map<String, Object> result = cyrusApiClient.executeRecharge(mobileNumber, "JIO", "Karnataka", amount, "TX-" + System.currentTimeMillis());
+        return (String) result.getOrDefault("providerReference", "RCHG-" + System.currentTimeMillis());
     }
 
+    public Map<String, Object> performFullRecharge(String mobileNumber, String operatorCode, String circle, Double amount, String userTxId) {
+        return cyrusApiClient.executeRecharge(mobileNumber, operatorCode, circle, amount, userTxId);
+    }
 }

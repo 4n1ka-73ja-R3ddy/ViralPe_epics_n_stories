@@ -79,9 +79,10 @@ export default function NavigationHeader() {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '1rem',
+          flexWrap: 'wrap'
         }}
       >
-        {/* Left Side: Brand Logo + Subtitle + Optional Back Button */}
+        {/* Left Side: Brand Logo + Subtitle + Back Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
           <div
             onClick={() => navigate('/dashboard')}
@@ -154,14 +155,13 @@ export default function NavigationHeader() {
                 transition: 'all 0.15s',
               }}
             >
-              ← Back to Dashboard
+              ← Dashboard
             </button>
           )}
         </div>
 
         {/* Right Side: Theme Toggle Switch + User Name + Gmail + Sign Out Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
-          {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
             style={{

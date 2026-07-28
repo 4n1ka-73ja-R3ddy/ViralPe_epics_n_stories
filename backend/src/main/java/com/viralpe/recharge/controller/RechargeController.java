@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/recharge")
+@Tag(name = "5. Mobile Recharge (Cyrus API)", description = "MNP operator lookup, plan fetching, and mobile recharge execution via Cyrus API")
 public class RechargeController {
 
     private final RechargeService rechargeService;
@@ -21,6 +24,11 @@ public class RechargeController {
             RechargeService rechargeService
     ) {
         this.rechargeService = rechargeService;
+    }
+
+    @GetMapping("/mnp")
+    public ResponseEntity<java.util.Map<String, String>> lookupMnp(@RequestParam String mobileNumber) {
+        return ResponseEntity.ok(rechargeService.lookupMnp(mobileNumber));
     }
 
     @GetMapping("/operators")

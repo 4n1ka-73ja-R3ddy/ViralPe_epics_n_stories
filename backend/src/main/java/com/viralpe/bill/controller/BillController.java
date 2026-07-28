@@ -13,8 +13,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/bill")
+@Tag(name = "6. Bill Payments BBPS (Cyrus API)", description = "Utility bill categories, billers, live BBPS fetch, and bill pay")
 public class BillController {
 
     private final BillService billService;

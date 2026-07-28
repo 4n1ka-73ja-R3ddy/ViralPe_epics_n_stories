@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/voucher")
+@Tag(name = "7. Digital Vouchers (Cyrus API)", description = "Brand gift cards, denominations, instant code/PIN reveal, and voucher history")
 public class VoucherController {
 
     private final VoucherService voucherService;
