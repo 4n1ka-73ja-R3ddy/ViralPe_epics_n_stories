@@ -708,7 +708,14 @@ export function getVoucherDenominations(brandId: string): Promise<VoucherDenomin
 export function purchaseVoucher(userId: number, brandId: string, denomination: number): Promise<any> {
   return apiRequest<any>('/api/voucher/purchase', {
     method: 'POST',
-    body: JSON.stringify({ userId, brandId, denomination })
+    body: JSON.stringify({
+      userId,
+      brandId,
+      denomination,
+      amount: denomination,
+      useReversalWallet: true,
+      paymentProvider: 'MOCK'
+    })
   });
 }
 

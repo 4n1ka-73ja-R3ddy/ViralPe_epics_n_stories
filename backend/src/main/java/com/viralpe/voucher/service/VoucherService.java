@@ -203,6 +203,10 @@ public class VoucherService {
             );
         }
 
+        if (request.getAmount() == null && request.getDenomination() != null) {
+            request.setAmount(request.getDenomination());
+        }
+
         if (request.getAmount() == null ||
                 request.getAmount() <= 0) {
             throw new IllegalArgumentException(
