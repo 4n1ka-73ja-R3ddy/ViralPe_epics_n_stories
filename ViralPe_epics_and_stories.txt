@@ -1,0 +1,339 @@
+ViralPe — Epics & User Stories
+Source: requirements.md (PRD v5.0)  
+Created: 2026-07-07  
+---
+Epic 1: User Onboarding & Authentication
+> Enable users to register and authenticate via social sign-in providers with a seamless, mandatory profile completion flow.
+Story 1.1: Google Sign-In
+As a new or returning user,  
+I want to sign in using my Google account,  
+So that I can access ViralPe without creating a separate password.
+Acceptance Criteria:
+•	User can tap "Sign in with Google" and complete OAuth flow
+•	On first login, a unique ViralPe User ID is provisioned and linked to the Google unique identifier
+•	Name and email are captured from the Google profile
+•	Returning users are authenticated and directed to the dashboard
+•	If Google auth fails, a meaningful error message is displayed
+---
+Story 1.2: Apple ID Sign-In
+As a new or returning user,  
+I want to sign in using my Apple ID,  
+So that I can access ViralPe on Apple devices without creating a separate password.
+Acceptance Criteria:
+•	User can tap "Sign in with Apple" and complete OAuth flow
+•	On first login, a unique ViralPe User ID is provisioned and linked to the Apple unique identifier
+•	Name and email are captured (respecting Apple's email relay/hide options)
+•	Returning users are authenticated and directed to the dashboard
+•	If Apple auth fails, a meaningful error message is displayed
+---
+Story 1.3: Mandatory Profile Completion — Pincode Entry
+As a newly registered user,  
+I want to enter and confirm my residential pincode during onboarding,  
+So that I am correctly mapped to my geographic region for royalty pools.
+Acceptance Criteria:
+•	New users are redirected to the profile completion screen before accessing any other feature
+•	User enters a 6-digit pincode
+•	System validates the pincode against a master postal directory lookup table
+•	On valid pincode, the associated City / District / State is displayed for user confirmation
+•	On invalid pincode, an error message prompts re-entry
+•	Once submitted, the pincode is permanently locked (immutable) and cannot be changed
+•	User cannot proceed without completing pincode entry
+---
+Story 1.4: Mandatory Profile Completion — Referral / Onboarding Code
+As a newly registered user,  
+I want to optionally enter a referral or onboarding code,  
+So that I am linked to the person who referred me or the vendor who onboarded me.
+Acceptance Criteria:
+•	An optional text field is presented on the profile completion screen for a referral/onboarding code
+•	If a valid standard referral code is entered, `referred_by_user_id` is set on the new user's record
+•	If a valid vendor onboarding code is entered, `onboarded_by_user_id` is set linking the vendor to the onboarder
+•	If an invalid code is entered, an error message is shown but the user can still proceed without a code
+•	The code field is optional — user can skip it and complete onboarding
+•	Once submitted, the referral/onboarding linkage is permanent
+---
+Story 1.5: Block Access Until Profile Complete
+As the system,  
+I want to prevent new users from accessing the dashboard or executing transactions until their profile is complete,  
+So that all users have valid geographic and referral data before transacting.
+Acceptance Criteria:
+•	Any navigation attempt by an incomplete-profile user redirects to the profile completion screen
+•	API calls from incomplete-profile users return a 403 with a descriptive message
+•	Once the profile is completed, the user is routed to the main dashboard
+---
+Epic 2: Multi-Ledger Wallet Architecture
+> Provide users with a wallet system that separates informational read-only ledgers from liquid spendable pools.
+Story 2.1: Wallet Dashboard Display
+As a user,  
+I want to see my full wallet layout on my dashboard,  
+So that I understand my spendable balance and cumulative earnings at a glance.
+Acceptance Criteria:
+•	Dashboard displays the Wallet Balance (spendable) prominently
+•	Dashboard displays the Reversal Wallet balance with a note that it expires at EOD
+•	Dashboard displays read-only ledgers: Cashback, Referral, Vendor Royalty, Pincode Royalty
+•	Dashboard displays the Total Earnings Ledger as the sum of all four tracking ledgers
+•	All values update in near real-time after transactions
+---
+Story 2.2: Wallet Balance Management
+As the system,  
+I want to maintain a single liquid Wallet Balance per user,  
+So that all approved earnings and platform funds are consolidated into one spendable pool.
+Acceptance Criteria:
+•	Wallet Balance increases when: royalty engine credits earnings, pincode championship payout occurs, or admin adds promotional funds
+•	Wallet Balance decreases when: used at checkout
+•	Wallet Balance cannot go negative
+•	All credits and debits are logged with timestamps and source references
+---
+Story 3.3: Payment Gateway Integration at Checkout
+As a user,  
+I want to pay the remaining amount via UPI, Card, or Net Banking,  
+So that I can complete my transaction seamlessly.
+Acceptance Criteria:
+•	Payment gateway options (UPI, Cards, Net Banking) are presented for the delta amount
+•	Successful PG payment completes the transaction and triggers the royalty engine
+•	Failed PG payment does not debit the wallet; the transaction is marked as failed
+•	If wallet was partially debited and PG fails, the wallet debit is reversed immediately
+---
+Epic 4: Utility & Voucher Services
+> Integrate third-party APIs to enable mobile recharges, bill payments, and digital gift card purchases.
+Story 4.1: Mobile Recharge
+As a user,  
+I want to recharge my prepaid mobile number through ViralPe,  
+So that I can earn cashback and contribute to royalty pools on everyday expenses.
+Acceptance Criteria:
+•	User can enter a mobile number and select operator/circle
+•	Available recharge plans are fetched and displayed from the third-party API
+•	User selects a plan and proceeds to checkout (Epic 3 payment flow)
+•	On successful payment, recharge is initiated via the API
+•	Transaction status (success/failure/pending) is displayed and recorded
+---
+Story 4.2: Bill Payments (BBPS)
+As a user,  
+I want to pay my utility bills (electricity, gas, water, broadband, etc.) through ViralPe,  
+So that I can earn cashback and contribute to royalty pools on recurring expenses.
+Acceptance Criteria:
+•	User can select a bill category and biller
+•	Bill fetch retrieves the outstanding amount from the BBPS aggregator
+•	User confirms and proceeds to checkout (Epic 3 payment flow)
+•	On successful payment, bill payment is processed via the API
+•	Transaction status and receipt are provided to the user
+---
+Story 4.3: Digital Voucher / Gift Card Purchase
+As a user,  
+I want to purchase brand digital gift cards through ViralPe,  
+So that I can earn cashback while buying vouchers for popular brands.
+Acceptance Criteria:
+•	User can browse available voucher brands and denominations
+•	User selects a voucher and proceeds to checkout (Epic 3 payment flow)
+•	On successful payment, voucher code/pin is delivered to the user
+•	Voucher details are stored in the user's voucher history
+•	Transaction status is recorded and the royalty engine is triggered
+---
+Epic 5: Referral Bonus Engine
+> Reward users who bring new transacting users to the platform via a percentage of the profit margin on referee transactions.
+Story 5.1: Referral Bonus Calculation & Credit
+As a referrer,  
+I want to earn a bonus from the profit margin whenever my referee completes a transaction,  
+So that I am rewarded for growing the ViralPe user base.
+Acceptance Criteria:
+•	When a referred user completes a successful transaction, the system calculates the referral bonus as a configured percentage of the profit margin (Gross Paid − API Cost)
+•	The bonus is credited instantly to the referrer's liquid Wallet Balance
+•	The same amount is appended to the referrer's read-only Referral Ledger
+•	The referrer's Total Earnings Ledger increments by the bonus amount
+•	The referral bonus entry includes a reference to the source transaction
+---
+Story 5.2: Referral Earnings History
+As a referrer,  
+I want to view a history of all referral earnings,  
+So that I can track which referees are generating income for me.
+Acceptance Criteria:
+•	Referral Ledger shows each earning entry with date, amount, and anonymized transaction reference
+•	Running total matches the Referral Ledger balance on the dashboard
+•	User can filter/sort by date range
+---
+Epic 6: User Cashback Engine
+> Reward users with cashback on their own transactions, with a portion carved out for the Pincode Royalty Pool.
+Story 6.1: Cashback Calculation with Pincode Deduction
+As a user,  
+I want to receive cashback on my transactions,  
+So that I am incentivized to transact through ViralPe.
+Acceptance Criteria:
+•	On successful transaction, raw cashback is calculated from the profit margin per configured percentage
+•	A configured fraction of the raw cashback is deducted and routed to the Pincode Royalty Pool for the user's registered pincode
+•	The net remaining cashback is credited instantly to the user's liquid Wallet Balance
+•	The net cashback amount is logged in the user's Cashback Ledger
+•	The user's Total Earnings Ledger increments by the net cashback amount
+---
+Story 6.2: Cashback Earnings History
+As a user,  
+I want to view a detailed history of all cashback earnings,  
+So that I can see how much I've earned from each transaction.
+Acceptance Criteria:
+•	Cashback Ledger shows each earning entry with date, amount, source transaction type, and reference
+•	Entries show both the gross cashback and the pincode pool deduction for transparency
+•	Running total matches the Cashback Ledger balance on the dashboard
+---
+Epic 7: Vendor Royalty Engine
+> Reward users who onboard commercial vendors by giving them a commission on transactions occurring at those vendors.
+Story 7.1: Vendor Royalty Calculation & Credit
+As a user who onboarded a vendor,  
+I want to earn commission from the profit margin on transactions at that vendor,  
+So that I am rewarded for growing ViralPe's merchant network.
+Acceptance Criteria:
+•	When a transaction occurs at a vendor, the system calculates the vendor commission from the profit margin per configured percentage
+•	A configured fraction is deducted and routed to the Pincode Royalty Pool for the vendor's business pincode
+•	The net remaining commission is credited instantly to the liquid Wallet Balance of the user identified by `onboarded_by_user_id`
+•	The same amount is appended to that user's Vendor Royalty Ledger
+•	Their Total Earnings Ledger increments by the commission amount
+---
+Story 7.2: Vendor Royalty Earnings History
+As a user who onboarded vendors,  
+I want to view a history of all vendor royalty earnings,  
+So that I can track which vendors are generating income for me.
+Acceptance Criteria:
+•	Vendor Royalty Ledger shows each earning entry with date, amount, vendor reference, and transaction type
+•	Running total matches the Vendor Royalty Ledger balance on the dashboard
+•	User can filter/sort by vendor or date range
+---
+Epic 8: Pincode Royalty Championship
+> Aggregate transaction-based contributions into geographic pools and award the accumulated amount to the highest earner in each pincode on a configurable cadence.
+Story 8.1: Live Pincode Ticker Display
+As a user,  
+I want to see a live ticker showing the total accumulated earnings pool for my registered pincode,  
+So that I am motivated to transact more and compete for the championship prize.
+Acceptance Criteria:
+•	Dashboard displays a dynamic ticker showing the current cycle's pool total for the user's pincode
+•	The ticker updates in near real-time as new contributions flow in
+•	The ticker shows the active phase label (Daily / Weekly / Monthly)
+•	The ticker shows a countdown to the current cycle's evaluation time
+•	Historical completed cycle totals are viewable
+---
+Story 8.2: Pincode Pool Contribution Accumulation
+As the system,  
+I want to accumulate fractions from user cashback and vendor royalty calculations into the corresponding pincode pool,  
+So that the championship prize grows with transaction volume.
+Acceptance Criteria:
+•	Each cashback deduction is atomically added to the pool matching the user's registered pincode
+•	Each vendor royalty deduction is atomically added to the pool matching the vendor's business pincode
+•	The `current_cycle_pool` value is always consistent and reflects all contributions
+•	Contributions are logged with source transaction references for auditability
+---
+Story 8.3: Championship Evaluation — Daily Phase
+As the system,  
+I want to evaluate and award the daily pincode championship at 23:59:59 server time,  
+So that the highest earner in each pincode receives the accumulated pool.
+Acceptance Criteria:
+•	A cron job fires at 23:59:59 server time daily (when Phase 1 is active)
+•	For each pincode with a non-zero pool, the system identifies the highest single transactional earner registered in that pincode during the current cycle
+•	Winner receives: Pool amount credited to Wallet Balance, appended to Pincode Royalty Ledger, Total Earnings Ledger incremented
+•	Non-winners: No wallet impact; the historical pool total is locked for display
+•	The pool resets to ₹0 and a new cycle begins immediately
+•	`last_cycle_winner_user_id` and `last_cycle_total_payout` are updated on the pincode pool record
+---
+Story 8.4: Championship Evaluation — Weekly Phase
+As the system,  
+I want to evaluate and award the weekly pincode championship on Sunday at 23:59:59 server time,  
+So that the highest earner over the calendar week receives the larger accumulated pool.
+Acceptance Criteria:
+•	A cron job fires on Sunday at 23:59:59 server time (when Phase 2 is active)
+•	Same winner determination and payout logic as Story 8.3
+•	Pool accumulates across the full Mon–Sun calendar week before evaluation
+•	Pool resets to ₹0 after evaluation; new cycle starts Monday
+---
+Story 8.5: Championship Evaluation — Monthly Phase
+As the system,  
+I want to evaluate and award the monthly pincode championship on the last day of the month at 23:59:59 server time,  
+So that the highest earner over the calendar month receives the largest accumulated pool.
+Acceptance Criteria:
+•	A cron job fires on the last calendar day at 23:59:59 server time (when Phase 3 is active)
+•	Same winner determination and payout logic as Story 8.3
+•	Pool accumulates across the full calendar month before evaluation
+•	Pool resets to ₹0 after evaluation; new cycle starts on the 1st
+---
+Story 8.6: Admin Phase Configuration
+As an admin,  
+I want to configure the active championship phase (Daily, Weekly, or Monthly) via the admin backend,  
+So that the platform can transition through phased rollouts over time.
+Acceptance Criteria:
+•	Admin can set the global `active_phase` flag to DAILY, WEEKLY, or MONTHLY
+•	Changing the phase takes effect at the start of the next natural cycle boundary
+•	The current cycle completes under its original phase rules before transitioning
+•	The active phase is reflected on all user-facing tickers
+---
+Epic 9: Vertical Royalty Engine
+> Apply category-level margin adjustments at the root of profit margin calculations to account for varying margins across API providers and service verticals.
+Story 9.1: Vertical Royalty Configuration & Application
+As an admin,  
+I want to configure vertical-level royalty percentages by service category,  
+So that varying API provider margins across categories (recharge, bills, vouchers) are accounted for before individual splits.
+Acceptance Criteria:
+•	Admin can configure a royalty percentage per service vertical/category
+•	Vertical royalty is applied at the root level of the profit margin calculation, before computing cashback, referral, and vendor royalty pools
+•	Changes to vertical royalty configuration apply to future transactions only
+•	The effective margin after vertical royalty deduction is used as the base for all downstream calculations
+---
+Epic 10: Admin Platform Management
+> Provide administrative tools to manage users, configure system parameters, and inject promotional funds.
+Story 10.1: Platform Add-On Fund Injection
+As an admin,  
+I want to add promotional funds directly to a user's Wallet Balance,  
+So that the platform can run campaigns, issue compensations, or make adjustments.
+Acceptance Criteria:
+•	Admin can search for a user and credit a specified amount to their Wallet Balance
+•	A reason/note is required for each fund injection
+•	The credit is logged in an admin audit trail with timestamp, admin user, amount, and reason
+•	The user's Wallet Balance reflects the addition immediately
+---
+Story 10.2: Pincode Master Directory Management
+As an admin,  
+I want to manage the pincode master lookup table,  
+So that all valid Indian pincodes with their City/District/State mappings are available for user onboarding.
+Acceptance Criteria:
+•	Admin can view, add, update, or deactivate pincodes in the master directory
+•	Each pincode entry includes: pincode, city, district, state, active status
+•	Changes are reflected immediately in the user onboarding validation
+---
+Story 10.3: Royalty Percentage Configuration
+As an admin,  
+I want to configure the percentage splits for cashback, referral bonus, vendor royalty, and pincode pool deductions,  
+So that the platform can adjust incentive structures without code changes.
+Acceptance Criteria:
+•	Admin can set: referral bonus %, user cashback %, vendor royalty %, pincode deduction fraction (from cashback), pincode deduction fraction (from vendor royalty)
+•	Configuration changes apply to future transactions only
+•	Current active configuration is viewable with effective-from date
+•	Configuration history is maintained for audit
+---
+Epic 11: Transaction History & Reporting
+> Provide users with complete visibility into their transaction history and earnings.
+Story 11.1: Transaction History
+As a user,  
+I want to view a complete history of all my transactions,  
+So that I can track my spending and service usage.
+Acceptance Criteria:
+•	All transactions (recharges, bill payments, voucher purchases) are listed with date, type, amount, and status
+•	Each transaction shows the payment breakdown (Reversal Wallet used, Wallet Balance used, PG amount)
+•	User can filter by date range, transaction type, and status
+•	Failed transactions are clearly marked and show Reversal Wallet credit
+---
+Story 11.2: Wallet Activity Log
+As a user,  
+I want to view a consolidated log of all wallet credits and debits,  
+So that I can understand all movements in my spendable balance.
+Acceptance Criteria:
+•	Shows all Wallet Balance credits (cashback, referral bonus, vendor royalty, pincode championship win, admin add-on) and debits (checkout usage)
+•	Each entry includes date, amount, type, and reference
+•	Running balance is shown after each entry
+---
+Summary: Epic-to-Module Mapping
+Epic	PRD Module	Stories
+Epic 1: User Onboarding & Authentication	Module 1	1.1 – 1.5
+Epic 2: Multi-Ledger Wallet Architecture	Module 2	2.1 – 2.5
+Epic 3: Zero-Load Checkout & Mixed-Mode Payment	Module 3	3.1 – 3.3
+Epic 4: Utility & Voucher Services	Module 4	4.1 – 4.3
+Epic 5: Referral Bonus Engine	Module 5 (§6.1)	5.1 – 5.2
+Epic 6: User Cashback Engine	Module 5 (§6.2)	6.1 – 6.2
+Epic 7: Vendor Royalty Engine	Module 5 (§6.3)	7.1 – 7.2
+Epic 8: Pincode Royalty Championship	Module 5 (§6.4)	8.1 – 8.6
+Epic 9: Vertical Royalty Engine	Module 5 (§6.5)	9.1
+Epic 10: Admin Platform Management	Cross-cutting	10.1 – 10.3
+Epic 11: Transaction History & Reporting	Cross-cutting	11.1 – 11.2
+Total: 11 Epics, 30 User Stories

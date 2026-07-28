@@ -1,0 +1,418 @@
+================================================================================
+VIRALPE — COMPREHENSIVE ENDPOINT & POSITIVE/NEGATIVE TEST CASE REFERENCE
+Mapped by Epic & User Story (PRD v5.0)
+Created: 2026-07-28
+================================================================================
+
+--------------------------------------------------------------------------------
+EPIC 1: USER ONBOARDING & AUTHENTICATION
+--------------------------------------------------------------------------------
+
+Story 1.1: Google Sign-In
+• Endpoint: POST /api/auth/sign-in/google
+  Description: Authenticates users using a Google OAuth2 ID Token.
+  [+] Positive Test Cases:
+      - Valid Google ID Token -> 200 OK. Returns { userId, token, profileComplete, message }.
+      - Returning user with completed profile -> 200 OK with profileComplete: true.
+  [-] Negative Test Cases:
+      - Missing or empty idToken -> 400 Bad Request ("Google sign-in failed: ID token is missing.").
+      - Invalid/Expired Google ID Token -> 400 Bad Request ("Google sign-in failed. Please try again.").
+      - Google email unverified -> 400 Bad Request ("Google sign-in failed. Google email is not verified.").
+
+Story 1.2: Apple ID Sign-In
+• Endpoint: POST /api/auth/sign-in/apple
+  Description: Authenticates users using Apple ID credentials (OAuth/Relay).
+  [+] Positive Test Cases:
+      - Valid Apple providerId, email, fullName -> 200 OK. Returns { userId, token, profileComplete }.
+      - Returning user -> 200 OK with profileComplete: true.
+  [-] Negative Test Cases:
+      - Missing providerId or email -> 400 Bad Request ("Provider ID and email are required for sign-in.").
+      - Empty request body -> 400 Bad Request.
+
+Story 1.3: Mandatory Profile Completion — Pincode Entry
+• Endpoint: GET /api/user/pincodes
+  Description: Retrieves the master active postal directory.
+  [+] Positive Test Cases:
+      - Request active pincodes -> 200 OK. Returns array of [{ pincode, city, district, state, active }].
+  [-] Negative Test Cases:
+      - None (Public directory lookup).
+
+• Endpoint: POST /api/user/validate-pincode
+  Description: Validates a 6-digit residential pincode against the master postal directory.
+  [+] Positive Test Cases:
+      - Valid active pincode (e.g. "560001") -> 200 OK. Returns { pincode, city: "Bengaluru", district: "Bengaluru Urban", state: "Karnataka", valid: true }.
+  [-] Negative Test Cases:
+      - Non 6-digit pincode (e.g. "5600") -> 400 Bad Request ("Pincode must be a 6-digit value.").
+      - Non-numeric input (e.g. "ABC123") -> 400 Bad Request ("Pincode must be a 6-digit value.").
+      - Inactive/Unsupported pincode (e.g. "999999") -> 400 Bad Request ("Provided pincode is not supported.").
+
+• Endpoint: POST /api/user/complete-profile
+  Description: Submits residential pincode & locks profile permanently.
+  [+] Positive Test Cases:
+      - Valid payload { userId: 1, pincode: "560001", locationConfirmed: true } -> 200 OK. Profile marked immutable.
+  [-] Negative Test Cases:
+      - locationConfirmed = false -> 400 Bad Request ("Please confirm the pincode location before completing your profile.").
+      - Submitting profile for an already completed user -> 400 Bad Request ("Profile is already completed.").
+      - Non-existent userId -> 400 Bad Request ("User not found.").
+
+Story 1.4: Mandatory Profile Completion — Referral / Onboarding Code
+• Endpoint: POST /api/user/complete-profile (with optional referralCode)
+  Description: Links user to referrer or vendor onboarder via code.
+  [+] Positive Test Cases:
+      - Valid referral code "REF101" -> 200 OK. Sets referred_by_user_id on user record.
+      - Valid vendor onboarding code "VEND202" -> 200 OK. Sets onboarded_by_user_id on user record.
+      - Empty referral code -> 200 OK (Code is optional).
+  [-] Negative Test Cases:
+      - Invalid referral code (e.g. "INVALID999") -> 200 OK with warning message ("Invalid referral code provided; profile completed without referral link."). User onboarding is not blocked.
+
+Story 1.5: Block Access Until Profile Complete
+• Endpoint: GET /api/user/profile?userId={id}
+  Description: Retrieves profile details and checks profile completion status.
+  [+] Positive Test Cases:
+      - User with profileComplete: true -> 200 OK. Returns full user profile object.
+  [-] Negative Test Cases:
+      - Navigation attempt by user with profileComplete: false -> 403 Forbidden ("Profile incomplete. Pincode entry required.").
+      - Missing userId query param -> 400 Bad Request ("User ID is required.").
+
+
+--------------------------------------------------------------------------------
+EPIC 2: MULTI-LEDGER WALLET ARCHITECTURE
+--------------------------------------------------------------------------------
+
+Story 2.1: Wallet Dashboard Display
+• Endpoint: GET /api/wallet/summary/{userId}
+  Description: Fetches liquid Wallet Balance, Reversal Balance, 4 tracking ledgers, and Total Earnings sum.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK. Returns { userId, spendableBalance, reversalBalance, cashbackLedger, referralLedger, vendorRoyaltyLedger, pincodeRoyaltyLedger, totalEarningsLedger }.
+        Verification: totalEarningsLedger == sum(cashback + referral + vendor + pincode).
+  [-] Negative Test Cases:
+      - Invalid/Null userId -> 400 Bad Request ("User ID is required.").
+
+Story 2.2: Wallet Balance Management
+• Endpoint: GET /api/wallet/balance/{userId}
+  Description: Retrieves current spendable liquid Wallet Balance.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK. Returns { userId, balance }.
+  [-] Negative Test Cases:
+      - Non-existent userId -> Auto-initializes ₹0.0 balance (200 OK).
+
+• Endpoint: POST /api/wallet/credit
+  Description: Credits funds to liquid Wallet Balance.
+  [+] Positive Test Cases:
+      - Valid payload { userId: 1, amount: 500.0, category: "CASHBACK", sourceReference: "TX-101" } -> 200 OK. Wallet balance increases by ₹500.0.
+  [-] Negative Test Cases:
+      - Negative amount (e.g. -100.0) -> 400 Bad Request ("Credit amount must be positive.").
+      - Null category -> 400 Bad Request ("Category is required.").
+
+• Endpoint: POST /api/wallet/debit
+  Description: Debits funds from liquid Wallet Balance.
+  [+] Positive Test Cases:
+      - Valid payload { userId: 1, amount: 200.0, category: "CHECKOUT", sourceReference: "CHK-102" } -> 200 OK.
+  [-] Negative Test Cases:
+      - Debit amount > spendable wallet balance -> 400 Bad Request ("Insufficient wallet balance.").
+      - Debit amount <= 0 -> 400 Bad Request ("Debit amount must be positive.").
+
+Story 2.3: Reversal Wallet — Instant Credit on Failed Transaction
+• Endpoint: GET /api/wallet/reversal/{userId}
+  Description: Retrieves Reversal Wallet balance with same-day expiration indicator.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK. Returns { userId, balance, expiresAt: "23:59:59 Today" }.
+  [-] Negative Test Cases:
+      - Invalid userId -> 400 Bad Request.
+
+• Endpoint: POST /api/wallet/credit-reversal
+  Description: Instantly credits failed transaction amount to Reversal Wallet.
+  [+] Positive Test Cases:
+      - Post-payment gateway failure -> 200 OK. Reversal Wallet credited instantly with exact failed amount.
+  [-] Negative Test Cases:
+      - Invalid transaction reference -> 400 Bad Request.
+
+Story 2.4: Reversal Wallet — End-of-Day Automated Sweep
+• Endpoint: POST /api/wallet/sweep-reversal (Triggered automatically by @Scheduled cron at 00:00:00)
+  Description: Sweeps non-zero Reversal Wallet balances via Refund-to-Source API & resets to ₹0.
+  [+] Positive Test Cases:
+      - Midnight sweep execution -> 200 OK. Sweeps all unclaimed reversal balances, initiates refund to original payment source, resets Reversal Wallet to ₹0.
+  [-] Negative Test Cases:
+      - Execution when all balances are ₹0 -> 200 OK (0 records swept).
+      - Third-party refund gateway failure -> Logs error, triggers admin alert, retries refund execution.
+
+Story 2.5: Informational Ledgers — Read-Only Tracking
+• Endpoint: GET /api/wallet/activity/{userId}
+  Description: Consolidated audit log of all wallet credits/debits with running balances.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK. Returns array of [{ id, category, amount, sourceReference, runningBalance, createdAt }].
+  [-] Negative Test Cases:
+      - Missing userId -> 400 Bad Request.
+
+
+--------------------------------------------------------------------------------
+EPIC 3: ZERO-LOAD CHECKOUT & MIXED-MODE PAYMENT
+--------------------------------------------------------------------------------
+
+Story 3.1: Checkout Payment Priority Ladder
+Story 3.2: Partial Wallet Usage at Checkout
+Story 3.3: Payment Gateway Integration at Checkout
+• Endpoint: POST /api/checkout
+  Description: Executes priority checkout ladder (Reversal -> Spendable Wallet -> PG).
+  [+] Positive Test Cases:
+      - Full Payment via Reversal Wallet -> 200 OK. PG Amount: ₹0.0.
+      - Mixed Payment (Reversal ₹100 + Wallet ₹400 + PG ₹500 = Invoice ₹1000) -> 200 OK. Payment breakdown returned cleanly.
+      - Full PG Payment (Wallet toggle OFF) -> 200 OK.
+  [-] Negative Test Cases:
+      - Wallet usage amount > available balance -> 400 Bad Request ("Applied wallet amount exceeds current balance.").
+      - Negative invoice amount -> 400 Bad Request ("Invoice amount must be positive.").
+      - Payment gateway failure during mixed checkout -> 400 Bad Request ("Payment gateway transaction failed.").
+        Verification: Partial wallet debit is immediately reversed back to user's wallet.
+
+
+--------------------------------------------------------------------------------
+EPIC 4: UTILITY & VOUCHER SERVICES (CYRUS API INTEGRATION)
+--------------------------------------------------------------------------------
+
+Story 4.1: Mobile Recharge
+• Endpoint: GET /api/recharge/mnp?mobileNumber={number}
+  Description: Auto-detects operator & circle for a 10-digit mobile number via Cyrus API.
+  [+] Positive Test Cases:
+      - Valid 10-digit mobile "9876543210" -> 200 OK. Returns { operator: "Airtel", circle: "Karnataka", operatorCode: "1", circleCode: "12" }.
+  [-] Negative Test Cases:
+      - Mobile number != 10 digits (e.g. "98765") -> 400 Bad Request ("Mobile number must be a valid 10-digit number.").
+
+• Endpoint: GET /api/recharge/plans?operatorCode={op}&circleCode={circle}&mobileNumber={mobile}
+  Description: Fetches available prepaid recharge plans from Cyrus API catalog.
+  [+] Positive Test Cases:
+      - Valid operator & circle -> 200 OK. Returns categorized plans [FULLTT, TOPUP, DATA, HERO].
+  [-] Negative Test Cases:
+      - Invalid operator code -> 400 Bad Request ("Invalid operator code.").
+
+• Endpoint: POST /api/recharge
+  Description: Initiates mobile recharge via Cyrus API (`recharge_cyapi.aspx`).
+  [+] Positive Test Cases:
+      - Successful recharge -> 200 OK. Returns { transactionId, status: "SUCCESS", operatorRef: "CYR109823", cashbackEarned }.
+  [-] Negative Test Cases:
+      - Cyrus API recharge failure -> 400 Bad Request. Triggers instant Reversal Wallet credit.
+
+Story 4.2: Bill Payments (BBPS)
+• Endpoint: GET /api/bill/categories
+  Description: Retrieves utility categories (Electricity, Water, Gas, Broadband, DTH).
+  [+] Positive Test Cases:
+      - Fetch categories -> 200 OK.
+  [-] Negative Test Cases: None.
+
+• Endpoint: GET /api/bill/billers?category={cat}
+  Description: Retrieves billers for a category.
+  [+] Positive Test Cases:
+      - Valid category "ELECTRICITY" -> 200 OK. Returns list of billers (BESCOM, Tata Power, etc.).
+  [-] Negative Test Cases:
+      - Unknown category -> 200 OK with empty list.
+
+• Endpoint: POST /api/bill/fetch
+  Description: Fetches live outstanding bill details via Cyrus BBPS (`BillFetch_Cyrus_BA.aspx`).
+  [+] Positive Test Cases:
+      - Valid consumer number -> 200 OK. Returns { customerName, billAmount, dueDate, billNumber }.
+  [-] Negative Test Cases:
+      - Invalid consumer number -> 400 Bad Request ("Unable to fetch bill for provided consumer account.").
+
+• Endpoint: POST /api/bill/pay
+  Description: Processes BBPS bill payment & generates receipt.
+  [+] Positive Test Cases:
+      - Successful bill pay -> 200 OK. Returns BBPS receipt with reference ID.
+  [-] Negative Test Cases:
+      - Provider timeout -> 400 Bad Request. Instant Reversal Wallet credit issued.
+
+• Endpoint: GET /api/bill/receipt/{id}
+  Description: Retrieves printable BBPS bill receipt.
+  [+] Positive Test Cases:
+      - Valid payment ID -> 200 OK.
+
+Story 4.3: Digital Gift Cards / Vouchers
+• Endpoint: GET /api/voucher/brands
+  Description: Fetches voucher brands (Amazon Pay, Flipkart, Myntra, Swiggy, Zomato, Google Play, Uber).
+  [+] Positive Test Cases:
+      - Browse brands -> 200 OK. Returns brand items with logo badge indicators & cashback rates.
+  [-] Negative Test Cases: None.
+
+• Endpoint: GET /api/voucher/denominations?brandId={id}
+  Description: Fetches available voucher denominations (₹100, ₹250, ₹500, ₹1000, ₹2000).
+  [+] Positive Test Cases:
+      - Valid brandId "AMAZON" -> 200 OK. Returns [100, 250, 500, 1000, 2000].
+  [-] Negative Test Cases:
+      - Invalid brandId -> 400 Bad Request ("Brand not found.").
+
+• Endpoint: POST /api/voucher/purchase
+  Description: Orders gift card via Cyrus API (`giftcard2.aspx`).
+  [+] Positive Test Cases:
+      - Successful purchase -> 200 OK. Returns { voucherCode: "AMZ-9988-1234", pin: "4321", expiryDate, status: "SUCCESS" }.
+  [-] Negative Test Cases:
+      - Cyrus Gift Card API error -> 400 Bad Request. Reversal Wallet credited instantly.
+
+• Endpoint: GET /api/voucher/history/{userId}
+  Description: Fetches user's voucher wallet history.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK.
+
+
+--------------------------------------------------------------------------------
+EPIC 5: REFERRAL BONUS ENGINE
+--------------------------------------------------------------------------------
+
+Story 5.1 & 5.2: Referral Bonus Calculation, Credit & History
+• Endpoint: GET /api/royalty/referral/history/{userId}
+  Description: Retrieves referral bonus history and total earned from referees.
+  [+] Positive Test Cases:
+      - Referee transacts -> Referrer receives referral bonus (% of profit margin) in Wallet Balance & Referral Ledger.
+      - Fetch history -> 200 OK. Returns list of [{ refereeUserId, transactionAmount, referralBonus, createdAt }].
+  [-] Negative Test Cases:
+      - User has no referrals -> 200 OK with empty array.
+
+
+--------------------------------------------------------------------------------
+EPIC 6: USER CASHBACK ENGINE
+--------------------------------------------------------------------------------
+
+Story 6.1 & 6.2: Cashback Calculation, Pincode Deduction & History
+• Endpoint: GET /api/royalty/cashback/history/{userId}
+  Description: Retrieves cashback ledger entries with gross cashback & pincode pool deduction breakdown.
+  [+] Positive Test Cases:
+      - User completes transaction -> Raw cashback calculated, pincode fraction deducted to Pincode Royalty Pool, net cashback credited to wallet.
+      - Fetch history -> 200 OK. Returns [{ grossCashback, pincodeDeduction, netCashback, sourceTransactionType, createdAt }].
+  [-] Negative Test Cases:
+      - Missing userId -> 400 Bad Request.
+
+
+--------------------------------------------------------------------------------
+EPIC 7: VENDOR ROYALTY ENGINE
+--------------------------------------------------------------------------------
+
+Story 7.1 & 7.2: Vendor Royalty Calculation, Credit & History
+• Endpoint: GET /api/royalty/vendor/history/{userId}
+  Description: Retrieves vendor commission history for users who onboarded merchants.
+  [+] Positive Test Cases:
+      - Transaction at onboarded vendor -> Commission credited to `onboarded_by_user_id` Wallet Balance & Vendor Royalty Ledger.
+      - Fetch history -> 200 OK.
+  [-] Negative Test Cases:
+      - Vendor has no onboarder -> 200 OK (0 commission distributed).
+
+
+--------------------------------------------------------------------------------
+EPIC 8: PINCODE ROYALTY CHAMPIONSHIP
+--------------------------------------------------------------------------------
+
+Story 8.1: Live Pincode Ticker Display
+• Endpoint: GET /api/royalty/pincode/ticker?userId={id}
+  Description: Returns live championship ticker for user's registered pincode.
+  [+] Positive Test Cases:
+      - Valid userId -> 200 OK. Returns { pincode: "560001", currentCyclePool: 12500.0, activePhase: "DAILY", countdownSeconds: 43200, lastCycleWinnerId: 104, lastCycleTotalPayout: 8500.0 }.
+  [-] Negative Test Cases:
+      - User has no registered pincode -> 400 Bad Request ("User pincode not found.").
+
+Story 8.2: Pincode Pool Contribution Accumulation
+• Endpoint: Automatic Internal Event Trigger
+  Description: Accumulates cashback & vendor royalty deductions into `current_cycle_pool`.
+  [+] Positive Test Cases:
+      - Deductions added atomically -> `current_cycle_pool` reflects real-time contributions.
+
+Story 8.3, 8.4, 8.5: Championship Evaluation (Daily, Weekly, Monthly)
+• Endpoint: POST /api/royalty/pincode/evaluate
+  Description: Cron evaluation (23:59:59 server time). Awards highest earner in pincode & resets pool.
+  [+] Positive Test Cases:
+      - Evaluation executed -> Highest transactional earner receives pool credited to Wallet Balance & Pincode Royalty Ledger. Pool resets to ₹0.
+  [-] Negative Test Cases:
+      - Pincode pool is ₹0 -> Evaluation skips payout, resets cycle (200 OK).
+
+Story 8.6: Admin Phase Configuration
+• Endpoint: POST /api/admin/championship/phase
+  Description: Configures active championship phase (DAILY, WEEKLY, MONTHLY).
+  [+] Positive Test Cases:
+      - Valid phase payload { activePhase: "WEEKLY" } -> 200 OK. Takes effect at next natural cycle boundary.
+  [-] Negative Test Cases:
+      - Invalid phase string (e.g. "ANNUAL") -> 400 Bad Request ("Invalid phase. Must be DAILY, WEEKLY, or MONTHLY.").
+
+
+--------------------------------------------------------------------------------
+EPIC 9: VERTICAL ROYALTY ENGINE
+--------------------------------------------------------------------------------
+
+Story 9.1: Vertical Royalty Configuration & Application
+• Endpoint: GET /api/royalty/vertical/configurations
+  Description: Fetches vertical profit margin rules across categories (ECOMMERCE, FOOD, TRAVEL, UTILITY, RECHARGE).
+  [+] Positive Test Cases:
+      - Fetch configs -> 200 OK.
+
+• Endpoint: POST /api/royalty/vertical/configure
+  Description: Sets vertical-level deduction percentage per category.
+  [+] Positive Test Cases:
+      - Update category "RECHARGE" root deduction to 10.0% -> 200 OK. Applies to future transactions.
+  [-] Negative Test Cases:
+      - Deduction percentage < 0 or > 100 -> 400 Bad Request ("Percentage must be between 0 and 100.").
+
+• Endpoint: POST /api/royalty/vertical/simulate
+  Description: Simulates profit margin calculations for testing.
+  [+] Positive Test Cases:
+      - Valid simulation request -> 200 OK. Returns effective base margin and downstream splits.
+
+
+--------------------------------------------------------------------------------
+EPIC 10: ADMIN PLATFORM MANAGEMENT
+--------------------------------------------------------------------------------
+
+Story 10.1: Platform Add-On Fund Injection
+• Endpoint: POST /api/admin/fund-user
+  Description: Credits promotional funds directly to a user's Wallet Balance with audit trail log.
+  [+] Positive Test Cases:
+      - Valid payload { targetUserId: 1, amount: 1000.0, reason: "Campaign Winner Bonus" } -> 200 OK. Instant wallet credit + audit log created.
+  [-] Negative Test Cases:
+      - Missing reason/note -> 400 Bad Request ("Reason is required for promotional fund injection.").
+      - Non-existent target user -> 400 Bad Request ("Target user not found.").
+      - Negative/Zero amount -> 400 Bad Request ("Injection amount must be greater than zero.").
+
+Story 10.2: Pincode Master Directory Management
+• Endpoint: POST /api/admin/pincode
+  Description: Adds or updates a pincode entry in the master postal directory.
+  [+] Positive Test Cases:
+      - Valid pincode entry { pincode: "560002", city: "Bengaluru", district: "Bengaluru Urban", state: "Karnataka", active: true } -> 200 OK.
+  [-] Negative Test Cases:
+      - Invalid pincode format -> 400 Bad Request.
+
+• Endpoint: PATCH /api/admin/pincode/{pincodeValue}?active=false
+  Description: Deactivates a pincode in the directory.
+  [+] Positive Test Cases:
+      - Deactivate pincode -> 200 OK. Pincode disabled for new onboarding.
+
+Story 10.3: Royalty Percentage Configuration
+• Endpoint: POST /api/admin/royalty-config
+  Description: Configures percentage splits for cashback, referral, vendor royalty, and pincode pool deductions.
+  [+] Positive Test Cases:
+      - Valid split payload -> 200 OK. Saves current active config and logs to history audit repository.
+  [-] Negative Test Cases:
+      - Split fractions total > 100% -> 400 Bad Request ("Percentage splits cannot exceed 100%.").
+
+• Endpoint: GET /api/admin/audit-logs
+  Description: Retrieves platform admin audit trail.
+  [+] Positive Test Cases:
+      - Fetch logs -> 200 OK.
+
+
+--------------------------------------------------------------------------------
+EPIC 11: TRANSACTION HISTORY & REPORTING
+--------------------------------------------------------------------------------
+
+Story 11.1: Transaction History
+• Endpoint: GET /api/transactions?userId={id}&type={type}&status={status}&startDate={start}&endDate={end}
+  Description: Lists user's transaction history with payment breakdown & filters.
+  [+] Positive Test Cases:
+      - Fetch history -> 200 OK. Returns list of [{ id, transactionType, amount, status, provider, reversalAmountApplied, walletAmountApplied, paymentGatewayAmount, createdAt }].
+        Failed transactions clearly display Reversal Wallet credit amount.
+  [-] Negative Test Cases:
+      - Invalid date range (e.g. startDate > endDate) -> 400 Bad Request.
+
+Story 11.2: Wallet Activity Log
+• Endpoint: GET /api/wallet/activity/{userId}
+  Description: Displays consolidated wallet credits & debits with running balance after each entry.
+  [+] Positive Test Cases:
+      - Fetch activity log -> 200 OK. Displays all credits (cashback, referral, vendor, pincode win, admin add-on) and debits (checkout) with running balance.
+  [-] Negative Test Cases:
+      - Missing userId -> 400 Bad Request.
+
+================================================================================
+END OF ENDPOINT REFERENCE DOCUMENT
+================================================================================
