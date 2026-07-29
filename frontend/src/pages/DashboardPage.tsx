@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationHeader from '../components/NavigationHeader';
+import BottomNavBar from '../components/BottomNavBar';
 import {
   getLedger,
   getPincodeChampionshipTicker,
@@ -15,7 +16,7 @@ import {
   WalletSummaryResponse
 } from '../lib/api';
 import { getSession } from '../lib/session';
-import { getStoredTheme, initTheme, setStoredTheme, ThemeMode } from '../lib/theme';
+import { getStoredTheme, initTheme, ThemeMode } from '../lib/theme';
 
 const EMPTY_SUMMARY: WalletSummaryResponse = {
   walletBalance: 0,
@@ -31,17 +32,15 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
-  const [walletSummary, setWalletSummary] =
-    useState<WalletSummaryResponse>(EMPTY_SUMMARY);
-  const [pincodePool, setPincodePool] =
-    useState<PincodePoolResponse | null>(null);
-  const [ticker, setTicker] =
-    useState<PincodeChampionshipTickerResponse | null>(null);
+  const [walletSummary, setWalletSummary] = useState<WalletSummaryResponse>(EMPTY_SUMMARY);
+  const [pincodePool, setPincodePool] = useState<PincodePoolResponse | null>(null);
+  const [ticker, setTicker] = useState<PincodeChampionshipTickerResponse | null>(null);
   const [ledger, setLedger] = useState<LedgerEntryResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [seedingDemo, setSeedingDemo] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
+  const [countdown, setCountdown] = useState<string>('11h 59m 59s');
 
   useEffect(() => {
     const current = initTheme();
@@ -55,6 +54,24 @@ export default function DashboardPage() {
     return () => window.removeEventListener('theme-change', handleThemeChange);
   }, []);
 
+  // Countdown timer for Championship evaluation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      const diffSec = Math.max(0, Math.floor((endOfDay.getTime() - now.getTime()) / 1000));
+
+      const hours = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+
+      setCountdown(`${hours}h ${mins}m ${secs}s`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchDashboard = async () => {
     const session = getSession();
     if (!session) return;
@@ -62,12 +79,11 @@ export default function DashboardPage() {
     setError('');
 
     try {
-      const [profileData, summaryData, ledgerData] =
-        await Promise.all([
-          getProfile(session.userId),
-          getWalletSummary(session.userId),
-          getLedger(session.userId)
-        ]);
+      const [profileData, summaryData, ledgerData] = await Promise.all([
+        getProfile(session.userId),
+        getWalletSummary(session.userId),
+        getLedger(session.userId)
+      ]);
 
       setProfile(profileData);
 
@@ -83,7 +99,7 @@ export default function DashboardPage() {
 
       setLedger(ledgerData ?? []);
 
-      if (profileData.registeredPincode) {
+      if (profileData?.registeredPincode) {
         try {
           const [poolData, tickerData] = await Promise.all([
             getPincodePoolSummary(profileData.registeredPincode),
@@ -96,619 +112,636 @@ export default function DashboardPage() {
           setPincodePool(null);
           setTicker(null);
         }
-      } else {
-        setPincodePool(null);
-        setTicker(null);
       }
-    } catch (dashboardError) {
-      setError(
-        dashboardError instanceof Error
-          ? dashboardError.message
-          : 'Failed to load dashboard data.'
-      );
+    } catch (err: any) {
+      setError(err?.message || 'Unable to load dashboard data.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const session = getSession();
+    fetchDashboard();
+  }, []);
 
-    if (!session) {
-      navigate('/', { replace: true });
-      return;
-    }
-
-    void fetchDashboard();
-  }, [navigate]);
-
-  const handleSeedDemoData = async () => {
+  const handleSeedDemo = async () => {
     const session = getSession();
     if (!session) return;
+
+    setSeedingDemo(true);
     try {
-      setSeedingDemo(true);
       await loadDemoData(session.userId);
       await fetchDashboard();
-    } catch (err: any) {
-      alert(`Failed to load demo data: ${err.message}`);
+    } catch {
+      setError('Unable to load demo data.');
     } finally {
       setSeedingDemo(false);
     }
   };
 
-  const toggleTheme = () => {
-    const nextTheme: ThemeMode = theme === 'light' ? 'dark' : 'light';
-    setStoredTheme(nextTheme);
-  };
-
-  const ledgerPreview = useMemo(
-    () => ledger.slice(0, 5),
-    [ledger]
-  );
-
-  const firstName =
-    profile?.fullName?.trim().split(' ')[0] || 'there';
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', transition: 'background 0.2s ease-in-out' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', paddingBottom: '90px' }}>
       <NavigationHeader />
 
-      <main style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem' }}>
-        {/* Welcome Banner */}
-        <section style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+      <main style={{ maxWidth: '1100px', margin: '1.5rem auto', padding: '0 1.25rem' }}>
+        {/* Wireframe Header Section: Welcome + Username (edit) + Pincode */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
           <div>
-            <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
-              YOUR VIRALPE DASHBOARD
+            <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.5rem', color: 'var(--accent-primary)', display: 'block', marginBottom: '-0.2rem' }}>
+              Welcome
             </span>
-            <h1 style={{ fontSize: '2.4rem', fontWeight: 800, margin: '0.2rem 0', color: 'var(--text-primary)' }}>
-              Welcome back, {firstName}.
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-              Manage your wallet balance, explore service modules, and track lifetime earnings.
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                {profile?.fullName || 'Valued User'}
+              </h1>
+              <button
+                onClick={() => navigate('/onboarding')}
+                title="Edit Profile & Pincode"
+                style={{
+                  background: 'var(--bg-highlight)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  color: 'var(--accent-primary)'
+                }}
+              >
+                ✏️
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <button
-              onClick={handleSeedDemoData}
-              disabled={seedingDemo}
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+              LOCATION MAPPED
+            </span>
+            <div
+              onClick={() => navigate('/onboarding')}
               style={{
-                padding: '0.75rem 1.25rem',
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: 'var(--accent-primary)',
+                textDecoration: 'underline',
+                textUnderlineOffset: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+            >
+              📍 Pincode {profile?.registeredPincode || '560001'}
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Wireframe Top Dual Cards Grid */}
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+          {/* Card 1: Main Balance & Earning Ledger Summary (Left Card) */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '2px solid var(--border-color)',
+              borderRadius: '20px',
+              padding: '1.5rem',
+              boxShadow: '0 4px 25px var(--shadow-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)' }}>
+                  SUMMARY LEDGER
+                </span>
+                <span style={{ fontSize: '1.2rem' }}>💳</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Lifetime :-</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--accent-primary)' }}>
+                    ₹{walletSummary.totalEarnings.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Cashback :-</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                    ₹{walletSummary.cashback.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Referral :-</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                    ₹{walletSummary.referral.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-highlight)', padding: '0.75rem 1rem', borderRadius: '12px' }}>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-primary)' }}>Available :-</span>
+                  <span style={{ fontWeight: 900, fontSize: '1.4rem', color: 'var(--accent-primary)' }}>
+                    ₹{walletSummary.walletBalance.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate('/checkout')}
+              style={{
+                marginTop: '1.25rem',
+                width: '100%',
+                padding: '0.75rem',
                 borderRadius: '12px',
                 background: 'var(--accent-gradient)',
                 color: '#ffffff',
                 border: 'none',
-                fontWeight: 700,
-                fontSize: '0.85rem',
+                fontWeight: 800,
+                fontSize: '0.95rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px var(--shadow-color)',
-                transition: 'all 0.15s'
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
-              {seedingDemo ? 'Loading Multi-Date Demo Data...' : '⚡ Seed Demo Presentation Data'}
+              Pay & Checkout →
             </button>
+          </div>
 
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '0.75rem 1.25rem', boxShadow: '0 4px 20px var(--shadow-color)', textAlign: 'right' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Registered Pincode</span>
-              <strong style={{ fontSize: '1.15rem', color: 'var(--accent-primary)', fontWeight: 800 }}>
-                {profile?.registeredPincode || 'Not set'}
-              </strong>
+          {/* Card 2: Royalty & Reversal Card (Right Card - "Royalty 👑") */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '2px solid var(--accent-primary)',
+              borderRadius: '20px',
+              padding: '1.5rem',
+              boxShadow: '0 4px 25px var(--shadow-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Royalty 👑
+                </span>
+                <span
+                  style={{
+                    background: 'var(--bg-highlight)',
+                    color: 'var(--accent-primary)',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  {ticker?.phaseLabel || 'DAILY'} PHASE
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Lifetime :-</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--accent-primary)' }}>
+                    ₹{walletSummary.pincodeRoyalty.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>To date :-</span>
+                    <span
+                      style={{
+                        background: '#fef3c7',
+                        color: '#b45309',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '12px',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.2rem'
+                      }}
+                    >
+                      ⏳ {countdown}
+                    </span>
+                  </div>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#d97706' }}>
+                    ₹{(ticker?.currentCyclePool ?? pincodePool?.currentCyclePool ?? 0).toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Vendor :-</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                    ₹{walletSummary.vendorRoyalty.toFixed(2)}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(239, 68, 68, 0.08)', padding: '0.75rem 1rem', borderRadius: '12px' }}>
+                  <div>
+                    <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#dc2626' }}>Reversal :-</span>
+                    <small style={{ display: 'block', fontSize: '0.7rem', color: '#dc2626' }}>Expires EOD</small>
+                  </div>
+                  <span style={{ fontWeight: 900, fontSize: '1.3rem', color: '#dc2626' }}>
+                    ₹{walletSummary.reversalBalance.toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            <button
+              onClick={() => navigate('/pincode-championship')}
+              style={{
+                marginTop: '1.25rem',
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '12px',
+                background: 'var(--bg-highlight)',
+                color: 'var(--accent-primary)',
+                border: '1px solid var(--accent-primary)',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                cursor: 'pointer'
+              }}
+            >
+              Pincode Championship 🏆 →
+            </button>
           </div>
         </section>
 
-        {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            Loading your dashboard metrics...
-          </div>
-        ) : null}
-
-        {error ? (
-          <p style={{ color: '#dc2626', marginBottom: '1.5rem', fontWeight: 600 }}>
-            {error}
-          </p>
-        ) : null}
-
-        {/* Primary Balances Section */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
-          {/* Main Wallet Card */}
-          <div style={{ background: 'var(--accent-gradient)', borderRadius: '20px', padding: '1.75rem', color: '#ffffff', boxShadow: '0 8px 30px var(--shadow-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', opacity: 0.85, fontWeight: 700 }}>Spendable Balance</span>
-                <span style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>₹</span>
-              </div>
-              <h2 style={{ fontSize: '2.8rem', fontWeight: 800, margin: '0.2rem 0', letterSpacing: '-0.02em' }}>
-                ₹{walletSummary.walletBalance.toFixed(2)}
-              </h2>
-              <p style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '0.5rem' }}>
-                Use balance for utility bill payments, recharges & checkout.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255, 255, 255, 0.2)', paddingTop: '1rem', marginTop: '1rem', fontSize: '0.8rem', opacity: 0.9 }}>
-              <span>Available Now</span>
-              <span>ViralPe Wallet</span>
-            </div>
-          </div>
-
-          {/* Reversal Wallet Card */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 4px 20px var(--shadow-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fef3c7', color: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ↺
-              </div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block' }}>Reversal Wallet</span>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0' }}>
-                ₹{walletSummary.reversalBalance.toFixed(2)}
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                Same-day reusable failed-payment balance priority pool.
-              </p>
-            </div>
-          </div>
-
-          {/* Total Earnings Card */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 4px 20px var(--shadow-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ↗
-              </div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block' }}>Total Earnings</span>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0.2rem 0' }}>
-                ₹{walletSummary.totalEarnings.toFixed(2)}
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
-                Combined total of all read-only reward ledgers.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 1: Services & Feature Portals (Interactive Gateway Cards) */}
+        {/* Wireframe Carousel Section 1: Utility :- frequently used. */}
         <section style={{ marginBottom: '2.5rem' }}>
-          <div style={{ marginBottom: '1.25rem' }}>
-            <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
-              PLATFORM MODULES
-            </span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0' }}>
-              Services & Features Portal
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Select a module to initiate transactions, check rewards, view histories, or manage system parameters.
-            </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+              Utility :- <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 400, fontSize: '1.1rem', color: 'var(--accent-primary)' }}>frequently used.</span>
+            </h3>
+            <button
+              onClick={() => navigate('/bills')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent-primary)',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              ▷ more
+            </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-            {/* Card 0A: Mobile Recharge */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
+            {/* Utility Card 1: Mobile Recharge */}
             <div
               onClick={() => navigate('/recharge')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)',
+                transition: 'transform 0.15s'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                📱
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📱</div>
+              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
                 Mobile Recharge
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Auto-detect MNP operator, browse Cyrus API plans, & recharge with cashback.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Recharge Mobile →
-              </span>
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Prepaid & MNP</span>
             </div>
 
-            {/* Card 0B: Bill Payments */}
+            {/* Utility Card 2: Electricity */}
             <div
               onClick={() => navigate('/bills')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)',
+                transition: 'transform 0.15s'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ⚡
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Bill Payments (BBPS)
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Fetch & pay Electricity, Water, Gas, and Broadband bills via Cyrus BBPS.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Pay Utility Bills →
-              </span>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
+              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Electricity Bill
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>BESCOM & State Boards</span>
             </div>
 
-            {/* Card 0C: Gift Cards */}
+            {/* Utility Card 3: Water */}
+            <div
+              onClick={() => navigate('/bills')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)',
+                transition: 'transform 0.15s'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💧</div>
+              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Water Utility
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Municipal Corporations</span>
+            </div>
+
+            {/* Utility Card 4: Gas Cylinder */}
+            <div
+              onClick={() => navigate('/bills')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)',
+                transition: 'transform 0.15s'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔥</div>
+              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Piped Gas / LPG
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Cylinder Booking</span>
+            </div>
+
+            {/* Utility Card 5: Broadband */}
+            <div
+              onClick={() => navigate('/bills')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)',
+                transition: 'transform 0.15s'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌐</div>
+              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Broadband Internet
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Airtel & JioFiber</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Wireframe Carousel Section 2: Vouchers :- */}
+        <section style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+              Vouchers :-
+            </h3>
+            <button
+              onClick={() => navigate('/vouchers')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent-primary)',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              ▷ more
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
+            {/* Voucher Brand 1: Amazon Pay */}
             <div
               onClick={() => navigate('/vouchers')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                🎁
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#232f3e', color: '#ff9900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', marginBottom: '0.5rem' }}>
+                amazon
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Digital Gift Cards
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Buy Amazon, Flipkart, Myntra, Swiggy & Uber gift cards with instant PINs.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Browse Gift Vouchers →
-              </span>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Amazon Pay
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>2.5% Cashback</span>
             </div>
 
-            {/* Card 1: Checkout */}
+            {/* Voucher Brand 2: Flipkart */}
             <div
-              onClick={() => navigate('/checkout')}
+              onClick={() => navigate('/vouchers')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ▣
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#2874f0', color: '#ffe500', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem', fontStyle: 'italic', marginBottom: '0.5rem' }}>
+                fk
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Checkout & Payments
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Preview invoice breakdown, test multi-wallet balance deduction, & checkout.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Launch Checkout →
-              </span>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Flipkart
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>3.0% Cashback</span>
             </div>
 
-            {/* Card 2: Cashback */}
+            {/* Voucher Brand 3: Myntra */}
             <div
-              onClick={() => navigate('/cashback')}
+              onClick={() => navigate('/vouchers')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ↗
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #ff3f6c 0%, #ff905a 100%)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                M
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Cashback Ledger
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Track liquid cashback credits and transparent pincode pool deductions.
-              </p>
-              <span style={{ color: '#15803d', fontSize: '0.85rem', fontWeight: 700 }}>
-                View Cashback Ledger →
-              </span>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Myntra Fashion
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>5.0% Cashback</span>
             </div>
 
-            {/* Card 3: Referrals */}
+            {/* Voucher Brand 4: Swiggy */}
             <div
-              onClick={() => navigate('/referral')}
+              onClick={() => navigate('/vouchers')}
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '16px',
-                padding: '1.5rem',
+                padding: '1.25rem',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ◎
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fc8019', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+                S
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Referrals & Bonuses
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Invite users and track bonuses earned from referee transactions.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                View Referral History →
-              </span>
-            </div>
-
-            {/* Card 4: Championship */}
-            <div
-              onClick={() => navigate('/championship')}
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '16px',
-                padding: '1.5rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
-              }}
-            >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                ⌖
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                Pincode Championship
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                View live regional pool ticker, evaluation countdown & winner leaderboards.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Open Live Championship →
-              </span>
-            </div>
-
-            {/* Card 5: History & Logs */}
-            <div
-              onClick={() => navigate('/transactions')}
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '16px',
-                padding: '1.5rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 20px var(--shadow-color)'
-              }}
-            >
-              <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
-                🧾
-              </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.3rem 0' }}>
-                History & Activity Logs
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Inspect transaction payment breakdowns & running wallet balance audit log.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Inspect History Logs →
-              </span>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Swiggy Money
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>4.0% Cashback</span>
             </div>
           </div>
         </section>
 
-        {/* Section 2: Interactive Earnings Overview */}
+        {/* Wireframe Carousel Section 3: Vendors :- */}
         <section style={{ marginBottom: '2.5rem' }}>
-          <div style={{ marginBottom: '1.25rem' }}>
-            <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
-              EARNINGS BREAKDOWN
-            </span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0' }}>
-              Lifetime Earnings Ledgers
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Click any ledger card below to view its dedicated reporting history page.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-            <div
-              onClick={() => navigate('/cashback')}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', boxShadow: '0 4px 20px var(--shadow-color)' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Cashback Earnings</span>
-                <span style={{ color: '#059669', fontSize: '1.1rem', fontWeight: 800 }}>₹</span>
-              </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.4rem 0' }}>
-                ₹{walletSummary.cashback.toFixed(2)}
-              </h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 700 }}>View Cashback Details →</span>
-            </div>
-
-            <div
-              onClick={() => navigate('/referral')}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', boxShadow: '0 4px 20px var(--shadow-color)' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Referral Earnings</span>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: 800 }}>◎</span>
-              </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.4rem 0' }}>
-                ₹{walletSummary.referral.toFixed(2)}
-              </h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 700 }}>View Referral Details →</span>
-            </div>
-
-            <div
-              onClick={() => navigate('/championship')}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', boxShadow: '0 4px 20px var(--shadow-color)' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Vendor Royalty</span>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: 800 }}>◇</span>
-              </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.4rem 0' }}>
-                ₹{walletSummary.vendorRoyalty.toFixed(2)}
-              </h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 700 }}>View Royalty Rules →</span>
-            </div>
-
-            <div
-              onClick={() => navigate('/championship')}
-              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', boxShadow: '0 4px 20px var(--shadow-color)' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Pincode Royalty</span>
-                <span style={{ color: 'var(--accent-primary)', fontSize: '1.1rem', fontWeight: 800 }}>⌖</span>
-              </div>
-              <h3 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.4rem 0' }}>
-                ₹{walletSummary.pincodeRoyalty.toFixed(2)}
-              </h3>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 700 }}>View Championship Pool →</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 3: Live Championship Ticker Preview & Recent Activity */}
-        <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2.5rem' }}>
-          {/* Recent Activity */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--accent-primary)', fontWeight: 700 }}>WALLET HISTORY</span>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Recent Activity</h3>
-              </div>
-              <button
-                onClick={() => navigate('/transactions')}
-                style={{ padding: '0.45rem 0.85rem', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-              >
-                View Full Activity Log →
-              </button>
-            </div>
-
-            {ledgerPreview.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                No recent activity recorded yet.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {ledgerPreview.map((entry) => {
-                  const isCredit = entry.amount >= 0;
-                  return (
-                    <div key={entry.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'var(--bg-card-subtle)', borderRadius: '10px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isCredit ? '#dcfce7' : '#fee2e2', color: isCredit ? '#15803d' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                          {isCredit ? '+' : '-'}
-                        </div>
-                        <div>
-                          <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'block' }}>{entry.category}</strong>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{entry.sourceReference || 'Wallet Activity'}</span>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <strong style={{ fontSize: '0.95rem', color: isCredit ? '#059669' : '#dc2626', display: 'block' }}>
-                          {isCredit ? '+' : '-'}₹{Math.abs(entry.amount).toFixed(2)}
-                        </strong>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{new Date(entry.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Championship Live Card */}
-          <div style={{ background: 'var(--bg-highlight)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <span style={{ padding: '0.25rem 0.6rem', borderRadius: '999px', background: 'var(--accent-primary)', color: '#ffffff', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
-                {ticker?.phaseLabel || 'DAILY'} CHAMPIONSHIP
-              </span>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.75rem 0 0.2rem 0' }}>
-                Pincode Royalty Pool
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Registered: {profile?.registeredPincode || '-'}</p>
-
-              <div style={{ margin: '1.25rem 0' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block' }}>Accumulated Pool</span>
-                <h2 style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--accent-primary)', margin: 0 }}>
-                  ₹{(ticker?.currentCyclePool ?? pincodePool?.currentCyclePool ?? walletSummary.pincodeRoyalty).toFixed(2)}
-                </h2>
-              </div>
-            </div>
-
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+              Vendors :-
+            </h3>
             <button
-              onClick={() => navigate('/championship')}
-              style={{ width: '100%', padding: '0.75rem', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}
+              onClick={() => navigate('/admin/platform')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent-primary)',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
             >
-              Open Live Championship →
+              ▷ more
             </button>
           </div>
-        </section>
 
-        {/* Section 4: Administration & Platform Configuration Portal */}
-        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
-          <div style={{ marginBottom: '1.25rem' }}>
-            <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
-              ADMINISTRATION & PLATFORM CONTROLS
-            </span>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0' }}>
-              System Configuration & Fund Management Portal
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Manage promotional fund injections, pincode master directory lookups, and vertical royalty percentage splits.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
-            {/* Admin Royalty Engine */}
-            <div
-              onClick={() => navigate('/admin/royalty')}
-              style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                  ⚙️
-                </div>
-                <div>
-                  <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', display: 'block' }}>Vertical Royalty Engine</strong>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Category profit margins & root deductions</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Configure vertical profit margins, set root deductions, & test effective margin base simulator.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Configure Royalty Engine →
-              </span>
-            </div>
-
-            {/* Admin Platform Management */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
             <div
               onClick={() => navigate('/admin/platform')}
-              style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)'
+              }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                  🛠️
-                </div>
-                <div>
-                  <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', display: 'block' }}>Admin Platform Management</strong>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Fund injection, pincodes & split history</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                Inject promotional add-on funds with mandatory audit notes, manage master pincodes, & audit history.
-              </p>
-              <span style={{ color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 700 }}>
-                Open Platform Controls →
-              </span>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏪</div>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Local Merchants
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pincode 560001</span>
+            </div>
+
+            <div
+              onClick={() => navigate('/admin/platform')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏬</div>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Retail Outlets
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Commercial Network</span>
+            </div>
+
+            <div
+              onClick={() => navigate('/admin/platform')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🍽️</div>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Partner Dining
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Royalty Onboarder</span>
+            </div>
+
+            <div
+              onClick={() => navigate('/admin/platform')}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px var(--shadow-color)'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛒</div>
+              <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                Supermarkets
+              </strong>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Regional Vendors</span>
             </div>
           </div>
         </section>
+
+        {/* Demo Presentation Loader Trigger */}
+        <section style={{ background: 'var(--bg-card-subtle)', borderRadius: '16px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', border: '1px solid var(--border-color)' }}>
+          <div>
+            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)', display: 'block' }}>
+              ⚡ Demo Presentation Loader
+            </strong>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Seed multi-date presentation records across all ledgers & transaction histories.
+            </span>
+          </div>
+          <button
+            onClick={handleSeedDemo}
+            disabled={seedingDemo}
+            style={{
+              padding: '0.65rem 1.25rem',
+              borderRadius: '10px',
+              background: 'var(--accent-primary)',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
+          >
+            {seedingDemo ? 'Loading Data...' : 'Seed Demo Presentation Data ⚡'}
+          </button>
+        </section>
       </main>
+
+      {/* Wireframe Fixed Bottom Navigation Bar */}
+      <BottomNavBar />
     </div>
   );
 }

@@ -1,0 +1,75 @@
+================================================================================
+VIRALPE — DEMO VIDEO VS. CURRENT APPLICATION COMPARISON & FEATURE MATRIX
+================================================================================
+Source Video: dmeo.mp4 (Duration: 122.58 seconds)
+Analyzed: 2026-07-29
+
+--------------------------------------------------------------------------------
+1. OBSERVED DEMO VIDEO FLOW & NAVIGATION STEPS
+--------------------------------------------------------------------------------
+Step 1: Dashboard (Home Tab)
+  - Top Burgundy Header (#4A0404 -> #2B0202 gradient) with "V PE 4 U" logo.
+  - Notification bell with unread badge count (3).
+  - User greeting: "Welcome, Sairam" and pincode "📍 500039".
+  - Scrollable Balance Card: Wallet Bal (₹5,680), Royalty (₹280), Vendor (₹1,200), Reversal Bal (₹150).
+  - Services Grid: Recharge (📞), DTH (📺), Electricity (⚡), Water (💧).
+  - My Vouchers Carousel: Amazon (₹500), Flipkart (₹1000), Swiggy (₹250).
+  - Vendors Grid: Medical (⊕), Restaurants (☕), Supermarket (🛒), Fuel (💧).
+  - Refer & Earn Banner: Yellow gradient card with referral code "VPE4USAIRAM >".
+  - Bottom Navigation Bar: Home, History, Center Crimson QR Scanner FAB, Vouchers, Profile.
+
+Step 2: Mobile Recharge Screen (Triggered by pressing "Recharge")
+  - Header: "← Mobile Recharge".
+  - Hero Card: Blue rounded container with Phone Icon & "Mobile Recharge - Secure payment · Instant confirmation".
+  - Input Fields:
+      • Mobile Number: 10-digit text box (e.g. 9704706691)
+      • Select State: Horizontal pills (Andhra Pradesh, Delhi, Gujarat, Karnataka...)
+      • Select Network: Horizontal pills (Airtel, BSNL, Jio, Vi)
+      • Amount (₹): Recharge amount input box
+      • Cashback Callout: "% Earn up to 3% cashback on this payment"
+      • Action Button: Crimson "Proceed →"
+
+Step 3: Broadband Bill Payment Screen (Triggered by pressing "Broadband")
+  - Header: "← Broadband".
+  - Hero Card: Green rounded container with WiFi Icon & "Broadband Bill - Secure payment · Instant confirmation".
+  - Input Fields:
+      • Customer ID: Customer / Account ID text box
+      • Provider: Horizontal pills (ACT Fibernet, Airtel Xstream, BSNL Broadband...)
+      • Amount (₹): Bill amount input box
+      • Cashback Callout: "% Earn up to 3% cashback on this payment"
+      • Action Button: Crimson "Pay →"
+
+Step 4: My Vouchers Inventory Screen (Triggered by pressing Vouchers tab)
+  - Header: "My Vouchers | 12 vouchers available".
+  - Card List: Brand cards with distinct header colors (Domino's, KFC, PVR, BigBasket, Amazon, Flipkart, Swiggy, Zomato).
+  - Voucher Details: Denomination (₹200, ₹300, ₹500, ₹1000), masked code (e.g. AMZN-X4K••••1234), "Copy" button, and expiration date ("Valid till Dec 31, 2026").
+
+Step 5: Transaction History Screen (Triggered by pressing History tab)
+  - Header: "Transaction History".
+  - Category Filter Pills: All, Recharge, Bills, Shopping, Vouchers.
+  - List Items: Icon, Service name (Mobile Recharge - Airtel), date & TXN ID (Jul 29, 2026 · TXN20260729001), green cashback badge (+₹5.97 cashback), amount (₹199), and "Success" pill badge.
+
+
+--------------------------------------------------------------------------------
+2. COMPARISON MATRIX: WHAT THE VIDEO HAS VS. WHAT WE HAVE & VICE VERSA
+--------------------------------------------------------------------------------
+
+[A] WHAT THE VIDEO HAS (TO BE ALIGNED / ADDED IN OUR APP):
+  1. Burgundy Branding Header with "V PE 4 U" logo & notification bell badge (🔔³).
+  2. Quick Balance Strip displaying Wallet Bal, Royalty, Vendor, and Reversal Bal inside the header fold.
+  3. Interactive State Selector Pills (Andhra Pradesh, Delhi, Gujarat, Karnataka) & Network Pills (Airtel, BSNL, Jio, Vi) on Mobile Recharge page.
+  4. Broadband Bill Payment Flow with Customer ID & Provider selector pills (ACT Fibernet, Airtel Xstream, BSNL Broadband).
+  5. Refer & Earn Home Banner displaying user's unique referral code (e.g. VPE4USAIRAM).
+  6. My Vouchers Inventory Cards with masked voucher codes (AMZN-X4K••••1234), instant Copy button, and expiration dates.
+  7. Category Filter Pills (All, Recharge, Bills, Shopping, Vouchers) & Cashback Line (+₹5.97 cashback) in Transaction History.
+  8. Glowing Crimson Floating QR Scanner Action Button in Bottom Navigation.
+
+[B] WHAT OUR APPLICATION HAS THAT THE VIDEO DOES NOT SHOW:
+  1. Pincode Royalty Championship Leaderboard & Ticker Engine (Live pool accumulation, countdown timer, daily/weekly/monthly phase switch).
+  2. Cyrus API Integration (Live BBPS bill fetch, MNP auto-detection, Cyrus gift card purchase).
+  3. Zero-Load Priority Checkout Ladder (Reversal Wallet -> Spendable Wallet -> PG priority debit logic).
+  4. Vertical Royalty Engine & Category Margin Configurations.
+  5. Admin Platform & Audit Logs (Promotional fund injections, pincode directory CRUD, audit trails).
+  6. Dual Dark Emerald & Light Theme Toggle.
+
+================================================================================

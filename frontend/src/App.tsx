@@ -132,7 +132,25 @@ function App() {
       />
 
       <Route
+        path="/pincode-championship"
+        element={
+          <RequireCompletedProfile>
+            <PincodeChampionshipPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
         path="/transactions"
+        element={
+          <RequireCompletedProfile>
+            <TransactionHistoryPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/history"
         element={
           <RequireCompletedProfile>
             <TransactionHistoryPage />
