@@ -137,27 +137,110 @@ export default function NavigationHeader() {
             </div>
           </div>
 
-          {!isDashboard && (
+          {/* Navigation Links (Matching Image 1) */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <button
               onClick={() => navigate('/dashboard')}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
                 padding: '0.45rem 0.85rem',
-                borderRadius: '8px',
-                border: '1px solid var(--border-color)',
-                background: 'var(--bg-highlight)',
-                color: 'var(--accent-primary)',
-                fontSize: '0.82rem',
+                borderRadius: '10px',
+                background: location.pathname === '/dashboard' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/dashboard' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
                 fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
+                fontSize: '0.88rem',
+                cursor: 'pointer'
               }}
             >
-              ← Dashboard
+              Dashboard
             </button>
-          )}
+
+            <button
+              onClick={() => navigate('/checkout')}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                background: location.pathname === '/checkout' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/checkout' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.2rem'
+              }}
+            >
+              Pay ▾
+            </button>
+
+            <button
+              onClick={() => navigate('/history')}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                background: location.pathname === '/history' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/history' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.2rem'
+              }}
+            >
+              Activity ▾
+            </button>
+
+            <button
+              onClick={() => navigate('/wallet')}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                background: location.pathname === '/wallet' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/wallet' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer'
+              }}
+            >
+              Wallet
+            </button>
+
+            <button
+              onClick={() => navigate('/admin/platform')}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                background: location.pathname === '/admin/platform' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/admin/platform' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer'
+              }}
+            >
+              Vendors
+            </button>
+
+            <button
+              onClick={() => navigate('/about')}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: '10px',
+                background: location.pathname === '/about' ? 'var(--bg-highlight)' : 'transparent',
+                color: location.pathname === '/about' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer'
+              }}
+            >
+              About
+            </button>
+          </nav>
         </div>
 
         {/* Right Side: Theme Toggle Switch + User Name + Gmail + Sign Out Button */}

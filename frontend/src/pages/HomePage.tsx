@@ -1,42 +1,47 @@
 import { useEffect, useState } from 'react';
-import {
-  CredentialResponse,
-  GoogleLogin
-} from '@react-oauth/google';
+import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { signInWithGoogle } from '../lib/api';
 import { getSession, setSession } from '../lib/session';
+import { getStoredTheme, initTheme, setStoredTheme, ThemeMode } from '../lib/theme';
 
 export default function HomePage() {
   const navigate = useNavigate();
 
+  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const googleClientId = (
-    import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
-  )?.trim();
+  const googleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+
+  useEffect(() => {
+    const currentTheme = initTheme();
+    setTheme(currentTheme);
+
+    const handleThemeChange = () => {
+      setTheme(getStoredTheme());
+    };
+
+    window.addEventListener('theme-change', handleThemeChange);
+    return () => window.removeEventListener('theme-change', handleThemeChange);
+  }, []);
 
   useEffect(() => {
     const session = getSession();
-
-    if (!session) {
-      return;
+    if (session?.token && session?.profileComplete) {
+      navigate('/dashboard', { replace: true });
     }
-
-    navigate(
-      session.profileComplete ? '/dashboard' : '/onboarding',
-      { replace: true }
-    );
   }, [navigate]);
 
-  const handleGoogleSuccess = async (
-    credentialResponse: CredentialResponse
-  ) => {
+  const toggleTheme = () => {
+    const nextTheme: ThemeMode = theme === 'light' ? 'dark' : 'light';
+    setStoredTheme(nextTheme);
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
-      setError(
-        'Google did not return a valid sign-in token. Please try again.'
-      );
+      setError('Google did not return a valid sign-in token. Please try again.');
       return;
     }
 
@@ -44,9 +49,7 @@ export default function HomePage() {
     setError('');
 
     try {
-      const response = await signInWithGoogle(
-        credentialResponse.credential
-      );
+      const response = await signInWithGoogle(credentialResponse.credential);
 
       setSession({
         userId: response.userId,
@@ -54,239 +57,296 @@ export default function HomePage() {
         profileComplete: response.profileComplete
       });
 
-      navigate(
-        response.profileComplete
-          ? '/dashboard'
-          : '/onboarding'
-      );
+      navigate(response.profileComplete ? '/dashboard' : '/onboarding');
     } catch (authError) {
-      setError(
-        authError instanceof Error
-          ? authError.message
-          : 'We could not sign you in. Please try again.'
-      );
+      setError(authError instanceof Error ? authError.message : 'We could not sign you in. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-background login-background-one" />
-      <div className="login-background login-background-two" />
+    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', transition: 'all 0.2s ease-in-out', display: 'flex', flexDirection: 'column', position: 'relative', overflowX: 'hidden' }}>
+      
+      {/* Decorative Background Aura Circles */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '-160px',
+          right: '-100px',
+          width: '500px',
+          height: '500px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(13, 148, 136, 0.22) 0%, rgba(13, 148, 136, 0) 70%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
+      />
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '-160px',
+          left: '-100px',
+          width: '450px',
+          height: '450px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(13, 148, 136, 0.2) 0%, rgba(13, 148, 136, 0) 70%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
+      />
 
-      <header className="login-header">
-        <a className="brand" href="/" aria-label="ViralPe home">
-          <span className="brand-mark">V</span>
-
-          <span className="brand-copy">
-            <strong>ViralPe</strong>
-            <small>Wallet Network</small>
-          </span>
-        </a>
-
-        <nav className="login-nav" aria-label="Page links">
-          <a href="#benefits">Benefits</a>
-          <a href="#security">Security</a>
-        </nav>
-      </header>
-
-      <main className="login-main">
-        <section className="login-hero">
-          <p className="login-eyebrow">
-            Payments that give something back
-          </p>
-
-          <h1>
-            Pay smarter.
-            <br />
-            Earn with every transaction.
-          </h1>
-
-          <p className="login-description">
-            Recharge, pay bills and manage rewards through one
-            secure wallet experience.
-          </p>
-
-          <div className="login-benefits" id="benefits">
-            <div className="login-benefit">
-              <span className="benefit-icon">₹</span>
-
-              <div>
-                <strong>One spendable wallet</strong>
-                <p>
-                  Use rewards and wallet balance during checkout.
-                </p>
-              </div>
+      {/* Top Header Navigation Bar */}
+      <header
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          background: 'var(--bg-card)',
+          borderBottom: '1px solid var(--border-color)',
+          boxShadow: '0 2px 10px var(--shadow-color)',
+          padding: '0.85rem 2rem'
+        }}
+      >
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          
+          {/* Brand Logo */}
+          <div onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--accent-gradient)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.25rem' }}>
+              V
             </div>
-
-            <div className="login-benefit">
-              <span className="benefit-icon">↗</span>
-
-              <div>
-                <strong>Rewards on everyday payments</strong>
-                <p>
-                  Track cashback, referrals and royalty earnings.
-                </p>
-              </div>
-            </div>
-
-            <div className="login-benefit">
-              <span className="benefit-icon">⌖</span>
-
-              <div>
-                <strong>Pincode-based rewards</strong>
-                <p>
-                  Participate in regional earning pools.
-                </p>
-              </div>
+            <div>
+              <strong style={{ fontSize: '1.2rem', color: 'var(--text-primary)', fontWeight: 800, display: 'block', lineHeight: 1.1 }}>
+                ViralPe
+              </strong>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                WALLET NETWORK
+              </span>
             </div>
           </div>
-        </section>
 
-        <section className="login-card" id="security">
-          <div className="login-card-header">
-            <span className="secure-badge">
-              Secure access
-            </span>
+          {/* Navigation Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', overflowX: 'auto' }}>
+            <a href="/" style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: '0.9rem', textDecoration: 'none' }}>Home</a>
+            <a href="/about" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>About</a>
+            <a href="/referral" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>Referral</a>
+            <a href="/bills" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>Services</a>
+            <a href="/admin/platform" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', textDecoration: 'none' }}>Vendors</a>
+          </nav>
 
-            <h2>Welcome to ViralPe</h2>
-
-            <p>
-              Continue with your Google account. New users will
-              complete a short profile setup.
-            </p>
-          </div>
-
-          <div className="google-login-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
-            {googleClientId ? (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() =>
-                  setError(
-                    'The Google sign-in window could not be opened.'
-                  )
-                }
-                shape="pill"
-                size="large"
-                text="continue_with"
-                theme="outline"
-                useOneTap={false}
-              />
-            ) : (
-              <p className="login-configuration-error">
-                Google sign-in is currently unavailable.
-              </p>
-            )}
-
-            {/* Apple ID Sign-In Button (Story 1.2) */}
+          {/* Right Header Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button
-              type="button"
-              onClick={async () => {
-                setLoading(true);
-                setError('');
-                try {
-                  const res = await fetch('/api/auth/sign-in/apple', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      providerId: 'apple-user-' + Date.now(),
-                      email: 'apple.user.' + Date.now() + '@privaterelay.appleid.com',
-                      fullName: 'Apple ID User'
-                    })
-                  }).then(r => r.json());
-
-                  setSession({
-                    userId: res.userId,
-                    token: res.token,
-                    profileComplete: res.profileComplete
-                  });
-
-                  navigate(res.profileComplete ? '/dashboard' : '/onboarding');
-                } catch (err) {
-                  setError('Apple Sign-In failed. Please try again.');
-                } finally {
-                  setLoading(false);
-                }
-              }}
+              onClick={toggleTheme}
               style={{
-                width: '100%',
-                maxWidth: '240px',
-                height: '40px',
-                borderRadius: '20px',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '999px',
                 border: '1px solid var(--border-color)',
-                background: '#000000',
-                color: '#ffffff',
+                background: 'var(--bg-highlight)',
+                color: 'var(--text-primary)',
+                fontSize: '0.8rem',
                 fontWeight: 700,
-                fontSize: '0.85rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                cursor: 'pointer'
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 170 170" fill="currentColor">
-                <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.82.13-9.67-1.92-14.54-6.14-3.4-2.9-7.3-7.65-11.71-14.25-6.24-9.36-11.2-19.8-14.88-31.32-3.68-11.53-5.52-22.36-5.52-32.49 0-14.75 3.65-26.68 10.96-35.8 7.31-9.12 16.48-13.78 27.5-13.98 4.71.07 9.87 1.15 15.48 3.24 5.61 2.09 9.5 3.14 11.67 3.14 1.95 0 5.82-1.05 11.62-3.14 5.8-2.09 10.74-3.14 14.82-3.14 11.63.4 20.91 4.96 27.84 13.68-10.23 6.18-15.22 14.86-14.97 26.04.25 8.78 3.55 16.14 9.9 22.08 6.35 5.94 13.92 9.29 22.71 10.05-2.04 6.09-4.7 12.38-7.98 18.87zM119.22 31.84c0-6.8 2.45-13.37 7.35-19.7 4.9-6.33 11.1-10.37 18.6-12.14.62 7.07-1.7 13.7-6.96 19.89-5.26 6.19-11.58 10.08-18.99 11.95z"/>
-              </svg>
-              Sign in with Apple
+              {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+            </button>
+
+            <button
+              onClick={() => navigate('/login')}
+              style={{
+                padding: '0.55rem 1.4rem',
+                borderRadius: '12px',
+                background: 'var(--accent-gradient)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px var(--shadow-color)'
+              }}
+            >
+              Login
             </button>
           </div>
+        </div>
+      </header>
 
-          {loading ? (
-            <div className="login-loading">
-              <span className="login-spinner" />
-              Signing you in securely...
-            </div>
-          ) : null}
+      {/* Main Content Area (flex: 1 pushes footer to absolute bottom) */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4rem', paddingBottom: '3rem' }}>
+        
+        {/* 1. Hero Section */}
+        <section
+          style={{
+            padding: '4.5rem 1.5rem 2rem 1.5rem',
+            textAlign: 'center',
+            position: 'relative'
+          }}
+        >
+          <div style={{ maxWidth: '920px', margin: '0 auto' }}>
+            
+            <span style={{ padding: '0.45rem 1.25rem', borderRadius: '999px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 800, border: '1px solid var(--border-color)', display: 'inline-block', marginBottom: '1.5rem' }}>
+              ⚡ INDIA'S HYPERLOCAL REWARDS WALLET
+            </span>
 
-          {error ? (
-            <p className="login-error" role="alert">
-              {error}
+            <h1 style={{ fontSize: '3.2rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.15, margin: '0 0 1.25rem 0' }}>
+              Pay Bills, Recharges & Vouchers.<br />
+              <span style={{ color: 'var(--accent-primary)' }}>Earn Guaranteed Wallet Royalties.</span>
+            </h1>
+
+            <p style={{ fontSize: '1.15rem', color: 'var(--text-secondary)', maxWidth: '750px', margin: '0 auto 2.25rem auto', lineHeight: 1.6, fontWeight: 500 }}>
+              Instant BBPS bill payments, mobile recharges & top brand gift cards. Earn real wallet cashback, pincode pool bonuses, and multi-level referral royalties on every spend.
             </p>
-          ) : null}
 
-          <div className="login-divider">
-            <span />
-            <p>Why continue with Google?</p>
-            <span />
+            <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3.5rem' }}>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '0.9rem 2.25rem',
+                  borderRadius: '14px',
+                  background: 'var(--accent-gradient)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 900,
+                  fontSize: '1.05rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px var(--shadow-color)'
+                }}
+              >
+                Pay & Earn Cashback →
+              </button>
+
+              <button
+                onClick={() => navigate('/vouchers')}
+                style={{
+                  padding: '0.9rem 2.25rem',
+                  borderRadius: '14px',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  fontWeight: 800,
+                  fontSize: '1.05rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px var(--shadow-color)'
+                }}
+              >
+                Explore Gift Vouchers 🎁
+              </button>
+            </div>
+
+            {/* Key Stat Highlights Bar */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '1.5rem',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '24px',
+                padding: '2rem',
+                boxShadow: '0 8px 30px var(--shadow-color)'
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>₹25L+</strong>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Cashback Paid</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>50,000+</strong>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Active Pincodes</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>100%</strong>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Instant Wallet Debit</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '2rem', fontWeight: 900, color: '#10b981', display: 'block' }}>99.9%</strong>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Success Rate</span>
+              </div>
+            </div>
+
           </div>
-
-          <div className="security-list">
-            <div>
-              <span>✓</span>
-              <p>Your Google password is never shared with ViralPe.</p>
-            </div>
-
-            <div>
-              <span>✓</span>
-              <p>Your verified name and email secure your account.</p>
-            </div>
-
-            <div>
-              <span>✓</span>
-              <p>Returning users go directly to their dashboard.</p>
-            </div>
-          </div>
-
-          <p className="login-legal">
-            By continuing, you agree to ViralPe&apos;s{' '}
-            <a href="#">Terms of Use</a> and{' '}
-            <a href="#">Privacy Policy</a>.
-          </p>
         </section>
+
+        {/* 2. Feature Showcase Cards */}
+        <section style={{ maxWidth: '1180px', margin: '0 auto', width: '100%', padding: '0 1.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              REVOLUTIONARY DIGITAL REWARDS
+            </span>
+            <h2 style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.4rem 0 0 0' }}>
+              Everything You Need in One Unified Wallet
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', boxShadow: '0 8px 25px var(--shadow-color)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.4rem', marginBottom: '1.25rem' }}>
+                📱
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                Utility Bills & Recharges
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
+                Pay Electricity, Water, Gas, FASTag, and Mobile Recharges via BBPS. Earn up to 5% instant wallet cashback on every transaction.
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', boxShadow: '0 8px 25px var(--shadow-color)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.4rem', marginBottom: '1.25rem' }}>
+                🎁
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                Top Brand Gift Vouchers
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
+                Instant digital gift cards for Amazon, Swiggy, Zomato, Flipkart, and Myntra. Redeem instantly or pay using your Reversal Wallet.
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '2rem', boxShadow: '0 8px 25px var(--shadow-color)' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'var(--bg-highlight)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.4rem', marginBottom: '1.25rem' }}>
+                🏆
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                Pincode Pool Championships
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
+                Participate in your registered All-India pincode earning pool. Get automatic monthly payouts based on network spending volume in your area.
+              </p>
+            </div>
+
+          </div>
+        </section>
+
       </main>
 
-      <footer className="login-footer">
-        <span>© 2026 ViralPe</span>
+      {/* Footer Pinned to Absolute Bottom */}
+      <footer
+        style={{
+          background: 'var(--bg-card)',
+          borderTop: '1px solid var(--border-color)',
+          padding: '1.5rem 2rem',
+          zIndex: 10
+        }}
+      >
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            © 2026 ViralPe Network. All rights reserved.
+          </span>
 
-        <div>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Help</a>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <a href="/about" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 600 }}>About</a>
+            <a href="/referral" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 600 }}>Referral</a>
+            <a href="/vouchers" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 600 }}>Vouchers</a>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

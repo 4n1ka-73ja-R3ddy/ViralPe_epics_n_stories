@@ -12,6 +12,11 @@ import AdminPlatformPage from './pages/AdminPlatformPage';
 import RechargePage from './pages/RechargePage';
 import BillPaymentPage from './pages/BillPaymentPage';
 import VoucherPage from './pages/VoucherPage';
+import MyVouchersPage from './pages/MyVouchersPage';
+import WalletPage from './pages/WalletPage';
+import AboutPage from './pages/AboutPage';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 import { getSession } from './lib/session';
 
 function RequireSession({ children }: { children: JSX.Element }) {
@@ -96,6 +101,34 @@ function App() {
       />
 
       <Route
+        path="/my-vouchers"
+        element={
+          <RequireCompletedProfile>
+            <MyVouchersPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/wallet"
+        element={
+          <RequireCompletedProfile>
+            <WalletPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/about"
+        element={<AboutPage />}
+      />
+
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
+
+      <Route
         path="/checkout"
         element={
           <RequireCompletedProfile>
@@ -154,6 +187,15 @@ function App() {
         element={
           <RequireCompletedProfile>
             <TransactionHistoryPage />
+          </RequireCompletedProfile>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <RequireCompletedProfile>
+            <ProfilePage />
           </RequireCompletedProfile>
         }
       />

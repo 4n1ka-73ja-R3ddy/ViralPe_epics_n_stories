@@ -161,4 +161,14 @@ public class AdminController {
     public ResponseEntity<String> status() {
         return ResponseEntity.ok("Admin module is available.");
     }
+
+    @PostMapping("/reset-users")
+    public ResponseEntity<?> resetAllUsers() {
+        userRepository.deleteAll();
+        adminService.logAction(0L, "RESET_ALL_USERS", "Cleared all user emails & accounts from database for presentation sign-in steps demo.");
+        return ResponseEntity.ok(Map.of(
+            "message", "All user accounts and emails have been deleted successfully from database.",
+            "userCount", userRepository.count()
+        ));
+    }
 }

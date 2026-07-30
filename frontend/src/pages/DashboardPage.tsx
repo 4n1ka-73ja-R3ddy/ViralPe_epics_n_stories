@@ -30,6 +30,7 @@ const EMPTY_SUMMARY: WalletSummaryResponse = {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const session = getSession();
 
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [walletSummary, setWalletSummary] = useState<WalletSummaryResponse>(EMPTY_SUMMARY);
@@ -41,6 +42,10 @@ export default function DashboardPage() {
   const [seedingDemo, setSeedingDemo] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [countdown, setCountdown] = useState<string>('11h 59m 59s');
+
+  const [showMoreUtility, setShowMoreUtility] = useState(false);
+  const [showMoreVouchers, setShowMoreVouchers] = useState(false);
+  const [showMoreVendors, setShowMoreVendors] = useState(false);
 
   useEffect(() => {
     const current = initTheme();
@@ -144,7 +149,119 @@ export default function DashboardPage() {
       <NavigationHeader />
 
       <main style={{ maxWidth: '1100px', margin: '1.5rem auto', padding: '0 1.25rem' }}>
-        {/* Wireframe Header Section: Welcome + Username (edit) + Pincode */}
+        
+        {/* Landing Hero Banner (Top Section of Dashboard Page) */}
+        <section
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '24px',
+            padding: '2.5rem 2rem',
+            textAlign: 'center',
+            marginBottom: '2.5rem',
+            boxShadow: '0 8px 30px var(--shadow-color)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+            <span
+              style={{
+                padding: '0.45rem 1.25rem',
+                borderRadius: '999px',
+                background: 'var(--bg-highlight)',
+                color: 'var(--accent-primary)',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                border: '1px solid var(--border-color)',
+                display: 'inline-block',
+                marginBottom: '1.25rem'
+              }}
+            >
+              ⚡ INDIA'S HYPERLOCAL REWARDS WALLET
+            </span>
+
+            <h1 style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1.18, margin: '0 0 1rem 0' }}>
+              Pay Bills, Recharges & Vouchers.<br />
+              <span style={{ color: 'var(--accent-primary)' }}>Earn Guaranteed Wallet Royalties.</span>
+            </h1>
+
+            <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '720px', margin: '0 auto 2rem auto', lineHeight: 1.6, fontWeight: 500 }}>
+              Instant BBPS bill payments, mobile recharges & top brand gift cards. Earn real wallet cashback, pincode pool bonuses, and multi-level referral royalties on every spend.
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '2.5rem' }}>
+              <button
+                onClick={() => navigate('/checkout')}
+                style={{
+                  padding: '0.85rem 2rem',
+                  borderRadius: '14px',
+                  background: 'var(--accent-gradient)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px var(--shadow-color)'
+                }}
+              >
+                Pay & Earn Cashback →
+              </button>
+
+              <button
+                onClick={() => navigate('/vouchers')}
+                style={{
+                  padding: '0.85rem 2rem',
+                  borderRadius: '14px',
+                  background: 'var(--bg-card-subtle)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Explore Gift Vouchers 🎁
+              </button>
+            </div>
+
+            {/* Key Stat Highlights Bar */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gap: '1.25rem',
+                background: 'var(--bg-card-subtle)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '18px',
+                padding: '1.5rem'
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>₹25L+</strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Cashback Paid</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>50,000+</strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Active Pincodes</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--accent-primary)', display: 'block' }}>100%</strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Instant Wallet Debit</span>
+              </div>
+
+              <div>
+                <strong style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981', display: 'block' }}>99.9%</strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Success Rate</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Clean Wireframe Header Section: Welcome + Username (edit) + Pincode */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
           <div>
             <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.5rem', color: 'var(--accent-primary)', display: 'block', marginBottom: '-0.2rem' }}>
@@ -155,8 +272,8 @@ export default function DashboardPage() {
                 {profile?.fullName || 'Valued User'}
               </h1>
               <button
-                onClick={() => navigate('/onboarding')}
-                title="Edit Profile & Pincode"
+                onClick={() => navigate('/profile')}
+                title="Edit Profile"
                 style={{
                   background: 'var(--bg-highlight)',
                   border: '1px solid var(--border-color)',
@@ -176,28 +293,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-              LOCATION MAPPED
+          <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => navigate('/profile')}>
+            <span style={{ fontSize: '1.25rem', fontStyle: 'italic', color: 'var(--accent-primary)', fontFamily: 'serif', display: 'block', lineHeight: 1.2 }}>
+              Pincode
             </span>
-            <div
-              onClick={() => navigate('/onboarding')}
-              style={{
-                fontSize: '1.35rem',
-                fontWeight: 800,
-                color: 'var(--accent-primary)',
-                textDecoration: 'underline',
-                textUnderlineOffset: '4px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem'
-              }}
-            >
-              📍 Pincode {profile?.registeredPincode || '560001'}
-            </div>
+            <strong style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', letterSpacing: '-0.02em', lineHeight: 1.2, textDecoration: 'underline', textUnderlineOffset: '4px' }}>
+              {profile?.registeredPincode || session?.registeredPincode || ''}
+            </strong>
           </div>
         </div>
+
+
 
         {error && (
           <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '12px', padding: '0.75rem 1rem', marginBottom: '1.5rem', fontWeight: 600 }}>
@@ -485,25 +591,64 @@ export default function DashboardPage() {
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Cylinder Booking</span>
             </div>
 
-            {/* Utility Card 5: Broadband */}
-            <div
-              onClick={() => navigate('/bills')}
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '16px',
-                padding: '1.25rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px var(--shadow-color)',
-                transition: 'transform 0.15s'
-              }}
-            >
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌐</div>
-              <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
-                Broadband Internet
-              </strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Airtel & JioFiber</span>
-            </div>
+            {/* Expanded Utility Cards */}
+            {showMoreUtility && (
+              <>
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌐</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Broadband Internet</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Airtel & JioFiber</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📺</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>DTH Recharge</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Tata Play & Airtel DTH</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏛️</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Municipal Taxes</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Property Tax & Fees</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚗</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Fastag Recharge</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>NHAI & Toll Pass</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📞</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Landline Bill</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>BSNL & MTNL</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/bills')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛡️</div>
+                  <strong style={{ display: 'block', fontSize: '1rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Insurance Premium</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>LIC & Health Pay</span>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -612,6 +757,66 @@ export default function DashboardPage() {
               </strong>
               <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>4.0% Cashback</span>
             </div>
+
+            {/* Expanded Voucher Cards */}
+            {showMoreVouchers && (
+              <>
+                <div
+                  onClick={() => navigate('/vouchers')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#cb202d', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', fontStyle: 'italic', marginBottom: '0.5rem' }}>
+                    zomato
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Zomato Pro</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>4.0% Cashback</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/vouchers')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#1e293b', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1rem', marginBottom: '0.5rem' }}>
+                    🎮
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Google Play</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>2.0% Cashback</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/vouchers')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#000000', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem', marginBottom: '0.5rem' }}>
+                    Uber
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Uber Rides</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>3.5% Cashback</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/vouchers')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#0066a1', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1rem', marginBottom: '0.5rem' }}>
+                    🍕
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Domino's Pizza</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>5.0% Cashback</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/vouchers')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e4002b', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1rem', marginBottom: '0.5rem' }}>
+                    🍗
+                  </div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>KFC Chicken</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700 }}>4.5% Cashback</span>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -652,7 +857,7 @@ export default function DashboardPage() {
               <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
                 Local Merchants
               </strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pincode 560001</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Pincode {profile?.registeredPincode || session?.registeredPincode || ''}</span>
             </div>
 
             <div
@@ -708,6 +913,133 @@ export default function DashboardPage() {
               </strong>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Regional Vendors</span>
             </div>
+
+            {/* Expanded Vendor Cards */}
+            {showMoreVendors && (
+              <>
+                <div
+                  onClick={() => navigate('/admin/platform')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💊</div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Pharmacy & Medical</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Apollo & Local Chemist</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/admin/platform')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⛽</div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Fuel Stations</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>HPCL & IndianOil</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/admin/platform')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💻</div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Electronics Stores</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Croma & Reliance Digital</span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/admin/platform')}
+                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', cursor: 'pointer', boxShadow: '0 4px 15px var(--shadow-color)' }}
+                >
+                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🥦</div>
+                  <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>Organic Grocery</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Fresh Vegetables & Produce</span>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Bottom Refer & Earn Banner */}
+        <section
+          onClick={() => navigate('/referral')}
+          style={{
+            background: theme === 'dark'
+              ? 'var(--bg-card)'
+              : 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+            border: theme === 'dark' ? '1px solid var(--accent-primary)' : '1px solid rgba(217, 119, 6, 0.3)',
+            borderRadius: '20px',
+            padding: '1.4rem 1.75rem',
+            color: theme === 'dark' ? 'var(--text-primary)' : '#000000',
+            cursor: 'pointer',
+            marginBottom: '2.5rem',
+            boxShadow: '0 6px 25px var(--shadow-color)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1.25rem'
+          }}
+        >
+          <div style={{ flex: '1 1 300px' }}>
+            <span style={{ fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, color: theme === 'dark' ? 'var(--accent-primary)' : '#78350f', display: 'block', marginBottom: '0.2rem' }}>
+              👑 REFER & EARN
+            </span>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: '0.2rem 0', color: theme === 'dark' ? 'var(--text-primary)' : '#000000' }}>
+              Share your code, earn on every rupee they spend
+            </h3>
+            <p style={{ fontSize: '0.82rem', margin: 0, color: theme === 'dark' ? 'var(--text-secondary)' : '#451a03', fontWeight: 600 }}>
+              Your referral royalty is credited automatically each time someone who joined with your code pays through VPE4U.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ background: theme === 'dark' ? 'var(--bg-card-subtle)' : '#ffffff', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.4rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <strong style={{ fontSize: '0.9rem', fontFamily: 'monospace', color: 'var(--text-primary)' }}>VPE4USAIRAM</strong>
+              <span style={{ fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => navigator.clipboard.writeText('VPE4USAIRAM')}>📋</span>
+            </div>
+
+            <span style={{ padding: '0.45rem 0.85rem', borderRadius: '14px', background: theme === 'dark' ? 'var(--bg-highlight)' : '#ffffff', color: theme === 'dark' ? 'var(--accent-primary)' : '#92400e', fontSize: '0.8rem', fontWeight: 800 }}>
+              👥 3 Referred Users
+            </span>
+
+            <button
+              onClick={() => navigate('/referral')}
+              style={{
+                padding: '0.5rem 1.1rem',
+                borderRadius: '12px',
+                background: theme === 'dark' ? 'var(--accent-primary)' : '#7f1d1d',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <span>📤 Share</span>
+            </button>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.origin + '/onboarding?ref=VPE4USAIRAM');
+                alert('Referral link copied!');
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '12px',
+                background: theme === 'dark' ? 'var(--bg-card-subtle)' : '#ffffff',
+                color: theme === 'dark' ? 'var(--text-primary)' : '#000000',
+                border: '1px solid var(--border-color)',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <span>📋 Copy link</span>
+            </button>
           </div>
         </section>
 

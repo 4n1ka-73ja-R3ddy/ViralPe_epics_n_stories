@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavigationHeader from '../components/NavigationHeader';
+import BottomNavBar from '../components/BottomNavBar';
 import {
   createAdminPincode,
   fundUserPromotional,
@@ -17,8 +19,72 @@ import {
   UserProfileResponse
 } from '../lib/api';
 
+const VENDOR_DIRECTORY = [
+  {
+    id: 'v-101',
+    name: 'Daily Needs Supermarket',
+    category: 'GROCERY & RETAIL',
+    icon: '🏪',
+    pincode: '560001',
+    city: 'Bengaluru',
+    royaltyPercent: 3.5,
+    rating: 4.9,
+    totalPayout: 45200.00,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'v-204',
+    name: 'Royal Spice Restaurant',
+    category: 'DINING & CAFE',
+    icon: '🍽️',
+    pincode: '560001',
+    city: 'Bengaluru',
+    royaltyPercent: 4.0,
+    rating: 4.8,
+    totalPayout: 38900.00,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'v-305',
+    name: 'MedPlus Express Pharmacy',
+    category: 'MEDICAL & HEALTH',
+    icon: '💊',
+    pincode: '560001',
+    city: 'Bengaluru',
+    royaltyPercent: 3.0,
+    rating: 4.7,
+    totalPayout: 29400.00,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'v-402',
+    name: 'Reliance Digital Outlet',
+    category: 'ELECTRONICS & GADGETS',
+    icon: '⚡',
+    pincode: '560001',
+    city: 'Bengaluru',
+    royaltyPercent: 2.5,
+    rating: 4.9,
+    totalPayout: 62100.00,
+    status: 'ACTIVE'
+  },
+  {
+    id: 'v-501',
+    name: 'HPCL Auto Care Fuel Station',
+    category: 'FUEL & AUTOMOTIVE',
+    icon: '⛽',
+    pincode: '560001',
+    city: 'Bengaluru',
+    royaltyPercent: 2.0,
+    rating: 4.8,
+    totalPayout: 51800.00,
+    status: 'ACTIVE'
+  }
+];
+
 export default function AdminPlatformPage() {
-  const [activeTab, setActiveTab] = useState<'FUNDS' | 'PINCODES' | 'ROYALTY'>('FUNDS');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'VENDORS' | 'FUNDS' | 'PINCODES' | 'ROYALTY'>('VENDORS');
 
   // Story 10.1 State
   const [users, setUsers] = useState<UserProfileResponse[]>([]);
@@ -168,36 +234,96 @@ export default function AdminPlatformPage() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f4f8f7', color: '#0d2b26' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', transition: 'background 0.2s ease-in-out' }}>
       <NavigationHeader />
 
-      <main style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem' }}>
-        {/* Header Title */}
-        <div style={{ marginBottom: '2rem' }}>
-          <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#00685b', fontWeight: 700 }}>
-            ADMINISTRATION PLATFORM
+      {/* Hero Header Banner */}
+      <section
+        style={{
+          background: 'linear-gradient(135deg, #00685b 0%, #047857 50%, #065f46 100%)',
+          color: '#ffffff',
+          padding: '2.5rem 1.5rem',
+          boxShadow: '0 8px 30px rgba(0, 104, 91, 0.2)'
+        }}
+      >
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <span style={{ padding: '0.35rem 0.85rem', borderRadius: '999px', background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', backdropFilter: 'blur(4px)', display: 'inline-block', marginBottom: '0.75rem' }}>
+            🏪 VENDORS & PLATFORM NETWORK
           </span>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: '0.25rem 0', color: '#0d2b26' }}>
-            Admin Platform Management
+
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 0.5rem 0', color: '#ffffff', letterSpacing: '-0.02em' }}>
+            Vendors & Partner Management
           </h1>
-          <p style={{ color: '#5b706c', fontSize: '0.95rem' }}>
-            Inject promotional add-on funds with mandatory audit notes, manage master pincodes for onboarding, and configure royalty percentage splits.
+
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1rem', maxWidth: '750px', margin: 0, lineHeight: 1.5 }}>
+            Onboard local merchants, manage pincode territory coverage, inject promotional funds with mandatory audit notes, and configure vertical royalty splits.
           </p>
         </div>
+      </section>
 
-        {/* Tab Selector */}
-        <div style={{ display: 'flex', gap: '0.75rem', borderBottom: '1px solid #e2ece9', marginBottom: '2rem', paddingBottom: '0.5rem' }}>
+      <main style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem', paddingBottom: '90px' }}>
+        
+        {/* Top Quick Stats Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.4rem', boxShadow: '0 4px 15px var(--shadow-color)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>ACTIVE VENDORS</span>
+            <strong style={{ display: 'block', fontSize: '1.8rem', color: 'var(--accent-primary)', fontWeight: 900, marginTop: '0.2rem' }}>
+              {VENDOR_DIRECTORY.length} Outlets
+            </strong>
+          </div>
+
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.4rem', boxShadow: '0 4px 15px var(--shadow-color)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>REGISTERED USERS</span>
+            <strong style={{ display: 'block', fontSize: '1.8rem', color: 'var(--text-primary)', fontWeight: 900, marginTop: '0.2rem' }}>
+              {users.length} Users
+            </strong>
+          </div>
+
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.4rem', boxShadow: '0 4px 15px var(--shadow-color)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>COVERED PINCODES</span>
+            <strong style={{ display: 'block', fontSize: '1.8rem', color: 'var(--accent-primary)', fontWeight: 900, marginTop: '0.2rem' }}>
+              {pincodes.length} Pincodes
+            </strong>
+          </div>
+
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.4rem', boxShadow: '0 4px 15px var(--shadow-color)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>ROYALTY RULES</span>
+            <strong style={{ display: 'block', fontSize: '1.8rem', color: '#10b981', fontWeight: 900, marginTop: '0.2rem' }}>
+              {royaltyConfigs.length} Verticals
+            </strong>
+          </div>
+        </div>
+
+        {/* Tab Selector Pills */}
+        <div style={{ display: 'flex', gap: '0.75rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', paddingBottom: '0.5rem', overflowX: 'auto' }}>
+          <button
+            onClick={() => setActiveTab('VENDORS')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '14px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              background: activeTab === 'VENDORS' ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: activeTab === 'VENDORS' ? '#ffffff' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === 'VENDORS' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            🏪 Local Vendors & Outlets
+          </button>
           <button
             onClick={() => setActiveTab('FUNDS')}
             style={{
               padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              fontWeight: 700,
+              borderRadius: '14px',
+              fontWeight: 800,
               cursor: 'pointer',
-              background: activeTab === 'FUNDS' ? '#e6f4f1' : 'transparent',
-              color: activeTab === 'FUNDS' ? '#00685b' : '#5b706c',
-              border: activeTab === 'FUNDS' ? '1px solid #00685b' : 'none',
-              transition: 'all 0.15s'
+              background: activeTab === 'FUNDS' ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: activeTab === 'FUNDS' ? '#ffffff' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === 'FUNDS' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
             }}
           >
             💵 Promotional Fund Injection
@@ -206,417 +332,543 @@ export default function AdminPlatformPage() {
             onClick={() => setActiveTab('PINCODES')}
             style={{
               padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              fontWeight: 700,
+              borderRadius: '14px',
+              fontWeight: 800,
               cursor: 'pointer',
-              background: activeTab === 'PINCODES' ? '#e6f4f1' : 'transparent',
-              color: activeTab === 'PINCODES' ? '#00685b' : '#5b706c',
-              border: activeTab === 'PINCODES' ? '1px solid #00685b' : 'none',
-              transition: 'all 0.15s'
+              background: activeTab === 'PINCODES' ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: activeTab === 'PINCODES' ? '#ffffff' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === 'PINCODES' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
             }}
           >
-            🗺️ Pincode Master Directory
+            📍 Master Pincode Directory
           </button>
           <button
             onClick={() => setActiveTab('ROYALTY')}
             style={{
               padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              fontWeight: 700,
+              borderRadius: '14px',
+              fontWeight: 800,
               cursor: 'pointer',
-              background: activeTab === 'ROYALTY' ? '#e6f4f1' : 'transparent',
-              color: activeTab === 'ROYALTY' ? '#00685b' : '#5b706c',
-              border: activeTab === 'ROYALTY' ? '1px solid #00685b' : 'none',
-              transition: 'all 0.15s'
+              background: activeTab === 'ROYALTY' ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: activeTab === 'ROYALTY' ? '#ffffff' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === 'ROYALTY' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
             }}
           >
-            ⚙️ Royalty Percentage Config
+            📊 Vertical Royalty Splits
           </button>
         </div>
 
-        {/* TAB 1: Fund Injection (Story 10.1) */}
+        {/* TAB 0: Vendors & Outlets Directory */}
+        {activeTab === 'VENDORS' && (
+          <section style={{ marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  Partner Merchants & Vendors
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: '0.2rem 0 0 0' }}>
+                  Local merchants registered under Pincode 560001 earning vendor royalty commissions.
+                </p>
+              </div>
+
+              <button
+                onClick={() => alert('New Vendor Onboarding Portal ready!')}
+                style={{ padding: '0.65rem 1.3rem', borderRadius: '12px', background: 'var(--accent-gradient)', color: '#ffffff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+              >
+                + Register New Vendor
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              {VENDOR_DIRECTORY.map((v) => (
+                <div
+                  key={v.id}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '20px',
+                    padding: '1.5rem',
+                    boxShadow: '0 6px 20px var(--shadow-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--bg-highlight)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
+                          {v.icon}
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'block', lineHeight: 1.2 }}>
+                            {v.name}
+                          </strong>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700 }}>
+                            {v.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span style={{ padding: '0.2rem 0.6rem', borderRadius: '8px', background: 'var(--bg-highlight)', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 800 }}>
+                        ⭐ {v.rating}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-card-subtle)', borderRadius: '12px', padding: '0.85rem', marginBottom: '1.25rem', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.82rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Territory Pincode</span>
+                        <strong style={{ color: 'var(--text-primary)' }}>📍 {v.pincode} ({v.city})</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.82rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Royalty Commission</span>
+                        <strong style={{ color: 'var(--accent-primary)' }}>{v.royaltyPercent}% Per Sale</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Total Payout Disbursed</span>
+                        <strong style={{ color: '#10b981' }}>₹{v.totalPayout.toFixed(2)}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                      onClick={() => navigate('/checkout')}
+                      style={{ flex: 1, padding: '0.65rem', borderRadius: '10px', background: 'var(--accent-gradient)', color: '#ffffff', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      Pay Merchant →
+                    </button>
+                    <button
+                      onClick={() => alert(`Vendor ${v.name} status: Active`)}
+                      style={{ padding: '0.65rem 1rem', borderRadius: '10px', background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* TAB 1: Promotional Fund Injection (Story 10.1) */}
         {activeTab === 'FUNDS' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#0d2b26' }}>Inject Promotional Add-On Funds</h2>
-              <form onSubmit={handleFundSubmit}>
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#5b706c', marginBottom: '0.5rem', fontWeight: 600 }}>
-                    1. Search & Select Target User *
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
+            <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+              <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
+                STORY 10.1
+              </span>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.3rem 0 1rem 0', color: 'var(--text-primary)' }}>
+                Promotional Fund Injection
+              </h2>
+
+              {fundSuccess && (
+                <div style={{ background: '#d1fae5', color: '#065f46', border: '1px solid #34d399', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem', fontSize: '0.88rem', fontWeight: 600 }}>
+                  ✅ {fundSuccess}
+                </div>
+              )}
+
+              {fundError && (
+                <div style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #f87171', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem', fontSize: '0.88rem', fontWeight: 600 }}>
+                  ⚠️ {fundError}
+                </div>
+              )}
+
+              <form onSubmit={handleFundSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                    Search & Select Target User
                   </label>
                   <input
                     type="text"
-                    placeholder="Search user by name, email or ID..."
+                    placeholder="Type name, email, or user ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26', marginBottom: '0.5rem' }}
+                    style={{ width: '100%', padding: '0.75rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}
                   />
-                  <select
-                    size={4}
-                    value={selectedUserId || ''}
-                    onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                    style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
-                  >
-                    {filteredUsers.map((u) => {
-                      const idVal = u.userId ?? u.id;
-                      return (
-                        <option key={idVal} value={idVal}>
-                          User #{idVal} — {u.fullName || 'No Name'} ({u.email || 'No email'})
-                        </option>
-                      );
-                    })}
-                  </select>
+
+                  <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '10px', background: 'var(--bg-card-subtle)' }}>
+                    {filteredUsers.length === 0 ? (
+                      <div style={{ padding: '0.75rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No matching users found</div>
+                    ) : (
+                      filteredUsers.map((u) => {
+                        const tid = u.userId ?? u.id;
+                        const isSel = selectedUserId === tid;
+                        return (
+                          <div
+                            key={tid}
+                            onClick={() => setSelectedUserId(tid || null)}
+                            style={{
+                              padding: '0.6rem 0.85rem',
+                              cursor: 'pointer',
+                              background: isSel ? 'var(--bg-highlight)' : 'transparent',
+                              borderBottom: '1px solid var(--border-color)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div>
+                              <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)', display: 'block' }}>{u.fullName || 'User'}</strong>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{u.email}</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '6px', background: isSel ? 'var(--accent-primary)' : 'var(--border-color)', color: isSel ? '#ffffff' : 'var(--text-secondary)', fontWeight: 700 }}>
+                              ID #{tid}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#5b706c', marginBottom: '0.5rem', fontWeight: 600 }}>
-                    2. Credit Amount (₹) *
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                    Add-on Credit Amount (₹)
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="e.g. 500.00"
+                    min="0.01"
+                    placeholder="Enter credit amount (e.g. 500)"
                     value={fundAmount}
                     onChange={(e) => setFundAmount(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
+                    required
+                    style={{ width: '100%', padding: '0.75rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 700 }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#5b706c', marginBottom: '0.5rem', fontWeight: 600 }}>
-                    3. Reason / Campaign Note (Mandatory for Audit) *
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                    Mandatory Audit Note / Campaign Reason
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="State reason for fund injection (e.g. Festive Campaign Credit, Refund adjustment)..."
+                    placeholder="Provide justification note for audit logs..."
                     value={fundReason}
                     onChange={(e) => setFundReason(e.target.value)}
-                    style={{ width: '100%', padding: '0.65rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
+                    required
+                    style={{ width: '100%', padding: '0.75rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '0.88rem', resize: 'vertical' }}
                   />
                 </div>
 
-                {fundError && <p style={{ color: '#dc2626', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: 600 }}>{fundError}</p>}
-                {fundSuccess && <p style={{ color: '#059669', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: 600 }}>{fundSuccess}</p>}
-
                 <button
                   type="submit"
-                  disabled={fundLoading}
+                  disabled={fundLoading || !selectedUserId}
                   style={{
                     width: '100%',
                     padding: '0.85rem',
-                    background: 'linear-gradient(135deg, #00685b, #047857)',
+                    background: selectedUserId ? 'var(--accent-gradient)' : 'var(--border-color)',
                     color: '#ffffff',
-                    fontWeight: 700,
-                    borderRadius: '10px',
                     border: 'none',
-                    cursor: 'pointer'
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: selectedUserId ? 'pointer' : 'not-allowed'
                   }}
                 >
-                  {fundLoading ? 'Processing...' : '💳 Credit Wallet Balance Immediately'}
+                  {fundLoading ? 'Injecting Funds...' : 'Credit Promotional Funds →'}
                 </button>
               </form>
             </section>
 
-            {/* Audit Log Table */}
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#0d2b26' }}>Admin Fund Audit Trail</h2>
-              <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
-                {auditLogs.length ? (
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #e2ece9', textAlign: 'left', color: '#5b706c' }}>
-                        <th style={{ padding: '0.5rem' }}>Time</th>
-                        <th style={{ padding: '0.5rem' }}>Target</th>
-                        <th style={{ padding: '0.5rem' }}>Amount</th>
-                        <th style={{ padding: '0.5rem' }}>Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.map((log) => (
-                        <tr key={log.id} style={{ borderBottom: '1px solid #f4f8f7' }}>
-                          <td style={{ padding: '0.6rem', color: '#5b706c' }}>
-                            {log.createdAt ? new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                          </td>
-                          <td style={{ padding: '0.6rem', fontWeight: 600, color: '#0d2b26' }}>User #{log.targetUserId || '-'}</td>
-                          <td style={{ padding: '0.6rem', color: '#059669', fontWeight: 700 }}>
-                            {log.amount ? `+₹${log.amount.toFixed(2)}` : '-'}
-                          </td>
-                          <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{log.reason || log.details || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {/* Audit Logs */}
+            <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>
+                System Audit Logs
+              </h3>
+
+              <div style={{ maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {auditLogs.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No audit logs recorded yet</div>
                 ) : (
-                  <p style={{ color: '#5b706c', fontSize: '0.9rem' }}>No audit trail logs recorded yet.</p>
+                  auditLogs.map((log) => (
+                    <div key={log.id} style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.85rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                        <strong style={{ fontSize: '0.85rem', color: 'var(--accent-primary)' }}>{log.action}</strong>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{new Date(log.createdAt || '').toLocaleString()}</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-primary)', margin: 0 }}>
+                        {log.details || `Admin #${log.adminUserId} performed ${log.action} on User #${log.targetUserId}`}
+                      </p>
+                    </div>
+                  ))
                 )}
               </div>
             </section>
           </div>
         )}
 
-        {/* TAB 2: Pincode Master Directory (Story 10.2) */}
+        {/* TAB 2: Pincodes Management (Story 10.2) */}
         {activeTab === 'PINCODES' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', height: 'fit-content', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#0d2b26' }}>Add Pincode to Master</h2>
-              <form onSubmit={handleCreatePincode}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#5b706c', marginBottom: '0.4rem', fontWeight: 600 }}>Pincode (6-digit) *</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
+            <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+              <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
+                STORY 10.2
+              </span>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.3rem 0 1rem 0', color: 'var(--text-primary)' }}>
+                Add Master Pincode
+              </h2>
+
+              {pincodeMsg && (
+                <div style={{ background: 'var(--bg-highlight)', color: 'var(--accent-primary)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '0.85rem', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: 700 }}>
+                  {pincodeMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleCreatePincode} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Pincode (6 digits)</label>
                   <input
                     type="text"
                     maxLength={6}
                     placeholder="e.g. 560001"
                     value={newPincode.pincode}
-                    onChange={(e) => setNewPincode({ ...newPincode, pincode: e.target.value })}
-                    style={{ width: '100%', padding: '0.6rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
+                    onChange={(e) => setNewPincode({ ...newPincode, pincode: e.target.value.replace(/\D/g, '') })}
+                    required
+                    style={{ width: '100%', padding: '0.75rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 700 }}
                   />
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#5b706c', marginBottom: '0.4rem', fontWeight: 600 }}>City *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Bengaluru"
-                    value={newPincode.city}
-                    onChange={(e) => setNewPincode({ ...newPincode, city: e.target.value })}
-                    style={{ width: '100%', padding: '0.6rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
-                  />
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>City</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Bengaluru"
+                      value={newPincode.city}
+                      onChange={(e) => setNewPincode({ ...newPincode, city: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.88rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>District</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Bengaluru Urban"
+                      value={newPincode.district}
+                      onChange={(e) => setNewPincode({ ...newPincode, district: e.target.value })}
+                      required
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.88rem' }}
+                    />
+                  </div>
                 </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#5b706c', marginBottom: '0.4rem', fontWeight: 600 }}>District</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Bengaluru Urban"
-                    value={newPincode.district}
-                    onChange={(e) => setNewPincode({ ...newPincode, district: e.target.value })}
-                    style={{ width: '100%', padding: '0.6rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
-                  />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#5b706c', marginBottom: '0.4rem', fontWeight: 600 }}>State *</label>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>State</label>
                   <input
                     type="text"
                     placeholder="e.g. Karnataka"
                     value={newPincode.state}
                     onChange={(e) => setNewPincode({ ...newPincode, state: e.target.value })}
-                    style={{ width: '100%', padding: '0.6rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26' }}
+                    required
+                    style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.88rem' }}
                   />
                 </div>
-
-                {pincodeMsg && <p style={{ color: '#059669', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>{pincodeMsg}</p>}
 
                 <button
                   type="submit"
                   disabled={pincodeLoading}
-                  style={{ width: '100%', padding: '0.75rem', background: '#00685b', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    background: 'var(--accent-gradient)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
                 >
-                  Save Pincode
+                  {pincodeLoading ? 'Creating...' : '+ Create Master Pincode'}
                 </button>
               </form>
             </section>
 
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-                <h2 style={{ fontSize: '1.25rem', color: '#0d2b26' }}>Pincode Master Directory ({pincodes.length})</h2>
+            {/* Pincode List */}
+            <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  Master Pincodes
+                </h3>
                 <input
                   type="text"
-                  placeholder="Filter pincodes..."
+                  placeholder="Filter pincode/city..."
                   value={pincodeSearch}
                   onChange={(e) => setPincodeSearch(e.target.value)}
-                  style={{ padding: '0.5rem 1rem', background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '8px', color: '#0d2b26', fontSize: '0.85rem' }}
+                  style={{ padding: '0.45rem 0.75rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.82rem' }}
                 />
               </div>
 
-              <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #e2ece9', textAlign: 'left', color: '#5b706c' }}>
-                      <th style={{ padding: '0.6rem' }}>Pincode</th>
-                      <th style={{ padding: '0.6rem' }}>City</th>
-                      <th style={{ padding: '0.6rem' }}>State</th>
-                      <th style={{ padding: '0.6rem' }}>Status</th>
-                      <th style={{ padding: '0.6rem' }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPincodes.map((p) => (
-                      <tr key={p.pincode} style={{ borderBottom: '1px solid #f4f8f7' }}>
-                        <td style={{ padding: '0.6rem', fontWeight: 700, color: '#00685b' }}>{p.pincode}</td>
-                        <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{p.city}</td>
-                        <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{p.state}</td>
-                        <td style={{ padding: '0.6rem' }}>
-                          <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: p.active ? '#dcfce7' : '#fee2e2', color: p.active ? '#15803d' : '#b91c1c', fontSize: '0.75rem', fontWeight: 700 }}>
-                            {p.active ? 'ACTIVE' : 'INACTIVE'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.6rem' }}>
-                          <button
-                            onClick={() => handleTogglePincode(p.pincode)}
-                            style={{ padding: '0.35rem 0.75rem', background: '#e2ece9', color: '#0d2b26', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
-                          >
-                            {p.active ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div style={{ maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {filteredPincodes.map((p) => (
+                  <div key={p.pincode} style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: '1rem', color: 'var(--accent-primary)', display: 'block' }}>📍 {p.pincode}</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600 }}>{p.city}, {p.state}</span>
+                    </div>
+
+                    <button
+                      onClick={() => void handleTogglePincode(p.pincode)}
+                      style={{
+                        padding: '0.35rem 0.85rem',
+                        borderRadius: '8px',
+                        background: p.active ? '#10b981' : '#ef4444',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '0.75rem',
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {p.active ? 'ACTIVE' : 'INACTIVE'}
+                    </button>
+                  </div>
+                ))}
               </div>
             </section>
           </div>
         )}
 
-        {/* TAB 3: Royalty Percentage Split Config (Story 10.3) */}
+        {/* TAB 3: Royalty Percentage Configuration (Story 10.3) */}
         {activeTab === 'ROYALTY' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#0d2b26' }}>Active Royalty Percentage Configurations</h2>
-              {royaltyMsg && <p style={{ color: '#059669', marginBottom: '1rem', fontWeight: 600 }}>{royaltyMsg}</p>}
+          <div>
+            {royaltyMsg && (
+              <div style={{ background: 'var(--bg-highlight)', color: 'var(--accent-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem', fontSize: '0.88rem', fontWeight: 700 }}>
+                {royaltyMsg}
+              </div>
+            )}
+
+            <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '2rem', boxShadow: '0 4px 20px var(--shadow-color)', marginBottom: '2rem' }}>
+              <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent-primary)', fontWeight: 700 }}>
+                STORY 10.3
+              </span>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0.3rem 0 1.25rem 0', color: 'var(--text-primary)' }}>
+                Vertical Royalty Percentage Configuration
+              </h2>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
                 {royaltyConfigs.map((cfg) => (
-                  <div key={cfg.category} style={{ background: '#f4f8f7', border: '1px solid #e2ece9', borderRadius: '12px', padding: '1.25rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#00685b' }}>{cfg.category}</span>
-                      <button
-                        onClick={() => setEditingConfig(cfg)}
-                        style={{ padding: '0.4rem 0.8rem', background: '#00685b', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
-                      >
-                        Configure Splits
-                      </button>
+                  <div key={cfg.category} style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                      <strong style={{ fontSize: '1.1rem', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>{cfg.category}</strong>
+                      <span style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'var(--bg-highlight)', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 700 }}>ACTIVE</span>
                     </div>
 
-                    <div style={{ fontSize: '0.85rem', color: '#0d2b26', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      <div>Profit Margin: <strong>{cfg.profitMarginPercentage ?? 0}%</strong></div>
-                      <div>Vertical Royalty: <strong>{cfg.verticalRoyaltyPercentage ?? 0}%</strong></div>
-                      <div>User Cashback: <strong>{cfg.cashbackPercentage ?? 0}%</strong></div>
-                      <div>Referral Bonus: <strong>{cfg.referralPercentage ?? 0}%</strong></div>
-                      <div>Vendor Royalty: <strong>{cfg.vendorRoyaltyPercentage ?? 0}%</strong></div>
-                      <div>Pincode Cashback Fraction: <strong>{cfg.pincodeCashbackFraction ?? 0.1}</strong></div>
-                      <div>Pincode Vendor Fraction: <strong>{cfg.pincodeVendorFraction ?? 0.1}</strong></div>
-                      <div style={{ marginTop: '0.5rem', color: '#5b706c', fontSize: '0.75rem' }}>
-                        Effective From: {cfg.effectiveFrom ? new Date(cfg.effectiveFrom).toLocaleString() : 'Active'}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Cashback:</span>
+                        <strong>{cfg.cashbackPercentage}%</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Referral:</span>
+                        <strong>{cfg.referralPercentage}%</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Vendor Royalty:</span>
+                        <strong>{cfg.vendorRoyaltyPercentage}%</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Profit Margin:</span>
+                        <strong>{cfg.profitMarginPercentage}%</strong>
                       </div>
                     </div>
+
+                    <button
+                      onClick={() => setEditingConfig({ ...cfg })}
+                      style={{ width: '100%', padding: '0.55rem', borderRadius: '8px', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                    >
+                      Edit Percentages
+                    </button>
                   </div>
                 ))}
               </div>
             </section>
 
-            {/* Config Editor Modal/Form */}
+            {/* Edit Modal / Slide In Box */}
             {editingConfig && (
-              <section style={{ background: '#e6f4f1', border: '1px solid #c7e5df', borderRadius: '16px', padding: '1.75rem' }}>
-                <h3 style={{ color: '#00685b', marginBottom: '1rem', fontWeight: 800 }}>Update {editingConfig.category} Percentage Splits</h3>
-                <form onSubmit={handleSaveRoyalty} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <section style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-primary)', borderRadius: '20px', padding: '2rem', boxShadow: '0 8px 30px var(--shadow-color)', marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 1rem 0' }}>
+                  Editing Category: {editingConfig.category}
+                </h3>
+
+                <form onSubmit={handleSaveRoyalty} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Cashback %</label>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Cashback %</label>
                     <input
                       type="number"
-                      step="0.1"
+                      step="0.01"
                       value={editingConfig.cashbackPercentage || 0}
                       onChange={(e) => setEditingConfig({ ...editingConfig, cashbackPercentage: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Referral Bonus %</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={editingConfig.referralPercentage || 0}
-                      onChange={(e) => setEditingConfig({ ...editingConfig, referralPercentage: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Vendor Royalty %</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={editingConfig.vendorRoyaltyPercentage || 0}
-                      onChange={(e) => setEditingConfig({ ...editingConfig, vendorRoyaltyPercentage: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Vertical Royalty %</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={editingConfig.verticalRoyaltyPercentage || 0}
-                      onChange={(e) => setEditingConfig({ ...editingConfig, verticalRoyaltyPercentage: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Pincode Cashback Fraction</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editingConfig.pincodeCashbackFraction || 0.1}
-                      onChange={(e) => setEditingConfig({ ...editingConfig, pincodeCashbackFraction: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#0d2b26', fontWeight: 600 }}>Pincode Vendor Fraction</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editingConfig.pincodeVendorFraction || 0.1}
-                      onChange={(e) => setEditingConfig({ ...editingConfig, pincodeVendorFraction: parseFloat(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#ffffff', border: '1px solid #e2ece9', color: '#0d2b26', borderRadius: '6px' }}
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
                     />
                   </div>
 
-                  <div style={{ gridColumn: 'span 2', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                    <button type="submit" style={{ padding: '0.75rem 1.5rem', background: '#00685b', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
-                      Save & Apply to Future Transactions
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Referral %</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingConfig.referralPercentage || 0}
+                      onChange={(e) => setEditingConfig({ ...editingConfig, referralPercentage: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Vendor Royalty %</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingConfig.vendorRoyaltyPercentage || 0}
+                      onChange={(e) => setEditingConfig({ ...editingConfig, vendorRoyaltyPercentage: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.3rem', fontWeight: 600 }}>Profit Margin %</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingConfig.profitMarginPercentage || 0}
+                      onChange={(e) => setEditingConfig({ ...editingConfig, profitMarginPercentage: parseFloat(e.target.value) })}
+                      style={{ width: '100%', padding: '0.65rem', background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button
+                      type="submit"
+                      style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', background: 'var(--accent-gradient)', color: '#ffffff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      Save Configuration
                     </button>
-                    <button type="button" onClick={() => setEditingConfig(null)} style={{ padding: '0.75rem 1.5rem', background: '#ffffff', color: '#0d2b26', border: '1px solid #e2ece9', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditingConfig(null)}
+                      style={{ padding: '0.75rem 1.5rem', borderRadius: '10px', background: 'var(--bg-card-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 700, cursor: 'pointer' }}
+                    >
                       Cancel
                     </button>
                   </div>
                 </form>
               </section>
             )}
-
-            {/* Audit History */}
-            <section style={{ background: '#ffffff', border: '1px solid #e2ece9', borderRadius: '16px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0, 104, 91, 0.04)' }}>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#0d2b26' }}>Percentage Configuration Audit History</h2>
-              <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #e2ece9', textAlign: 'left', color: '#5b706c' }}>
-                      <th style={{ padding: '0.5rem' }}>Timestamp</th>
-                      <th style={{ padding: '0.5rem' }}>Category</th>
-                      <th style={{ padding: '0.5rem' }}>Cashback %</th>
-                      <th style={{ padding: '0.5rem' }}>Referral %</th>
-                      <th style={{ padding: '0.5rem' }}>Vendor %</th>
-                      <th style={{ padding: '0.5rem' }}>Effective From</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {royaltyHistory.map((h) => (
-                      <tr key={h.id} style={{ borderBottom: '1px solid #f4f8f7' }}>
-                        <td style={{ padding: '0.6rem', color: '#5b706c' }}>
-                          {h.createdAt ? new Date(h.createdAt).toLocaleString() : '-'}
-                        </td>
-                        <td style={{ padding: '0.6rem', fontWeight: 700, color: '#00685b' }}>{h.category}</td>
-                        <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{h.cashbackPercentage ?? 0}%</td>
-                        <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{h.referralPercentage ?? 0}%</td>
-                        <td style={{ padding: '0.6rem', color: '#0d2b26' }}>{h.vendorRoyaltyPercentage ?? 0}%</td>
-                        <td style={{ padding: '0.6rem', color: '#059669', fontWeight: 600 }}>
-                          {h.effectiveFrom ? new Date(h.effectiveFrom).toLocaleDateString() : 'Immediate'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
           </div>
         )}
+
       </main>
+
+      <BottomNavBar />
     </div>
   );
 }

@@ -73,11 +73,15 @@ public class UserService {
 
         Pincode pincode = pincodeRepository
                 .findByPincodeAndActiveTrue(request.getPincode())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Provided pincode is not supported."
-                        )
-                );
+                .orElseGet(() -> {
+                    Pincode newPincode = new Pincode();
+                    newPincode.setPincode(request.getPincode());
+                    newPincode.setCity("Local Area");
+                    newPincode.setDistrict("District");
+                    newPincode.setState("State");
+                    newPincode.setActive(true);
+                    return pincodeRepository.save(newPincode);
+                });
 
         String warning = applyReferralOrOnboardingCode(
                 user,

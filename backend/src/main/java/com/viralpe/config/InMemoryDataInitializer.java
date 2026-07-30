@@ -59,16 +59,8 @@ public class InMemoryDataInitializer {
             ));
         }
 
-        // 3. Seed Default Users & Initial Presentation Data in Memory
-        if (userRepository.count() == 0) {
-            User user1 = createUser(1L, "anikatejareddy0003@gmail.com", "Anika Teja Reddy", "560001");
-            User user2 = createUser(2L, "demo@viralpe.com", "Demo User", "500001");
-            userRepository.saveAll(List.of(user1, user2));
-
-            // Populate multi-date demo presentation ledgers & wallets
-            demoService.loadDemoData(1L);
-            demoService.loadDemoData(2L);
-        }
+        // 3. Clear User Database for Presentation Sign-In Demo (0 emails in DB)
+        userRepository.deleteAll();
     }
 
     private User createUser(Long id, String email, String name, String pincode) {

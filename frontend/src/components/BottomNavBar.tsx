@@ -94,9 +94,9 @@ export default function BottomNavBar() {
           </button>
         </div>
 
-        {/* Item 4: Vouchers */}
+        {/* Item 4: My Vouchers */}
         <button
-          onClick={() => navigate('/vouchers')}
+          onClick={() => navigate('/my-vouchers')}
           style={{
             background: 'none',
             border: 'none',
@@ -104,9 +104,9 @@ export default function BottomNavBar() {
             flexDirection: 'column',
             alignItems: 'center',
             gap: '0.2rem',
-            color: isActive('/vouchers') ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            color: (isActive('/my-vouchers') || isActive('/vouchers')) ? 'var(--accent-primary)' : 'var(--text-secondary)',
             cursor: 'pointer',
-            fontWeight: isActive('/vouchers') ? 800 : 600,
+            fontWeight: (isActive('/my-vouchers') || isActive('/vouchers')) ? 800 : 600,
             fontSize: '0.75rem',
             flex: 1
           }}
@@ -117,7 +117,7 @@ export default function BottomNavBar() {
 
         {/* Item 5: Profile */}
         <button
-          onClick={() => navigate('/onboarding')}
+          onClick={() => navigate('/profile')}
           style={{
             background: 'none',
             border: 'none',
@@ -125,9 +125,9 @@ export default function BottomNavBar() {
             flexDirection: 'column',
             alignItems: 'center',
             gap: '0.2rem',
-            color: isActive('/onboarding') ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            color: isActive('/profile') ? 'var(--accent-primary)' : 'var(--text-secondary)',
             cursor: 'pointer',
-            fontWeight: isActive('/onboarding') ? 800 : 600,
+            fontWeight: isActive('/profile') ? 800 : 600,
             fontSize: '0.75rem',
             flex: 1
           }}

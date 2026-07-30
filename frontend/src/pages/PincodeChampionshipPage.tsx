@@ -229,7 +229,7 @@ export default function PincodeChampionshipPage() {
                     <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>User #{item.winnerUserId || '104'}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-primary)' }}>₹{(item.poolAmount || 0).toFixed(2)}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                      <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: 700 }}>
+                      <span style={{ padding: '0.25rem 0.65rem', borderRadius: '12px', background: 'var(--badge-credit-bg)', color: 'var(--badge-credit-text)', fontSize: '0.75rem', fontWeight: 800, border: '1px solid var(--accent-primary)' }}>
                         AWARDED
                       </span>
                     </td>

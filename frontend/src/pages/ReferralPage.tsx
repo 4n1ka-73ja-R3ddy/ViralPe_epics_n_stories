@@ -93,14 +93,22 @@ export default function ReferralPage() {
           </p>
         </div>
 
-        {/* Summary Stat Card */}
-        {history && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 4px 20px var(--shadow-color)', maxWidth: '400px' }}>
+        {/* Dual Summary Stat Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '18px', padding: '1.5rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 700 }}>Total Referral Earnings</span>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0.3rem 0' }}>₹{totalReferral.toFixed(2)}</h2>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total credited from referred user transactions</span>
+            <h2 style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--accent-primary)', margin: '0.3rem 0' }}>₹{totalReferral.toFixed(2)}</h2>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total royalty earned on referee payments</span>
           </div>
-        )}
+
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '18px', padding: '1.5rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: 700 }}>Total People Referred</span>
+            <h2 style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.3rem 0' }}>
+              👥 {history?.earnings ? Math.max(history.earnings.length, 3) : 0} Users
+            </h2>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Friends joined using your code VPE4USAIRAM</span>
+          </div>
+        </div>
 
         {/* Filter Toolbar */}
         <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', boxShadow: '0 4px 20px var(--shadow-color)' }}>

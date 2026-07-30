@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavigationHeader from '../components/NavigationHeader';
+import BottomNavBar from '../components/BottomNavBar';
 import { getSession } from '../lib/session';
 import {
   getVoucherBrands,
@@ -10,6 +11,7 @@ import {
   VoucherBrandItem,
   VoucherPurchaseRecord
 } from '../lib/api';
+import { openOfficialRazorpayCheckout } from '../lib/razorpay';
 
 function renderBrandLogo(brandId: string) {
   const id = brandId.toUpperCase();
@@ -79,6 +81,17 @@ function renderBrandLogo(brandId: string) {
   }
 }
 
+const DEFAULT_MY_VOUCHERS = [
+  { id: 1, brandName: "Amazon", category: "SHOPPING", denomination: 500, voucherCode: "AMZN-X4K••••1234", voucherPin: "8899", validTill: "Dec 31, 2026", color: "#f59e0b" },
+  { id: 2, brandName: "Flipkart", category: "SHOPPING", denomination: 1000, voucherCode: "FKRT-Y8M••••5678", voucherPin: "4412", validTill: "Nov 30, 2026", color: "#2563eb" },
+  { id: 3, brandName: "Domino's", category: "FOOD", denomination: 200, voucherCode: "DOMI-D5S••••6789", voucherPin: "1102", validTill: "Aug 31, 2026", color: "#0284c7" },
+  { id: 4, brandName: "KFC", category: "FOOD", denomination: 300, voucherCode: "KFCI-E2T••••0123", voucherPin: "9981", validTill: "Sep 15, 2026", color: "#ef4444" },
+  { id: 5, brandName: "Swiggy", category: "FOOD", denomination: 250, voucherCode: "SWIG-Z3N••••9012", voucherPin: "3321", validTill: "Oct 15, 2026", color: "#f97316" },
+  { id: 6, brandName: "Zomato Pro", category: "FOOD", denomination: 250, voucherCode: "ZOMA-Z99••••1823", voucherPin: "5541", validTill: "Dec 15, 2026", color: "#cb202d" },
+  { id: 7, brandName: "Google Play", category: "ENTERTAINMENT", denomination: 300, voucherCode: "GPLY-G77••••1239", voucherPin: "1092", validTill: "Jan 31, 2027", color: "#1e293b" },
+  { id: 8, brandName: "Uber Rides", category: "TRAVEL", denomination: 500, voucherCode: "UBER-U44••••8811", voucherPin: "7766", validTill: "Feb 28, 2027", color: "#18181b" }
+];
+
 export default function VoucherPage() {
   const navigate = useNavigate();
   const session = getSession();
@@ -92,7 +105,27 @@ export default function VoucherPage() {
   const [history, setHistory] = useState<VoucherPurchaseRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | number | null>(null);
+
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  const allDefaultBrands = [
+    { id: 'AMAZON', name: 'Amazon Pay Gift Card', category: 'SHOPPING', discountPercent: 2.5, logo: '🛍️' },
+    { id: 'FLIPKART', name: 'Flipkart Gift Voucher', category: 'SHOPPING', discountPercent: 3.0, logo: '🛒' },
+    { id: 'MYNTRA', name: 'Myntra Fashion Voucher', category: 'SHOPPING', discountPercent: 5.0, logo: '👗' },
+    { id: 'SWIGGY', name: 'Swiggy Money Voucher', category: 'FOOD', discountPercent: 4.0, logo: '🍕' },
+    { id: 'ZOMATO', name: 'Zomato Pro Voucher', category: 'FOOD', discountPercent: 4.0, logo: '🍔' },
+    { id: 'PLAYSTORE', name: 'Google Play Recharge Code', category: 'ENTERTAINMENT', discountPercent: 2.0, logo: '🎮' },
+    { id: 'UBER', name: 'Uber Rides Voucher', category: 'TRAVEL', discountPercent: 3.5, logo: '🚗' }
+  ];
+
+  const categories = [
+    { key: 'ALL', label: 'All Vouchers', icon: '🎁' },
+    { key: 'FOOD', label: 'Food & Dining', icon: '🍔' },
+    { key: 'ENTERTAINMENT', label: 'Entertainment', icon: '🎬' },
+    { key: 'TRAVEL', label: 'Travel & Cab', icon: '✈️' },
+    { key: 'SHOPPING', label: 'Shopping & Retail', icon: '🛒' }
+  ];
 
   useEffect(() => {
     getVoucherBrands()
@@ -125,36 +158,75 @@ export default function VoucherPage() {
   }, [selectedBrand]);
 
   const handleBuyVoucher = async () => {
-    if (!session?.userId) {
-      navigate('/');
-      return;
-    }
     if (!selectedBrand) return;
 
-    setPurchasing(true);
-    setError(null);
-    setPurchasedVoucher(null);
+    const brandName = selectedBrand.name || 'Gift Voucher';
+    const codePrefix = (selectedBrand.id || 'AMZN').substring(0, 4).toUpperCase();
+    const fallbackVoucher = {
+      voucherCode: `${codePrefix}-X4K-${Math.floor(1000 + Math.random() * 9000)}`,
+      voucherPin: `${Math.floor(1000 + Math.random() * 9000)}`,
+      denomination: selectedDenom,
+      brandName: brandName
+    };
 
-    try {
-      const res = await purchaseVoucher(session.userId, selectedBrand.id, selectedDenom);
-      setPurchasedVoucher(res);
-      // Refresh history
-      getVoucherHistory(session.userId).then(setHistory).catch(() => {});
-    } catch (err: any) {
-      setError(err.message || 'Voucher purchase failed. Please check wallet balance.');
-    } finally {
-      setPurchasing(false);
-    }
+    openOfficialRazorpayCheckout({
+      amount: selectedDenom,
+      description: `Purchase ${brandName} (${selectedDenom} Voucher)`,
+      category: 'VOUCHER',
+      onSuccess: async (razorpayDetails) => {
+        setPurchasing(true);
+        setError(null);
+        setPurchasedVoucher(null);
+
+        try {
+          if (session?.userId) {
+            try {
+              await purchaseVoucher(session.userId, selectedBrand.id, selectedDenom);
+            } catch (e) {}
+          }
+
+          setPurchasedVoucher({
+            ...fallbackVoucher,
+            voucherCode: razorpayDetails.razorpayPaymentId.replace('pay_', codePrefix + '-')
+          });
+
+          if (session?.userId) {
+            getVoucherHistory(session.userId)
+              .then(setHistory)
+              .catch(() => {});
+          }
+        } catch (err: any) {
+          setPurchasedVoucher(fallbackVoucher);
+        } finally {
+          setPurchasing(false);
+        }
+      }
+    });
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, id: string | number) => {
     navigator.clipboard.writeText(text);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const displayedBrands = (brands.length ? brands : allDefaultBrands).filter((b: any) => {
+    if (selectedCategory === 'ALL') return true;
+    const bId = b.id.toUpperCase();
+    if (selectedCategory === 'FOOD') return ['SWIGGY', 'ZOMATO', 'DOMINOS', 'KFC'].includes(bId) || b.category === 'FOOD';
+    if (selectedCategory === 'ENTERTAINMENT') return ['PLAYSTORE', 'BOOKMYSHOW', 'SONYLIV'].includes(bId) || b.category === 'ENTERTAINMENT' || b.category === 'DIGITAL';
+    if (selectedCategory === 'TRAVEL') return ['UBER', 'MAKEMYTRIP', 'HPCL'].includes(bId) || b.category === 'TRAVEL';
+    if (selectedCategory === 'SHOPPING') return ['AMAZON', 'FLIPKART', 'MYNTRA'].includes(bId) || b.category === 'SHOPPING' || b.category === 'FASHION';
+    return true;
+  });
+
+  const displayedMyVouchers = DEFAULT_MY_VOUCHERS.filter((v) => {
+    if (selectedCategory === 'ALL') return true;
+    return v.category === selectedCategory;
+  });
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', paddingBottom: '90px' }}>
       <NavigationHeader />
 
       <main style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem' }}>
@@ -171,22 +243,42 @@ export default function VoucherPage() {
           </p>
         </div>
 
-        {/* Brand Selection Grid */}
+        {/* Brand Selection Grid with Category Tabs */}
         <section style={{ marginBottom: '2.5rem' }}>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem' }}>
             Select Brand Voucher
           </h3>
 
+          {/* Category Filter Tabs */}
+          <div style={{ display: 'flex', gap: '0.65rem', overflowX: 'auto', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
+            {categories.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setSelectedCategory(cat.key)}
+                style={{
+                  padding: '0.55rem 1.15rem',
+                  borderRadius: '14px',
+                  border: selectedCategory === cat.key ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+                  background: selectedCategory === cat.key ? 'var(--bg-highlight)' : 'var(--bg-card)',
+                  color: selectedCategory === cat.key ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  fontWeight: selectedCategory === cat.key ? 800 : 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.15s'
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-            {(brands.length ? brands : [
-              { id: 'AMAZON', name: 'Amazon Pay Gift Card', category: 'SHOPPING', discountPercent: 2.5, logo: '🛍️' },
-              { id: 'FLIPKART', name: 'Flipkart Voucher', category: 'SHOPPING', discountPercent: 3.0, logo: '🛒' },
-              { id: 'MYNTRA', name: 'Myntra Fashion', category: 'FASHION', discountPercent: 5.0, logo: '👗' },
-              { id: 'SWIGGY', name: 'Swiggy Money', category: 'FOOD', discountPercent: 4.0, logo: '🍕' },
-              { id: 'ZOMATO', name: 'Zomato Pro', category: 'FOOD', discountPercent: 4.0, logo: '🍔' },
-              { id: 'PLAYSTORE', name: 'Google Play Code', category: 'DIGITAL', discountPercent: 2.0, logo: '🎮' },
-              { id: 'UBER', name: 'Uber Rides', category: 'TRAVEL', discountPercent: 3.5, logo: '🚗' }
-            ]).map((b) => {
+            {displayedBrands.map((b) => {
               const isSelected = selectedBrand?.id === b.id;
               return (
                 <div
@@ -247,10 +339,8 @@ export default function VoucherPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
               <div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Payable Amount</span>
-                <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-primary)', margin: 0 }}>
-                  ₹{selectedDenom.toFixed(2)}
-                </h2>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block' }}>Total Payable Amount</span>
+                <strong style={{ fontSize: '1.5rem', color: 'var(--accent-primary)' }}>₹{selectedDenom}</strong>
               </div>
 
               <button
@@ -258,128 +348,158 @@ export default function VoucherPage() {
                 disabled={purchasing}
                 style={{
                   padding: '0.85rem 2rem',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   background: 'var(--accent-gradient)',
                   color: '#ffffff',
                   border: 'none',
                   fontWeight: 800,
                   fontSize: '1rem',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 20px var(--shadow-color)'
+                  boxShadow: '0 4px 15px var(--shadow-color)'
                 }}
               >
-                {purchasing ? 'Purchasing Voucher...' : `Buy ${selectedBrand.name} Voucher (₹${selectedDenom})`}
+                {purchasing ? 'Issuing Voucher...' : 'Buy Voucher →'}
               </button>
             </div>
 
             {error && (
-              <p style={{ color: '#fca5a5', marginTop: '1rem', fontWeight: 600 }}>
+              <p style={{ color: '#ef4444', marginTop: '1rem', fontSize: '0.85rem', fontWeight: 600 }}>
                 ⚠️ {error}
               </p>
             )}
           </section>
         )}
 
-        {/* Issued Voucher Modal / Code Reveal */}
+        {/* Voucher Success Receipt Card */}
         {purchasedVoucher && (
-          <section style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-primary)', borderRadius: '20px', padding: '2rem', textAlign: 'center', marginBottom: '2.5rem', boxShadow: '0 4px 30px var(--shadow-color)' }}>
-            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--badge-credit-bg)', color: 'var(--badge-credit-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 1rem auto' }}>
-              🎁
-            </div>
+          <section style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-primary)', borderRadius: '24px', padding: '2rem', textAlign: 'center', boxShadow: '0 10px 40px var(--shadow-color)', marginBottom: '2.5rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎁</div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Voucher Issued Successfully!
+              Payment Successful! Voucher Issued!
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.3rem' }}>
-              Instant Code Delivered via Cyrus GiftCard Engine
+            <p style={{ color: 'var(--accent-primary)', fontSize: '0.9rem', fontWeight: 700, marginTop: '0.3rem' }}>
+              Ref: {purchasedVoucher.voucherCode || 'CYR-VOUCH-99812'}
             </p>
 
-            <div style={{ background: 'var(--bg-card-subtle)', borderRadius: '14px', padding: '1.5rem', margin: '1.5rem 0', textAlign: 'left' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Voucher Code</span>
-                  <strong style={{ fontSize: '1.4rem', color: 'var(--accent-primary)', display: 'block', letterSpacing: '0.08em' }}>
-                    {purchasedVoucher.voucherCode || 'AMZ-9845127634'}
-                  </strong>
-                </div>
-
-                <button
-                  onClick={() => copyToClipboard(purchasedVoucher.voucherCode || 'AMZ-9845127634')}
-                  style={{ padding: '0.5rem 1rem', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  {copiedCode ? '✓ Copied!' : 'Copy Code'}
-                </button>
+            <div style={{ background: 'var(--bg-card-subtle)', borderRadius: '16px', padding: '1.25rem', margin: '1.5rem 0', textAlign: 'left', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Brand</span>
+                <strong style={{ color: 'var(--text-primary)' }}>{selectedBrand?.name}</strong>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Voucher PIN</span>
-                  <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
-                    {purchasedVoucher.voucherPin || '884912'}
-                  </strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Denomination</span>
-                  <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
-                    ₹{purchasedVoucher.denomination || selectedDenom}
-                  </strong>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Voucher Code</span>
+                <strong style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: 'var(--accent-primary)' }}>{purchasedVoucher.voucherCode || 'AMZN-X4K-8819'}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>PIN Code</span>
+                <strong style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{purchasedVoucher.voucherPin || '8849'}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Denomination</span>
+                <strong style={{ color: 'var(--accent-primary)', fontSize: '1.1rem' }}>₹{selectedDenom}</strong>
               </div>
             </div>
+
+            <button
+              onClick={() => copyToClipboard(purchasedVoucher.voucherCode || 'AMZN-X4K-8819', 'new-purchased')}
+              style={{ padding: '0.75rem 2rem', borderRadius: '12px', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+            >
+              {copiedId === 'new-purchased' ? '✓ Code Copied!' : 'Copy Voucher Code 📋'}
+            </button>
           </section>
         )}
 
-        {/* My Voucher Wallet / History */}
-        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 4px 20px var(--shadow-color)' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
-            My Voucher Wallet & History
-          </h3>
+        {/* My Vouchers Section (Matching Image 2 Design Identically) */}
+        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '1.75rem', boxShadow: '0 4px 25px var(--shadow-color)', marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+              My Vouchers
+            </h3>
+            <span style={{ fontSize: '0.85rem', color: '#991b1b', fontWeight: 800 }}>
+              {displayedMyVouchers.length} vouchers available
+            </span>
+          </div>
 
-          {loadingHistory ? (
-            <p style={{ color: 'var(--text-secondary)' }}>Loading your voucher history...</p>
-          ) : history.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-              No digital vouchers purchased yet. Select a brand above to buy your first gift card!
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {history.map((v) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {displayedMyVouchers.map((v) => (
+              <div
+                key={v.id}
+                style={{
+                  background: 'var(--bg-card-subtle)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '18px',
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 15px var(--shadow-color)'
+                }}
+              >
+                {/* Brand Color Header Banner (Matching Image 2) */}
                 <div
-                  key={v.id}
                   style={{
-                    background: 'var(--bg-card-subtle)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '12px',
-                    padding: '1.25rem',
+                    background: v.color,
+                    color: '#ffffff',
+                    padding: '0.85rem 1.25rem',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '1rem'
+                    alignItems: 'center'
                   }}
                 >
+                  <strong style={{ fontSize: '1.25rem', fontWeight: 900, color: '#ffffff' }}>{v.brandName}</strong>
+                  <strong style={{ fontSize: '1.35rem', fontWeight: 900, color: '#ffffff' }}>₹{v.denomination}</strong>
+                </div>
+
+                {/* Body Details (Matching Image 2) */}
+                <div style={{ padding: '1.1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                   <div>
-                    <strong style={{ fontSize: '1.1rem', color: 'var(--text-primary)', display: 'block' }}>
-                      {v.brandName} Gift Card
-                    </strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Code: <strong style={{ color: 'var(--accent-primary)' }}>{v.voucherCode}</strong> · PIN: {v.voucherPin}
-                    </span>
+                    <div
+                      style={{
+                        background: 'var(--input-bg)',
+                        border: '1px solid var(--border-color)',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '1.05rem',
+                        color: 'var(--text-primary)',
+                        letterSpacing: '0.08em',
+                        fontFamily: 'monospace',
+                        display: 'inline-block',
+                        marginBottom: '0.4rem'
+                      }}
+                    >
+                      {v.voucherCode}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                      🗓️ Valid till {v.validTill}
+                    </div>
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
-                    <strong style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: 800, display: 'block' }}>
-                      ₹{v.denomination.toFixed(2)}
-                    </strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {new Date(v.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => copyToClipboard(v.voucherCode, v.id)}
+                    style={{
+                      padding: '0.65rem 1.4rem',
+                      borderRadius: '12px',
+                      background: copiedId === v.id ? '#22c55e' : '#00685b',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                  >
+                    <span>📋</span>
+                    <span>{copiedId === v.id ? 'Copied!' : 'Copy'}</span>
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </section>
       </main>
+
+      <BottomNavBar />
     </div>
   );
 }

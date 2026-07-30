@@ -77,10 +77,9 @@ public class CheckoutService {
                 double take =
                         Math.min(reversal.getBalance(), remaining);
 
-                walletService.creditReversalWallet(
+                walletService.debitReversalWallet(
                         userId,
-                        -take,
-                        null
+                        take
                 );
 
                 usedFromReversal = take;
