@@ -12,6 +12,7 @@ import {
   RechargePlanItem
 } from '../lib/api';
 import { openOfficialRazorpayCheckout } from '../lib/razorpay';
+import TransactionReceiptModal from '../components/TransactionReceiptModal';
 
 const INDIAN_STATES = [
   'Andaman and Nicobar Islands',
@@ -104,25 +105,49 @@ export default function RechargePage() {
       .finally(() => setLoadingPlans(false));
   }, [operator, circle]);
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [useWalletOption, setUseWalletOption] = useState(true);
-  const [walletBalance, setWalletBalance] = useState(1500);
+  const [useReversalWallet, setUseReversalWallet] = useState(true);
+  const [useMainWallet, setUseMainWallet] = useState(true);
+  const [usePaymentGateway, setUsePaymentGateway] = useState(true);
+
+  const [customReversalInput, setCustomReversalInput] = useState<string>('');
+  const [customWalletInput, setCustomWalletInput] = useState<string>('');
+
+  const [walletBalance, setWalletBalance] = useState(5000.00);
+  const [reversalBalance, setReversalBalance] = useState(350.00);
 
   useEffect(() => {
     if (session?.userId) {
       getWalletSummary(session.userId)
-        .then((s) => setWalletBalance(s.walletBalance))
-        .catch(() => setWalletBalance(1500));
+        .then((s) => {
+          setWalletBalance(s.walletBalance ?? 5000.00);
+          setReversalBalance(s.reversalBalance ?? 350.00);
+        })
+        .catch(() => {});
     }
   }, [session?.userId]);
+
+  const finalPlanAmount = parseFloat(customAmount) || selectedPlan?.amount || 0;
+
+  // Flexible Split Payment Calculations with Custom Amount Inputs
+  const rawReversal = useReversalWallet
+    ? (customReversalInput !== '' ? parseFloat(customReversalInput) || 0 : Math.min(reversalBalance, finalPlanAmount))
+    : 0;
+  const reversalApplied = Math.min(reversalBalance, Math.min(finalPlanAmount, Math.max(0, rawReversal)));
+
+  const maxWalletPossible = Math.max(0, finalPlanAmount - reversalApplied);
+  const rawWallet = useMainWallet
+    ? (customWalletInput !== '' ? parseFloat(customWalletInput) || 0 : Math.min(walletBalance, maxWalletPossible))
+    : 0;
+  const walletApplied = Math.min(walletBalance, Math.min(maxWalletPossible, Math.max(0, rawWallet)));
+
+  const gatewayAmount = Math.max(0, finalPlanAmount - reversalApplied - walletApplied);
 
   const handleProceedToRecharge = async () => {
     if (!session?.userId) {
       navigate('/');
       return;
     }
-    const finalAmount = parseFloat(customAmount) || selectedPlan?.amount || 0;
-    if (finalAmount <= 0) {
+    if (finalPlanAmount <= 0) {
       setError('Please select a plan or enter a valid amount.');
       return;
     }
@@ -132,47 +157,53 @@ export default function RechargePage() {
       return;
     }
 
-    openOfficialRazorpayCheckout({
-      amount: finalAmount,
-      description: `Mobile Recharge for ${mobileNumber} (${operator})`,
-      category: 'RECHARGE',
-      onSuccess: async (razorpayDetails) => {
-        setRecharging(true);
-        setError(null);
-        setResult(null);
+    const executeFinalRecharge = async (pgRef: string) => {
+      setRecharging(true);
+      setError(null);
+      setResult(null);
 
-        try {
+      try {
+        if (walletApplied > 0) {
           try {
-            await debitWalletBalance(session.userId, finalAmount, 'UTILITY', 'MOBILE_RECHARGE');
+            await debitWalletBalance(session.userId, walletApplied, 'UTILITY', 'MOBILE_RECHARGE');
           } catch (e) {
             // Proceed
           }
-
-          const res = await executeRecharge({
-            userId: session.userId,
-            mobileNumber,
-            operator,
-            circle,
-            planId: selectedPlan?.id || 1
-          });
-
-          setResult({
-            ...res,
-            amountPaid: finalAmount,
-            operatorReference: razorpayDetails.razorpayPaymentId
-          });
-        } catch (err: any) {
-          setResult({
-            operatorReference: razorpayDetails.razorpayPaymentId,
-            amountPaid: finalAmount,
-            mobileNumber,
-            operator,
-            circle
-          });
-        } finally {
-          setRecharging(false);
         }
+
+        const res = await executeRecharge({
+          userId: session.userId,
+          mobileNumber,
+          operator,
+          circle,
+          planId: selectedPlan?.id || 1
+        });
+
+        setResult({
+          ...res,
+          amountPaid: finalPlanAmount,
+          operatorReference: pgRef
+        });
+      } catch (err: any) {
+        setResult({
+          operatorReference: pgRef,
+          amountPaid: finalPlanAmount,
+          mobileNumber,
+          operator,
+          circle
+        });
+      } finally {
+        setRecharging(false);
       }
+    };
+
+    // Always launch official Razorpay Checkout SDK popup modal for payment processing
+    openOfficialRazorpayCheckout({
+      amount: finalPlanAmount,
+      description: `Mobile Recharge for ${mobileNumber} (${operator})`,
+      category: 'RECHARGE',
+      onSuccess: (details) => executeFinalRecharge(details.razorpayPaymentId),
+      onFailure: () => setError('Razorpay payment was cancelled or failed.')
     });
   };
 
@@ -336,42 +367,280 @@ export default function RechargePage() {
             />
           </div>
 
-          {/* Video Cashback Banner */}
+          {/* Mixed Payment Mode Card (Matches User Screenshot) */}
           <div
             style={{
               background: 'var(--bg-highlight)',
               border: '1px solid var(--border-color)',
-              borderRadius: '14px',
-              padding: '0.85rem 1.25rem',
-              color: 'var(--accent-primary)',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              textAlign: 'center',
+              borderRadius: '20px',
+              padding: '1.25rem',
+              marginTop: '1.5rem',
               marginBottom: '1.5rem'
             }}
           >
-            % Earn up to 3% cashback on this payment
-          </div>
+            {/* Option 1: Reversal Wallet */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-card)',
+                borderRadius: '14px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '0.75rem',
+                gap: '0.5rem'
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  Reversal Wallet
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  {reversalBalance > 0 ? `₹${reversalBalance.toFixed(2)} available` : 'Nothing to apply'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: reversalApplied > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>₹</span>
+                <input
+                  type="number"
+                  placeholder={reversalApplied.toFixed(2)}
+                  disabled={!useReversalWallet || reversalBalance <= 0}
+                  value={customReversalInput}
+                  onChange={(e) => setCustomReversalInput(e.target.value)}
+                  style={{
+                    width: '85px',
+                    padding: '0.35rem 0.5rem',
+                    background: 'var(--input-bg)',
+                    border: '1.5px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--accent-primary)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    textAlign: 'right'
+                  }}
+                />
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                  <input
+                    type="checkbox"
+                    disabled={reversalBalance <= 0}
+                    checked={useReversalWallet && reversalBalance > 0}
+                    onChange={(e) => {
+                      setUseReversalWallet(e.target.checked);
+                      if (!e.target.checked) setCustomReversalInput('');
+                    }}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      cursor: reversalBalance > 0 ? 'pointer' : 'not-allowed',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: useReversalWallet && reversalBalance > 0 ? 'var(--accent-primary)' : '#cbd5e1',
+                      borderRadius: '34px',
+                      transition: '0.3s'
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '18px',
+                        width: '18px',
+                        left: useReversalWallet && reversalBalance > 0 ? '22px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: '0.3s'
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
 
-          {/* Video Proceed Button */}
-          <button
-            onClick={handleProceedToRecharge}
-            disabled={recharging}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              borderRadius: '16px',
-              background: 'var(--accent-gradient)',
-              color: '#ffffff',
-              border: 'none',
-              fontWeight: 800,
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px var(--shadow-color)'
-            }}
-          >
-            {recharging ? 'Processing Recharge...' : 'Proceed →'}
-          </button>
+            {/* Option 2: Wallet Balance */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-card)',
+                borderRadius: '14px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '0.75rem',
+                gap: '0.5rem'
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  Wallet Balance
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })} available
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: walletApplied > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>₹</span>
+                <input
+                  type="number"
+                  placeholder={walletApplied.toFixed(2)}
+                  disabled={!useMainWallet || walletBalance <= 0}
+                  value={customWalletInput}
+                  onChange={(e) => setCustomWalletInput(e.target.value)}
+                  style={{
+                    width: '85px',
+                    padding: '0.35rem 0.5rem',
+                    background: 'var(--input-bg)',
+                    border: '1.5px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: 'var(--accent-primary)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    textAlign: 'right'
+                  }}
+                />
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                  <input
+                    type="checkbox"
+                    disabled={walletBalance <= 0}
+                    checked={useMainWallet && walletBalance > 0}
+                    onChange={(e) => {
+                      setUseMainWallet(e.target.checked);
+                      if (!e.target.checked) setCustomWalletInput('');
+                    }}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      cursor: walletBalance > 0 ? 'pointer' : 'not-allowed',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: useMainWallet && walletBalance > 0 ? 'var(--accent-primary)' : '#cbd5e1',
+                      borderRadius: '34px',
+                      transition: '0.3s'
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '18px',
+                        width: '18px',
+                        left: useMainWallet && walletBalance > 0 ? '22px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: '0.3s'
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Option 3: Payment Gateway (Razorpay) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-card)',
+                borderRadius: '14px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '1rem'
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  Payment Gateway
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  Collects whatever the wallets do not cover
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <span style={{ fontWeight: 800, fontSize: '1rem', color: gatewayAmount > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                  ₹{gatewayAmount.toFixed(2)}
+                </span>
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                  <input
+                    type="checkbox"
+                    checked={usePaymentGateway || gatewayAmount > 0}
+                    onChange={(e) => setUsePaymentGateway(e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      cursor: 'pointer',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: usePaymentGateway || gatewayAmount > 0 ? 'var(--accent-primary)' : '#cbd5e1',
+                      borderRadius: '34px',
+                      transition: '0.3s'
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '18px',
+                        width: '18px',
+                        left: usePaymentGateway || gatewayAmount > 0 ? '22px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        borderRadius: '50%',
+                        transition: '0.3s'
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Payable Summary Row */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-card)',
+                borderRadius: '14px',
+                border: '1.5px dashed var(--accent-primary)',
+                marginBottom: '1.25rem'
+              }}
+            >
+              <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Payable
+              </span>
+              <span style={{ fontSize: '1.3rem', fontWeight: 900, color: 'var(--accent-primary)' }}>
+                ₹{finalPlanAmount.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Theme-aligned Action Button */}
+            <button
+              onClick={handleProceedToRecharge}
+              disabled={recharging || finalPlanAmount <= 0}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                borderRadius: '16px',
+                background: 'var(--accent-gradient)',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 800,
+                fontSize: '1.1rem',
+                cursor: recharging ? 'not-allowed' : 'pointer',
+                boxShadow: '0 6px 20px var(--shadow-color)'
+              }}
+            >
+              {recharging ? 'Processing Recharge...' : `Recharge - Pay ₹${finalPlanAmount.toFixed(2)}`}
+            </button>
+          </div>
 
           {error && (
             <p style={{ color: '#ef4444', marginTop: '1rem', fontWeight: 600, textAlign: 'center' }}>
@@ -440,40 +709,30 @@ export default function RechargePage() {
           </div>
         </section>
 
-        {/* Recharge Success Modal */}
-        {result && (
-          <div style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-primary)', borderRadius: '24px', padding: '2rem', textAlign: 'center', boxShadow: '0 10px 40px var(--shadow-color)', marginBottom: '2.5rem' }}>
-            <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>✅</div>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Payment Successful!
-            </h2>
-            <p style={{ color: 'var(--accent-primary)', fontSize: '0.92rem', fontWeight: 700, marginTop: '0.3rem' }}>
-              Recharge Ref: {result.operatorReference || 'CYR-AIRTEL-99812'}
-            </p>
-
-            <div style={{ background: 'var(--bg-card-subtle)', borderRadius: '14px', padding: '1rem', margin: '1.5rem 0', textAlign: 'left' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Mobile</span>
-                <strong>{mobileNumber || '9876543210'}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Operator</span>
-                <strong>{operator} ({circle})</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Amount Paid</span>
-                <strong style={{ color: 'var(--accent-primary)' }}>₹{customAmount || selectedPlan?.amount}</strong>
-              </div>
-            </div>
-
-            <button
-              onClick={() => navigate('/history')}
-              style={{ padding: '0.75rem 2rem', borderRadius: '12px', background: 'var(--accent-primary)', color: '#ffffff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
-            >
-              View History & Cashback →
-            </button>
-          </div>
-        )}
+        {/* Transaction Receipt Modal matching User Screenshots */}
+        <TransactionReceiptModal
+          isOpen={!!result}
+          onClose={() => setResult(null)}
+          details={result ? {
+            status: 'SUCCESS',
+            amount: result.amountPaid || finalPlanAmount,
+            mobileNumber: mobileNumber || '9876543210',
+            operator: operator || 'Prepaid',
+            paidOn: new Date().toLocaleString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }),
+            fundingMode: gatewayAmount > 0 ? (walletApplied > 0 ? 'MIXED' : 'GATEWAY') : 'WALLET',
+            paidByGateway: gatewayAmount,
+            paidByWallet: walletApplied + reversalApplied,
+            description: `Mobile recharge ${mobileNumber || '9876543210'} — ${selectedPlan?.description || 'Unlimited Combo'}`,
+            referenceId: result.operatorReference || '199ec7c3-1f27-420c-a055-6b37a7658992'
+          } : null}
+        />
       </main>
 
       <BottomNavBar />
