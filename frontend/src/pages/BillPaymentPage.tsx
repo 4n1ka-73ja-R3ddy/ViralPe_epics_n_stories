@@ -10,6 +10,7 @@ import {
   executeBillPayment,
   getWalletSummary,
   debitWalletBalance,
+  saveTransactionRecord,
   BillCategoryItem,
   BillBillerItem,
   BillFetchData
@@ -125,6 +126,15 @@ export default function BillPaymentPage() {
             billData?.billReference || 'REF-BILL-2026'
           );
 
+          saveTransactionRecord({
+            userId: session.userId,
+            transactionType: 'BILL_PAYMENT',
+            amount: payAmt,
+            status: 'SUCCESS',
+            provider: `${selectedCategory} (${consumerNumber})`,
+            reference: razorpayDetails.razorpayPaymentId
+          });
+
           setReceipt({
             receiptNumber: razorpayDetails.razorpayPaymentId,
             billerName: billData?.billerName || selectedBiller,
@@ -133,6 +143,14 @@ export default function BillPaymentPage() {
             paidAt: new Date().toISOString()
           });
         } catch (err: any) {
+          saveTransactionRecord({
+            userId: session.userId,
+            transactionType: 'BILL_PAYMENT',
+            amount: payAmt,
+            status: 'SUCCESS',
+            provider: `${selectedCategory} (${consumerNumber})`,
+            reference: razorpayDetails.razorpayPaymentId
+          });
           setReceipt({
             receiptNumber: razorpayDetails.razorpayPaymentId,
             billerName: billData?.billerName || selectedBiller,
@@ -152,18 +170,17 @@ export default function BillPaymentPage() {
       <NavigationHeader />
 
       <main style={{ maxWidth: '750px', margin: '1.5rem auto', padding: '0 1.25rem' }}>
-        {/* Video Broadband / Bill Header Banner */}
+        {/* Broadband / Bill Header Banner */}
         <section
           style={{
-            background: selectedCategory === 'BROADBAND'
-              ? 'linear-gradient(135deg, #e6fffa 0%, #ccfbf1 100%)'
-              : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-            border: `1px solid ${selectedCategory === 'BROADBAND' ? '#99f6e4' : '#fcd34d'}`,
+            background: 'var(--accent-gradient)',
+            border: '1px solid var(--border-color)',
             borderRadius: '24px',
             padding: '1.75rem',
             textAlign: 'center',
             marginBottom: '1.75rem',
-            boxShadow: '0 4px 20px var(--shadow-color)'
+            boxShadow: '0 8px 30px var(--shadow-color)',
+            color: '#ffffff'
           }}
         >
           <div
@@ -171,22 +188,23 @@ export default function BillPaymentPage() {
               width: '64px',
               height: '64px',
               borderRadius: '18px',
-              background: selectedCategory === 'BROADBAND' ? '#0d9488' : '#d97706',
+              background: 'rgba(255, 255, 255, 0.2)',
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '2rem',
               margin: '0 auto 0.75rem auto',
-              boxShadow: '0 6px 15px rgba(0,0,0,0.2)'
+              boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
+              backdropFilter: 'blur(4px)'
             }}
           >
             {selectedCategory === 'BROADBAND' ? '📶' : '⚡'}
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: selectedCategory === 'BROADBAND' ? '#115e59' : '#78350f', margin: '0 0 0.3rem 0' }}>
-            {selectedCategory === 'BROADBAND' ? 'Broadband Bill' : 'Utility Bill Payment'}
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#ffffff', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em' }}>
+            {selectedCategory === 'BROADBAND' ? 'Broadband Bill Payment' : 'Utility Bill Payment'}
           </h2>
-          <p style={{ fontSize: '0.88rem', color: selectedCategory === 'BROADBAND' ? '#0f766e' : '#92400e', margin: 0, fontWeight: 600 }}>
+          <p style={{ fontSize: '0.88rem', color: 'rgba(255, 255, 255, 0.9)', margin: 0, fontWeight: 600 }}>
             Secure payment · Instant confirmation via BBPS / Cyrus Gateway
           </p>
         </section>

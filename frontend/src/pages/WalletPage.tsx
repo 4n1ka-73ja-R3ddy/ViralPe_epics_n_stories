@@ -27,11 +27,6 @@ export default function WalletPage() {
     { id: 5, userId: 1, category: 'REFERRAL_ROYALTY', amount: 1250.0, sourceReference: 'Multi-level Referral Bonus from 3 referred friends', createdAt: '2026-07-27T15:00:00Z', runningBalance: 7218.97 }
   ]);
 
-  const [showAddMoney, setShowAddMoney] = useState(false);
-  const [addAmount, setAddAmount] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [addSuccess, setAddSuccess] = useState(false);
-
   useEffect(() => {
     if (!session) {
       navigate('/', { replace: true });
@@ -55,40 +50,6 @@ export default function WalletPage() {
       .catch(() => {});
   }, [session?.userId]);
 
-  const handleAddMoney = (e: React.FormEvent) => {
-    e.preventDefault();
-    const val = Number(addAmount);
-    if (!val || val <= 0) return;
-
-    setAdding(true);
-    setTimeout(() => {
-      setSummary((prev) => ({
-        ...prev,
-        walletBalance: prev.walletBalance + val,
-        totalEarnings: prev.totalEarnings + val
-      }));
-      setActivities((prev) => [
-        {
-          id: Date.now(),
-          userId: session?.userId || 1,
-          category: 'PROMOTIONAL_FUND',
-          amount: val,
-          sourceReference: 'Added money via UPI / Card',
-          createdAt: new Date().toISOString(),
-          runningBalance: summary.walletBalance + val
-        },
-        ...prev
-      ]);
-      setAdding(false);
-      setAddSuccess(true);
-      setTimeout(() => {
-        setAddSuccess(false);
-        setShowAddMoney(false);
-        setAddAmount('');
-      }, 1500);
-    }, 600);
-  };
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)', color: 'var(--text-primary)', paddingBottom: '90px' }}>
       <NavigationHeader />
@@ -109,11 +70,11 @@ export default function WalletPage() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.8rem' }}>
+          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
             <button
-              onClick={() => setShowAddMoney(!showAddMoney)}
+              onClick={() => navigate('/my-vouchers')}
               style={{
-                padding: '0.75rem 1.5rem',
+                padding: '0.75rem 1.4rem',
                 borderRadius: '14px',
                 background: 'var(--accent-gradient)',
                 color: '#ffffff',
@@ -121,83 +82,16 @@ export default function WalletPage() {
                 fontWeight: 800,
                 fontSize: '0.92rem',
                 cursor: 'pointer',
-                boxShadow: '0 4px 15px var(--shadow-color)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem'
-              }}
-            >
-              <span>+ Add Money</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/my-vouchers')}
-              style={{
-                padding: '0.75rem 1.4rem',
-                borderRadius: '14px',
-                background: 'var(--bg-card)',
-                color: 'var(--accent-primary)',
-                border: '1px solid var(--border-color)',
-                fontWeight: 800,
-                fontSize: '0.92rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem'
+                gap: '0.4rem',
+                boxShadow: '0 4px 15px var(--shadow-color)'
               }}
             >
               <span>🎁 My Vouchers</span>
             </button>
           </div>
         </div>
-
-        {/* Add Money Modal / Expand Box */}
-        {showAddMoney && (
-          <section style={{ background: 'var(--bg-card)', border: '2px solid var(--accent-primary)', borderRadius: '20px', padding: '1.5rem', marginBottom: '2rem', boxShadow: '0 8px 30px var(--shadow-color)' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 1rem 0' }}>
-              Add Money to Wallet
-            </h3>
-
-            {addSuccess ? (
-              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '1.1rem', padding: '1rem', textAlign: 'center' }}>
-                ✅ ₹{addAmount} Added Successfully to Wallet!
-              </div>
-            ) : (
-              <form onSubmit={handleAddMoney} style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <input
-                  type="number"
-                  placeholder="Enter amount (e.g. 500)"
-                  value={addAmount}
-                  onChange={(e) => setAddAmount(e.target.value)}
-                  required
-                  min="1"
-                  style={{ padding: '0.75rem 1rem', borderRadius: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, width: '240px' }}
-                />
-
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {[100, 500, 1000, 2000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setAddAmount(amt.toString())}
-                      style={{ padding: '0.5rem 0.85rem', borderRadius: '8px', background: 'var(--bg-highlight)', border: '1px solid var(--border-color)', color: 'var(--accent-primary)', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
-                    >
-                      +₹{amt}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={adding}
-                  style={{ padding: '0.75rem 1.75rem', borderRadius: '12px', background: 'var(--accent-gradient)', color: '#ffffff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
-                >
-                  {adding ? 'Processing...' : 'Proceed to Pay →'}
-                </button>
-              </form>
-            )}
-          </section>
-        )}
 
         {/* Digital Wallet Virtual Card Banner */}
         <section

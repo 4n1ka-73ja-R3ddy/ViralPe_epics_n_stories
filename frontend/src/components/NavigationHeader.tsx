@@ -209,21 +209,25 @@ export default function NavigationHeader() {
               Wallet
             </button>
 
-            <button
-              onClick={() => navigate('/admin/platform')}
-              style={{
-                padding: '0.45rem 0.85rem',
-                borderRadius: '10px',
-                background: location.pathname === '/admin/platform' ? 'var(--bg-highlight)' : 'transparent',
-                color: location.pathname === '/admin/platform' ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '0.88rem',
-                cursor: 'pointer'
-              }}
-            >
-              Vendors
-            </button>
+            {/* Admin Portal Button — ONLY visible to anikatejareddy0003@gmail.com */}
+            {(session?.email === 'anikatejareddy0003@gmail.com' || userInfo.email === 'anikatejareddy0003@gmail.com') && (
+              <button
+                onClick={() => navigate('/admin/platform')}
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '10px',
+                  background: location.pathname.startsWith('/admin') ? 'var(--accent-gradient)' : 'var(--bg-highlight)',
+                  color: location.pathname.startsWith('/admin') ? '#ffffff' : 'var(--accent-primary)',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px var(--shadow-color)'
+                }}
+              >
+                👑 Admin Portal
+              </button>
+            )}
 
             <button
               onClick={() => navigate('/about')}

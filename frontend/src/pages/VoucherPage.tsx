@@ -8,10 +8,12 @@ import {
   getVoucherDenominations,
   purchaseVoucher,
   getVoucherHistory,
+  saveTransactionRecord,
   VoucherBrandItem,
   VoucherPurchaseRecord
 } from '../lib/api';
 import { openOfficialRazorpayCheckout } from '../lib/razorpay';
+import VoucherReceiptModal from '../components/VoucherReceiptModal';
 
 function renderBrandLogo(brandId: string) {
   const id = brandId.toUpperCase();
@@ -185,6 +187,15 @@ export default function VoucherPage() {
             } catch (e) {}
           }
 
+          saveTransactionRecord({
+            userId: session?.userId || 1,
+            transactionType: 'VOUCHER',
+            amount: selectedDenom,
+            status: 'SUCCESS',
+            provider: brandName,
+            reference: razorpayDetails.razorpayPaymentId
+          });
+
           setPurchasedVoucher({
             ...fallbackVoucher,
             voucherCode: razorpayDetails.razorpayPaymentId.replace('pay_', codePrefix + '-')
@@ -196,10 +207,30 @@ export default function VoucherPage() {
               .catch(() => {});
           }
         } catch (err: any) {
+          saveTransactionRecord({
+            userId: session?.userId || 1,
+            transactionType: 'VOUCHER',
+            amount: selectedDenom,
+            status: 'SUCCESS',
+            provider: brandName,
+            reference: razorpayDetails.razorpayPaymentId
+          });
           setPurchasedVoucher(fallbackVoucher);
         } finally {
           setPurchasing(false);
         }
+      },
+      onFailure: () => {
+        const cancelRef = 'TXN-CAN-' + Math.floor(100000 + Math.random() * 900000);
+        saveTransactionRecord({
+          userId: session?.userId || 1,
+          transactionType: 'VOUCHER',
+          amount: selectedDenom,
+          status: 'FAILED',
+          provider: brandName,
+          reference: cancelRef
+        });
+        setError('Razorpay payment was cancelled or failed.');
       }
     });
   };
@@ -498,6 +529,20 @@ export default function VoucherPage() {
           </div>
         </section>
       </main>
+
+      {/* Voucher Issued Receipt Popup Modal */}
+      {purchasedVoucher && (
+        <VoucherReceiptModal
+          details={{
+            brandName: purchasedVoucher.brandName,
+            voucherCode: purchasedVoucher.voucherCode,
+            voucherPin: purchasedVoucher.voucherPin,
+            denomination: purchasedVoucher.denomination,
+            paidAt: new Date().toISOString()
+          }}
+          onClose={() => setPurchasedVoucher(null)}
+        />
+      )}
 
       <BottomNavBar />
     </div>

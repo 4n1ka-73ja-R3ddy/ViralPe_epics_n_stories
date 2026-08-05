@@ -145,7 +145,10 @@ public class AuthService {
             user = userRepository.save(user);
         }
 
-        return new AuthResponse(user.getId(), generateToken(user), user.getProfileComplete(), "Sign-in successful.");
+        AuthResponse authResponse = new AuthResponse(user.getId(), generateToken(user), user.getProfileComplete(), "Sign-in successful.");
+        authResponse.setEmail(user.getEmail());
+        authResponse.setFullName(user.getFullName());
+        return authResponse;
     }
 
     private GoogleIdentity verifyGoogleToken(String idToken) {

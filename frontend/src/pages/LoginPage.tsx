@@ -53,7 +53,9 @@ export default function LoginPage() {
       setSession({
         userId: response.userId,
         token: response.token,
-        profileComplete: response.profileComplete
+        profileComplete: response.profileComplete,
+        email: response.email,
+        fullName: response.fullName
       });
 
       navigate(response.profileComplete ? '/dashboard' : '/onboarding');

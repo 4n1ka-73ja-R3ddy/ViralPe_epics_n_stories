@@ -9,6 +9,7 @@ import {
   executeRecharge,
   getWalletSummary,
   debitWalletBalance,
+  saveTransactionRecord,
   RechargePlanItem
 } from '../lib/api';
 import { openOfficialRazorpayCheckout } from '../lib/razorpay';
@@ -202,8 +203,29 @@ export default function RechargePage() {
       amount: finalPlanAmount,
       description: `Mobile Recharge for ${mobileNumber} (${operator})`,
       category: 'RECHARGE',
-      onSuccess: (details) => executeFinalRecharge(details.razorpayPaymentId),
-      onFailure: () => setError('Razorpay payment was cancelled or failed.')
+      onSuccess: (details) => {
+        saveTransactionRecord({
+          userId: session.userId,
+          transactionType: 'RECHARGE',
+          amount: finalPlanAmount,
+          status: 'SUCCESS',
+          provider: `${operator} (${mobileNumber})`,
+          reference: details.razorpayPaymentId
+        });
+        executeFinalRecharge(details.razorpayPaymentId);
+      },
+      onFailure: () => {
+        const cancelRef = 'TXN-CAN-' + Math.floor(100000 + Math.random() * 900000);
+        saveTransactionRecord({
+          userId: session.userId,
+          transactionType: 'RECHARGE',
+          amount: finalPlanAmount,
+          status: 'FAILED',
+          provider: `${operator} (${mobileNumber})`,
+          reference: cancelRef
+        });
+        setError('Razorpay payment was cancelled or failed.');
+      }
     });
   };
 
@@ -459,85 +481,115 @@ export default function RechargePage() {
               </div>
             </div>
 
-            {/* Option 2: Wallet Balance */}
+            {/* Option 2: Wallet Balance with Range Slider */}
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1rem',
                 background: 'var(--bg-card)',
                 borderRadius: '14px',
                 border: '1px solid var(--border-color)',
                 marginBottom: '0.75rem',
-                gap: '0.5rem'
+                padding: '0.85rem 1rem'
               }}
             >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                  Wallet Balance
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  marginBottom: useMainWallet && walletBalance > 0 ? '0.6rem' : 0
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    Wallet Balance
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })} available
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  ₹{walletBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })} available
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: walletApplied > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>₹</span>
-                <input
-                  type="number"
-                  placeholder={walletApplied.toFixed(2)}
-                  disabled={!useMainWallet || walletBalance <= 0}
-                  value={customWalletInput}
-                  onChange={(e) => setCustomWalletInput(e.target.value)}
-                  style={{
-                    width: '85px',
-                    padding: '0.35rem 0.5rem',
-                    background: 'var(--input-bg)',
-                    border: '1.5px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: 'var(--accent-primary)',
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    textAlign: 'right'
-                  }}
-                />
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: walletApplied > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>₹</span>
                   <input
-                    type="checkbox"
-                    disabled={walletBalance <= 0}
-                    checked={useMainWallet && walletBalance > 0}
-                    onChange={(e) => {
-                      setUseMainWallet(e.target.checked);
-                      if (!e.target.checked) setCustomWalletInput('');
-                    }}
-                    style={{ opacity: 0, width: 0, height: 0 }}
-                  />
-                  <span
+                    type="number"
+                    placeholder={walletApplied.toFixed(2)}
+                    disabled={!useMainWallet || walletBalance <= 0}
+                    value={customWalletInput}
+                    onChange={(e) => setCustomWalletInput(e.target.value)}
                     style={{
-                      position: 'absolute',
-                      cursor: walletBalance > 0 ? 'pointer' : 'not-allowed',
-                      top: 0, left: 0, right: 0, bottom: 0,
-                      backgroundColor: useMainWallet && walletBalance > 0 ? 'var(--accent-primary)' : '#cbd5e1',
-                      borderRadius: '34px',
-                      transition: '0.3s'
+                      width: '85px',
+                      padding: '0.35rem 0.5rem',
+                      background: 'var(--input-bg)',
+                      border: '1.5px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: 'var(--accent-primary)',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      textAlign: 'right'
                     }}
-                  >
+                  />
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                    <input
+                      type="checkbox"
+                      disabled={walletBalance <= 0}
+                      checked={useMainWallet && walletBalance > 0}
+                      onChange={(e) => {
+                        setUseMainWallet(e.target.checked);
+                        if (!e.target.checked) setCustomWalletInput('');
+                      }}
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
                     <span
                       style={{
                         position: 'absolute',
-                        content: '""',
-                        height: '18px',
-                        width: '18px',
-                        left: useMainWallet && walletBalance > 0 ? '22px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        borderRadius: '50%',
+                        cursor: walletBalance > 0 ? 'pointer' : 'not-allowed',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: useMainWallet && walletBalance > 0 ? 'var(--accent-primary)' : '#cbd5e1',
+                        borderRadius: '34px',
                         transition: '0.3s'
                       }}
-                    />
-                  </span>
-                </label>
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          content: '""',
+                          height: '18px',
+                          width: '18px',
+                          left: useMainWallet && walletBalance > 0 ? '22px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          borderRadius: '50%',
+                          transition: '0.3s'
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
               </div>
+
+              {/* Interactive Wallet Balance Range Slider (Story 3.2 AC) */}
+              {useMainWallet && walletBalance > 0 && maxWalletPossible > 0 && (
+                <div style={{ paddingTop: '0.4rem', borderTop: '1px dashed var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '0.3rem' }}>
+                    <span>₹0 (None)</span>
+                    <span style={{ color: 'var(--accent-primary)', fontWeight: 800 }}>Applying ₹{walletApplied.toFixed(2)}</span>
+                    <span>Max ₹{maxWalletPossible.toFixed(2)}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={maxWalletPossible}
+                    step="1"
+                    value={walletApplied}
+                    onChange={(e) => setCustomWalletInput(e.target.value)}
+                    style={{
+                      width: '100%',
+                      accentColor: 'var(--accent-primary)',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Option 3: Payment Gateway (Razorpay) */}

@@ -480,7 +480,7 @@ export default function OnboardingPage() {
                         }}
                       >
                         {pincodeDetails.areas.map((areaItem, index) => (
-                          <option key={index} value={areaItem}>
+                          <option key={index} value={areaItem} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
                             📍 {areaItem}
                           </option>
                         ))}

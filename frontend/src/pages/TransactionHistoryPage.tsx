@@ -5,7 +5,6 @@ import BottomNavBar from '../components/BottomNavBar';
 import {
   getFilteredTransactions,
   getWalletActivityLog,
-  loadDemoData,
   TransactionDetailResponse,
   WalletActivityEntryResponse
 } from '../lib/api';
@@ -34,7 +33,6 @@ export default function TransactionHistoryPage() {
   const [actLoading, setActLoading] = useState(true);
 
   const [expandedTxId, setExpandedTxId] = useState<number | null>(null);
-  const [seedingDemo, setSeedingDemo] = useState(false);
 
   useEffect(() => {
     const session = getSession();
@@ -46,152 +44,13 @@ export default function TransactionHistoryPage() {
     void loadWalletActivity(session.userId);
   }, [navigate]);
 
-const DEFAULT_DEMO_TRANSACTIONS: TransactionDetailResponse[] = [
-  {
-    id: 1,
-    userId: 1,
-    transactionType: 'VOUCHER',
-    amount: 1000.0,
-    status: 'SUCCESS',
-    provider: 'Flipkart Voucher Store',
-    reference: 'TXN-2026-981245',
-    reversalAmountApplied: 0.0,
-    walletAmountApplied: 1000.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-29T14:30:00Z'
-  },
-  {
-    id: 2,
-    userId: 1,
-    transactionType: 'RECHARGE',
-    amount: 299.0,
-    status: 'SUCCESS',
-    provider: 'Airtel Prepaid Recharge',
-    reference: 'TXN-2026-774129',
-    reversalAmountApplied: 0.0,
-    walletAmountApplied: 299.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-29T11:15:00Z'
-  },
-  {
-    id: 3,
-    userId: 1,
-    transactionType: 'BILL_PAYMENT',
-    amount: 1250.0,
-    status: 'SUCCESS',
-    provider: 'BESCOM Electricity Bill',
-    reference: 'TXN-2026-663812',
-    reversalAmountApplied: 50.0,
-    walletAmountApplied: 1200.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-28T16:45:00Z'
-  },
-  {
-    id: 4,
-    userId: 1,
-    transactionType: 'VOUCHER',
-    amount: 500.0,
-    status: 'SUCCESS',
-    provider: 'Amazon Pay Gift Card',
-    reference: 'TXN-2026-551982',
-    reversalAmountApplied: 0.0,
-    walletAmountApplied: 500.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-28T10:20:00Z'
-  },
-  {
-    id: 5,
-    userId: 1,
-    transactionType: 'CHECKOUT',
-    amount: 1000.0,
-    status: 'SUCCESS',
-    provider: 'Store #101 - Daily Needs (Shopping)',
-    reference: 'TXN-2026-440912',
-    reversalAmountApplied: 100.0,
-    walletAmountApplied: 900.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-27T18:10:00Z'
-  },
-  {
-    id: 6,
-    userId: 1,
-    transactionType: 'CHECKOUT',
-    amount: 450.0,
-    status: 'SUCCESS',
-    provider: 'Swiggy Food Orders',
-    reference: 'TXN-2026-339811',
-    reversalAmountApplied: 0.0,
-    walletAmountApplied: 450.0,
-    paymentGatewayAmount: 0.0,
-    createdAt: '2026-07-26T20:05:00Z'
-  }
-];
-
-const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
-  {
-    id: 1,
-    userId: 1,
-    category: 'CASHBACK',
-    amount: 30.0,
-    sourceReference: 'Instant 3% cashback earned on Flipkart Voucher',
-    createdAt: '2026-07-29T14:30:05Z',
-    runningBalance: 5680.0
-  },
-  {
-    id: 2,
-    userId: 1,
-    category: 'PAYMENT',
-    amount: 1000.0,
-    sourceReference: 'Wallet debit for Flipkart Voucher purchase',
-    createdAt: '2026-07-29T14:30:00Z',
-    runningBalance: 4680.0
-  },
-  {
-    id: 3,
-    userId: 1,
-    category: 'CASHBACK',
-    amount: 8.97,
-    sourceReference: 'Instant cashback earned on Airtel Recharge',
-    createdAt: '2026-07-29T11:15:05Z',
-    runningBalance: 5688.97
-  },
-  {
-    id: 4,
-    userId: 1,
-    category: 'ROYALTY_POOL',
-    amount: 280.0,
-    sourceReference: 'Pincode 560001 Championship Pool Royalty Share',
-    createdAt: '2026-07-28T23:59:59Z',
-    runningBalance: 5968.97
-  },
-  {
-    id: 5,
-    userId: 1,
-    category: 'REFERRAL_ROYALTY',
-    amount: 1250.0,
-    sourceReference: 'Multi-level Referral Bonus from 3 referred friends',
-    createdAt: '2026-07-27T15:00:00Z',
-    runningBalance: 7218.97
-  }
-];
-
   const loadTransactions = async (userId: number, filterType = txType) => {
     try {
       setTxLoading(true);
       const fromIso = txFromDate ? `${txFromDate}T00:00:00Z` : undefined;
       const toIso = txToDate ? `${txToDate}T23:59:59Z` : undefined;
-      let data: TransactionDetailResponse[] = [];
-      try {
-        data = await getFilteredTransactions(userId, filterType, txStatus, fromIso, toIso);
-      } catch (e) {}
-
-      if (!data || data.length === 0) {
-        data = DEFAULT_DEMO_TRANSACTIONS.filter((t) => {
-          if (filterType === 'ALL') return true;
-          return t.transactionType === filterType;
-        });
-      }
-      setTransactions(data);
+      const data = await getFilteredTransactions(userId, filterType, txStatus, fromIso, toIso);
+      setTransactions(data || []);
     } catch (err) {
       console.error('Error fetching transactions:', err);
     } finally {
@@ -202,15 +61,8 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
   const loadWalletActivity = async (userId: number) => {
     try {
       setActLoading(true);
-      let data: WalletActivityEntryResponse[] = [];
-      try {
-        data = await getWalletActivityLog(userId, actFromDate, actToDate, actCategory);
-      } catch (e) {}
-
-      if (!data || data.length === 0) {
-        data = DEFAULT_DEMO_ACTIVITIES;
-      }
-      setActivities(data);
+      const data = await getWalletActivityLog(userId, actFromDate, actToDate, actCategory);
+      setActivities(data || []);
     } catch (err) {
       console.error('Error fetching wallet activity log:', err);
     } finally {
@@ -226,21 +78,6 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
   const handleApplyActFilter = () => {
     const session = getSession();
     if (session) void loadWalletActivity(session.userId);
-  };
-
-  const handleSeedDemoData = async () => {
-    const session = getSession();
-    if (!session) return;
-    try {
-      setSeedingDemo(true);
-      await loadDemoData(session.userId);
-      await loadTransactions(session.userId);
-      await loadWalletActivity(session.userId);
-    } catch (err: any) {
-      alert(`Failed to load demo data: ${err.message}`);
-    } finally {
-      setSeedingDemo(false);
-    }
   };
 
   return (
@@ -260,36 +97,16 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
             boxShadow: '0 8px 30px var(--shadow-color)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                AUDIT & TRANSACTIONS
-              </span>
-              <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.2rem 0', color: 'var(--text-primary)' }}>
-                Transaction History
-              </h1>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                View all payment transactions, cashback earnings, and multi-ledger entries.
-              </p>
-            </div>
-
-            <button
-              onClick={handleSeedDemoData}
-              disabled={seedingDemo}
-              style={{
-                padding: '0.65rem 1.25rem',
-                borderRadius: '12px',
-                background: 'var(--accent-gradient)',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: 800,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px var(--shadow-color)'
-              }}
-            >
-              {seedingDemo ? 'Loading...' : '⚡ Seed Demo Data'}
-            </button>
+          <div>
+            <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+              AUDIT & TRANSACTIONS
+            </span>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0.2rem 0', color: 'var(--text-primary)' }}>
+              Transaction History
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+              View all real-time payment transactions, status logs, and cashback ledger entries.
+            </p>
           </div>
 
           {/* Category Filter Pills */}
@@ -536,8 +353,12 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
               ) : (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
                   <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>🧾</span>
-                  <strong style={{ color: 'var(--text-primary)' }}>No transactions found</strong>
-                  <p style={{ fontSize: '0.85rem' }}>Click <strong>⚡ Seed Demo Presentation Data</strong> above to populate multi-date transactions for your presentation.</p>
+                  <strong style={{ color: 'var(--text-primary)', fontSize: '1.1rem', display: 'block', marginBottom: '0.3rem' }}>
+                    No transactions recorded yet
+                  </strong>
+                  <p style={{ fontSize: '0.85rem', margin: 0 }}>
+                    Every successful or failed payment transaction will be automatically logged here.
+                  </p>
                 </div>
               )}
             </div>
@@ -561,9 +382,8 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
                   <option value="REFERRAL">Referral Bonus</option>
                   <option value="VENDOR_ROYALTY">Vendor Royalty</option>
                   <option value="PINCODE_CHAMPIONSHIP">Pincode Championship Win</option>
-                  <option value="PROMOTIONAL_ADD_ON">Admin Promotional Add-On</option>
-                  <option value="CHECKOUT">Checkout Debit</option>
-                  <option value="REFUND">Refund</option>
+                  <option value="PAYMENT">Payment</option>
+                  <option value="PAYMENT_FAILED">Failed Payment</option>
                 </select>
               </div>
 
@@ -651,8 +471,12 @@ const DEFAULT_DEMO_ACTIVITIES: WalletActivityEntryResponse[] = [
               ) : (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
                   <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>📜</span>
-                  <strong style={{ color: 'var(--text-primary)' }}>No wallet activity entries found</strong>
-                  <p style={{ fontSize: '0.85rem' }}>Click <strong>⚡ Seed Demo Presentation Data</strong> above to populate multi-date wallet log entries.</p>
+                  <strong style={{ color: 'var(--text-primary)', fontSize: '1.1rem', display: 'block', marginBottom: '0.3rem' }}>
+                    No wallet activity logged yet
+                  </strong>
+                  <p style={{ fontSize: '0.85rem', margin: 0 }}>
+                    Every transaction and wallet balance movement will be logged here.
+                  </p>
                 </div>
               )}
             </section>

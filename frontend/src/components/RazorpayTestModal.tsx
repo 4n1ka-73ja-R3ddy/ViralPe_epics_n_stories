@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRazorpayOrder, verifyRazorpayPayment } from '../lib/api';
+import { openOfficialRazorpayCheckout } from '../lib/razorpay';
 import { getSession } from '../lib/session';
 
 interface RazorpayTestModalProps {
@@ -259,28 +260,43 @@ export default function RazorpayTestModal({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Single Clean Action Button */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <button
-            onClick={handleSimulatePaymentSuccess}
+            type="button"
+            onClick={async () => {
+              onClose();
+              openOfficialRazorpayCheckout({
+                amount,
+                description: 'ViralPe Service Payment',
+                onSuccess: (details) => onSuccess(details),
+                onFailure: () => {}
+              });
+            }}
             disabled={processing || loadingOrder}
             style={{
               width: '100%',
-              height: '48px',
-              borderRadius: '12px',
-              background: '#0d9488',
+              height: '50px',
+              borderRadius: '14px',
+              background: 'var(--accent-gradient)',
               color: '#ffffff',
               border: 'none',
-              fontWeight: 800,
-              fontSize: '0.95rem',
+              fontWeight: 900,
+              fontSize: '1.05rem',
               cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(13, 148, 136, 0.4)'
+              boxShadow: '0 4px 18px var(--shadow-color)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
             }}
           >
-            {processing ? 'Verifying Razorpay Signature...' : `Pay ₹${amount.toFixed(2)} (Simulate Razorpay Success) →`}
+            <span>💳</span>
+            <span>{processing ? 'Processing Payment...' : `Pay ₹${amount.toFixed(2)} →`}</span>
           </button>
 
           <button
+            type="button"
             onClick={onClose}
             style={{
               width: '100%',
@@ -290,7 +306,7 @@ export default function RazorpayTestModal({
               border: 'none',
               color: 'var(--text-secondary)',
               fontWeight: 700,
-              fontSize: '0.85rem',
+              fontSize: '0.88rem',
               cursor: 'pointer'
             }}
           >

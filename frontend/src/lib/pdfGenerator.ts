@@ -168,16 +168,136 @@ export function createReceiptPDFBlob(
     // Convert Canvas to High Quality JPEG & Embed in Native PDF
     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     const base64Data = dataUrl.split(',')[1];
+    const binaryImg = atob(dataUrl.split(',')[1]);
+    const imgLen = binaryImg.length;
     
-    const pdfBlob = createPdfWithImageData(base64Data, width, height);
+    const pdfBlob = assemblePdfStream(binaryImg, imgLen, width, height);
     resolve(pdfBlob);
   });
 }
 
-function createPdfWithImageData(base64Image: string, width: number, height: number): Blob {
-  const binaryImg = atob(base64Image);
-  const imgLen = binaryImg.length;
-  
+export interface VoucherPDFDetails {
+  brandName: string;
+  voucherCode: string;
+  voucherPin: string;
+  denomination: number;
+  paidAt?: string;
+}
+
+export function createVoucherPDFBlob(
+  details: VoucherPDFDetails,
+  userName: string,
+  userPincode: string
+): Promise<Blob> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const width = 600;
+    const height = 900;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    const grad = ctx.createLinearGradient(0, 0, width, 0);
+    grad.addColorStop(0, '#00685b');
+    grad.addColorStop(1, '#004d43');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, 110);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('VIRALPE WALLET NETWORK', width / 2, 48);
+
+    ctx.font = '600 13px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.fillText('OFFICIAL DIGITAL GIFT VOUCHER', width / 2, 75);
+
+    ctx.beginPath();
+    ctx.arc(width / 2, 160, 36, 0, Math.PI * 2);
+    ctx.fillStyle = '#00685b';
+    ctx.fill();
+
+    ctx.font = '32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎁', width / 2, 172);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Payment Successful! Voucher Issued!', width / 2, 230);
+
+    ctx.fillStyle = '#00685b';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText(`₹${details.denomination.toLocaleString('en-IN')}`, width / 2, 280);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 13px sans-serif';
+    ctx.fillText(`Ref: ${details.voucherCode}`, width / 2, 305);
+
+    const cardX = 40;
+    const cardY = 340;
+    const cardW = width - 80;
+    const cardH = 340;
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 16);
+    ctx.fill();
+    ctx.stroke();
+
+    const rows = [
+      { label: 'Brand', value: details.brandName },
+      { label: 'Voucher Code', value: details.voucherCode },
+      { label: 'PIN Code', value: details.voucherPin },
+      { label: 'Denomination', value: `₹${details.denomination.toLocaleString('en-IN')}` },
+      { label: 'Issued To', value: `${userName} (Pincode ${userPincode})` },
+      { label: 'Issued On', value: new Date(details.paidAt || Date.now()).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }
+    ];
+
+    let rowY = cardY + 45;
+    rows.forEach((r, idx) => {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '600 14px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(r.label, cardX + 25, rowY);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(r.value, cardX + cardW - 25, rowY);
+
+      if (idx < rows.length - 1) {
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cardX + 20, rowY + 18);
+        ctx.lineTo(cardX + cardW - 20, rowY + 18);
+        ctx.stroke();
+      }
+      rowY += 50;
+    });
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '600 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Authorized by ViralPe Wallet Network · Valid across participating brand stores', width / 2, 730);
+    ctx.fillText(`Issued for ${userName} (${userPincode})`, width / 2, 750);
+
+    const jpegUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const binaryImg = atob(jpegUrl.split(',')[1]);
+    const imgLen = binaryImg.length;
+
+    const pdfBlob = assemblePdfStream(binaryImg, imgLen, width, height);
+    resolve(pdfBlob);
+  });
+}
+
+function assemblePdfStream(binaryImg: string, imgLen: number, width: number, height: number): Blob {
   const imgArray = new Uint8Array(imgLen);
   for (let i = 0; i < imgLen; i++) {
     imgArray[i] = binaryImg.charCodeAt(i);

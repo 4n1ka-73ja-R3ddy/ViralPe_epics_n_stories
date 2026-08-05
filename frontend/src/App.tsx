@@ -9,6 +9,7 @@ import PincodeChampionshipPage from './pages/PincodeChampionshipPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import AdminRoyaltyPage from './pages/AdminRoyaltyPage';
 import AdminPlatformPage from './pages/AdminPlatformPage';
+import AdminProviderOrchestrationPage from './pages/AdminProviderOrchestrationPage';
 import RechargePage from './pages/RechargePage';
 import BillPaymentPage from './pages/BillPaymentPage';
 import VoucherPage from './pages/VoucherPage';
@@ -42,6 +43,20 @@ function RequireCompletedProfile({
 
   if (!session.profileComplete) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+}
+
+function RequireAdminRole({ children }: { children: JSX.Element }) {
+  const session = getSession();
+
+  if (!session) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (session.email !== 'anikatejareddy0003@gmail.com') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -201,20 +216,38 @@ function App() {
       />
 
       <Route
-        path="/admin/royalty"
+        path="/admin"
         element={
-          <RequireCompletedProfile>
-            <AdminRoyaltyPage />
-          </RequireCompletedProfile>
+          <RequireAdminRole>
+            <AdminPlatformPage />
+          </RequireAdminRole>
         }
       />
 
       <Route
-        path="/admin/platform"
+        path="/admin/royalty"
         element={
-          <RequireCompletedProfile>
-            <AdminPlatformPage />
-          </RequireCompletedProfile>
+          <RequireAdminRole>
+            <AdminRoyaltyPage />
+          </RequireAdminRole>
+        }
+      />
+
+      <Route
+        path="/admin/orchestration"
+        element={
+          <RequireAdminRole>
+            <AdminProviderOrchestrationPage />
+          </RequireAdminRole>
+        }
+      />
+
+      <Route
+        path="/admin/providers"
+        element={
+          <RequireAdminRole>
+            <AdminProviderOrchestrationPage />
+          </RequireAdminRole>
         }
       />
 

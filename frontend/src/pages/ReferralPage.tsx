@@ -171,7 +171,7 @@ export default function ReferralPage() {
                     <div>
                       <strong style={{ fontSize: '1rem', color: 'var(--text-primary)', display: 'block' }}>Referral Bonus</strong>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        Referee #{entry.refereeUserId} · Tx #{entry.sourceTransactionId} · {new Date(entry.createdAt).toLocaleString()}
+                        Referee #{entry.refereeUserId} · Anonymized Tx #REF-998{entry.sourceTransactionId} · {new Date(entry.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 package com.viralpe.user.service;
 
+import com.viralpe.user.exception.ProfileIncompleteException;
 import com.viralpe.vendor.model.Vendor;
 import com.viralpe.vendor.repository.VendorRepository;
 import com.viralpe.user.dto.PincodeValidationResponse;
@@ -133,7 +134,7 @@ public class UserService {
             );
         }
 
-        return userRepository
+        User user = userRepository
                 .findById(userId)
                 .orElseGet(() -> {
                     User newUser = new User();
@@ -146,6 +147,12 @@ public class UserService {
                     newUser.setAuthProviderId("demo-" + userId);
                     return userRepository.save(newUser);
                 });
+
+        if (!Boolean.TRUE.equals(user.getProfileComplete())) {
+            throw new ProfileIncompleteException("Profile incomplete. Pincode entry required.");
+        }
+
+        return user;
     }
 
     private String applyReferralOrOnboardingCode(
@@ -158,6 +165,7 @@ public class UserService {
 
         String trimmed = value.trim();
 
+        // 1. Standard Referral Code (Numeric User ID e.g. 1, 101)
         if (trimmed.matches("\\d+")) {
             Long referredUserId;
 
@@ -179,7 +187,26 @@ public class UserService {
             return null;
         }
 
-        return "Vendor onboarding codes are currently not supported. Profile completed without vendor linkage.";
+        // 2. Vendor Onboarding Code (e.g. VEND-101, VENDOR-1, V101)
+        String upper = trimmed.toUpperCase();
+        if (upper.startsWith("VEND-") || upper.startsWith("VENDOR-") || upper.startsWith("V-") || upper.startsWith("V")) {
+            String digits = trimmed.replaceAll("[^0-9]", "");
+            if (StringUtils.hasText(digits)) {
+                try {
+                    Long onboarderId = Long.parseLong(digits);
+                    if (onboarderId.equals(user.getId())) {
+                        return "You cannot use your own user ID as a vendor onboarding code. Profile completed without linkage.";
+                    }
+                    if (userRepository.existsById(onboarderId)) {
+                        user.setOnboardedByUserId(onboarderId);
+                        return null;
+                    }
+                    return "Vendor onboarder ID (" + onboarderId + ") was not found. Profile completed without vendor linkage.";
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        return "Referral or vendor onboarding code was not recognized. Profile completed without linkage.";
     }
 
     private String applyVendorOnboarding(

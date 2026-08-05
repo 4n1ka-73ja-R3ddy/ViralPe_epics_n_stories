@@ -18,6 +18,79 @@ import {
   RoyaltyConfigurationHistory,
   UserProfileResponse
 } from '../lib/api';
+import VoucherReceiptModal from '../components/VoucherReceiptModal';
+
+const DEMO_ADMIN_USERS = [
+  {
+    userId: 1,
+    fullName: 'Anika Teja Reddy',
+    email: 'anikatejareddy0003@gmail.com',
+    role: 'SUPER_ADMIN',
+    profileComplete: true,
+    registeredPincode: '560001',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    authProvider: 'GOOGLE',
+    walletBalance: 2450.00,
+    totalEarnings: 8900.00,
+    vouchers: [
+      { brandName: 'Amazon Pay Gift Card', voucherCode: 'AMZN-TK99mQPB', voucherPin: '8899', denomination: 500, validTill: 'Dec 31, 2026' },
+      { brandName: 'Flipkart Gift Voucher', voucherCode: 'FKRT-Y8M01923', voucherPin: '4412', denomination: 1000, validTill: 'Nov 30, 2026' },
+      { brandName: 'Myntra Fashion Voucher', voucherCode: 'MYNT-TK03mQPBM67pSH', voucherPin: '5341', denomination: 1000, validTill: 'Dec 15, 2026' }
+    ]
+  },
+  {
+    userId: 2,
+    fullName: 'Standard User',
+    email: 'user.demo@gmail.com',
+    role: 'USER',
+    profileComplete: true,
+    registeredPincode: '560001',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    authProvider: 'GOOGLE',
+    walletBalance: 1200.00,
+    totalEarnings: 3200.00,
+    vouchers: [
+      { brandName: 'Swiggy Money Voucher', voucherCode: 'SWIG-Z3N88123', voucherPin: '3321', denomination: 250, validTill: 'Oct 15, 2026' },
+      { brandName: 'Zomato Pro Voucher', voucherCode: 'ZOMA-Z9918234', voucherPin: '5541', denomination: 250, validTill: 'Dec 15, 2026' }
+    ]
+  },
+  {
+    userId: 3,
+    fullName: 'Rajesh Sharma',
+    email: 'rajesh.sharma@gmail.com',
+    role: 'USER',
+    profileComplete: true,
+    registeredPincode: '110001',
+    city: 'New Delhi',
+    state: 'Delhi',
+    authProvider: 'GOOGLE',
+    walletBalance: 850.00,
+    totalEarnings: 1950.00,
+    vouchers: [
+      { brandName: 'Uber Rides Voucher', voucherCode: 'UBER-U4488112', voucherPin: '7766', denomination: 500, validTill: 'Feb 28, 2027' },
+      { brandName: 'Domino\'s Pizza Voucher', voucherCode: 'DOMI-D5S67891', voucherPin: '1102', denomination: 200, validTill: 'Aug 31, 2026' }
+    ]
+  },
+  {
+    userId: 4,
+    fullName: 'Priya Patel',
+    email: 'priya.patel@gmail.com',
+    role: 'USER',
+    profileComplete: true,
+    registeredPincode: '400001',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    authProvider: 'APPLE',
+    walletBalance: 600.00,
+    totalEarnings: 1400.00,
+    vouchers: [
+      { brandName: 'Google Play Recharge Code', voucherCode: 'GPLY-G7712390', voucherPin: '1092', denomination: 300, validTill: 'Jan 31, 2027' },
+      { brandName: 'KFC Food Voucher', voucherCode: 'KFCI-E2T01234', voucherPin: '9981', denomination: 300, validTill: 'Sep 15, 2026' }
+    ]
+  }
+];
 
 const VENDOR_DIRECTORY = [
   {
@@ -84,7 +157,10 @@ const VENDOR_DIRECTORY = [
 
 export default function AdminPlatformPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'VENDORS' | 'FUNDS' | 'PINCODES' | 'ROYALTY'>('VENDORS');
+  const [activeTab, setActiveTab] = useState<'USERS' | 'VENDORS' | 'FUNDS' | 'PINCODES' | 'ROYALTY'>('USERS');
+
+  const [selectedUserVoucher, setSelectedUserVoucher] = useState<any | null>(null);
+  const [userSearchText, setUserSearchText] = useState('');
 
   // Story 10.1 State
   const [users, setUsers] = useState<UserProfileResponse[]>([]);
@@ -247,12 +323,17 @@ export default function AdminPlatformPage() {
         }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <span style={{ padding: '0.35rem 0.85rem', borderRadius: '999px', background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', backdropFilter: 'blur(4px)', display: 'inline-block', marginBottom: '0.75rem' }}>
-            🏪 VENDORS & PLATFORM NETWORK
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+            <span style={{ padding: '0.35rem 0.85rem', borderRadius: '999px', background: 'rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', backdropFilter: 'blur(4px)' }}>
+              👑 SUPER ADMIN PORTAL
+            </span>
+            <span style={{ padding: '0.35rem 0.85rem', borderRadius: '999px', background: '#071713', color: '#34d399', border: '1px solid #1c4d40', fontSize: '0.78rem', fontWeight: 800 }}>
+              Logged in as: anikatejareddy0003@gmail.com
+            </span>
+          </div>
 
           <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: '0 0 0.5rem 0', color: '#ffffff', letterSpacing: '-0.02em' }}>
-            Vendors & Partner Management
+            Platform & Vendor Management Portal
           </h1>
 
           <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1rem', maxWidth: '750px', margin: 0, lineHeight: 1.5 }}>
@@ -296,6 +377,22 @@ export default function AdminPlatformPage() {
 
         {/* Tab Selector Pills */}
         <div style={{ display: 'flex', gap: '0.75rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', paddingBottom: '0.5rem', overflowX: 'auto' }}>
+          <button
+            onClick={() => setActiveTab('USERS')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '14px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              background: activeTab === 'USERS' ? 'var(--accent-primary)' : 'var(--bg-card)',
+              color: activeTab === 'USERS' ? '#ffffff' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === 'USERS' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            👥 Registered Users & Vouchers
+          </button>
           <button
             onClick={() => setActiveTab('VENDORS')}
             style={{
@@ -360,7 +457,199 @@ export default function AdminPlatformPage() {
           >
             📊 Vertical Royalty Splits
           </button>
+          <button
+            onClick={() => navigate('/admin/orchestration')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '14px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              background: '#3b82f6',
+              color: '#ffffff',
+              border: 'none',
+              transition: 'all 0.15s',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            ⚙️ Provider Orchestration
+          </button>
         </div>
+
+        {/* TAB 0: Users & Held Vouchers Directory */}
+        {activeTab === 'USERS' && (
+          <section style={{ marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                  Registered Users & Held Vouchers Directory
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: '0.2rem 0 0 0' }}>
+                  View all registered Gmail accounts, names, pincodes, wallet balances, and active digital brand vouchers.
+                </p>
+              </div>
+
+              {/* User Search Bar */}
+              <div style={{ minWidth: '280px' }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search by Gmail, Name, or Pincode..."
+                  value={userSearchText}
+                  onChange={(e) => setUserSearchText(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem 1rem',
+                    background: 'var(--input-bg)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: 700
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Users Directory Table */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {DEMO_ADMIN_USERS.filter((u) => {
+                if (!userSearchText) return true;
+                const q = userSearchText.toLowerCase();
+                return (
+                  u.fullName.toLowerCase().includes(q) ||
+                  u.email.toLowerCase().includes(q) ||
+                  u.registeredPincode.includes(q) ||
+                  (u.city && u.city.toLowerCase().includes(q))
+                );
+              }).map((u) => (
+                <div
+                  key={u.userId}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '20px',
+                    padding: '1.5rem',
+                    boxShadow: '0 6px 20px var(--shadow-color)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.25rem'
+                  }}
+                >
+                  {/* Top Bar: User Info + Badges */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '14px',
+                          background: u.role === 'SUPER_ADMIN' ? 'var(--accent-gradient)' : 'var(--bg-highlight)',
+                          color: u.role === 'SUPER_ADMIN' ? '#ffffff' : 'var(--accent-primary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          fontSize: '1.2rem'
+                        }}
+                      >
+                        {u.role === 'SUPER_ADMIN' ? '👑' : '👤'}
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)', fontWeight: 900 }}>
+                            {u.fullName}
+                          </strong>
+                          {u.role === 'SUPER_ADMIN' && (
+                            <span style={{ padding: '0.15rem 0.6rem', borderRadius: '999px', background: 'var(--accent-gradient)', color: '#ffffff', fontSize: '0.72rem', fontWeight: 800 }}>
+                              SUPER ADMIN
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '0.88rem', color: 'var(--accent-primary)', fontWeight: 700, fontFamily: 'monospace' }}>
+                          ✉️ {u.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '0.3rem 0.75rem', borderRadius: '10px', background: 'var(--bg-card-subtle)', border: '1px solid var(--border-color)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                        📍 Pincode {u.registeredPincode} ({u.city}, {u.state})
+                      </span>
+                      <span style={{ padding: '0.3rem 0.75rem', borderRadius: '10px', background: 'var(--bg-highlight)', border: '1px solid var(--border-color)', fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-primary)' }}>
+                        {u.authProvider} Sign-in
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Financial Stats Bar */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: 'var(--bg-card-subtle)', borderRadius: '14px', padding: '1rem 1.25rem', border: '1px solid var(--border-color)' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>SPENDABLE WALLET BALANCE</span>
+                      <strong style={{ display: 'block', fontSize: '1.3rem', color: 'var(--accent-primary)', fontWeight: 900, marginTop: '0.1rem' }}>
+                        ₹{u.walletBalance.toFixed(2)}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>TOTAL NETWORK EARNINGS</span>
+                      <strong style={{ display: 'block', fontSize: '1.3rem', color: '#10b981', fontWeight: 900, marginTop: '0.1rem' }}>
+                        ₹{u.totalEarnings.toFixed(2)}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 800 }}>ACTIVE DIGITAL VOUCHERS</span>
+                      <strong style={{ display: 'block', fontSize: '1.3rem', color: 'var(--text-primary)', fontWeight: 900, marginTop: '0.1rem' }}>
+                        {u.vouchers.length} Vouchers Held
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* User Vouchers List */}
+                  <div>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.75rem' }}>
+                      🎁 Held Digital Vouchers (Tap to View / Share / Download PDF):
+                    </span>
+
+                    <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
+                      {u.vouchers.map((v, vIdx) => (
+                        <div
+                          key={vIdx}
+                          onClick={() => setSelectedUserVoucher(v)}
+                          style={{
+                            background: 'var(--input-bg)',
+                            border: '1.5px solid var(--border-color)',
+                            borderRadius: '14px',
+                            padding: '0.75rem 1rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            boxShadow: '0 2px 8px var(--shadow-color)',
+                            transition: 'transform 0.15s ease'
+                          }}
+                        >
+                          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--bg-highlight)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                            🎁
+                          </div>
+
+                          <div>
+                            <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)', display: 'block' }}>
+                              {v.brandName}
+                            </strong>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 800, fontFamily: 'monospace' }}>
+                              ₹{v.denomination} · {v.voucherCode}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* TAB 0: Vendors & Outlets Directory */}
         {activeTab === 'VENDORS' && (
@@ -867,6 +1156,20 @@ export default function AdminPlatformPage() {
         )}
 
       </main>
+
+      {/* Admin User Voucher Receipt Modal */}
+      {selectedUserVoucher && (
+        <VoucherReceiptModal
+          details={{
+            brandName: selectedUserVoucher.brandName,
+            voucherCode: selectedUserVoucher.voucherCode,
+            voucherPin: selectedUserVoucher.voucherPin,
+            denomination: selectedUserVoucher.denomination,
+            paidAt: new Date().toISOString()
+          }}
+          onClose={() => setSelectedUserVoucher(null)}
+        />
+      )}
 
       <BottomNavBar />
     </div>

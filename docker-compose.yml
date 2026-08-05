@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: viralpe-db
+    environment:
+      POSTGRES_DB: viralpe_db
+      POSTGRES_USER: viralpe_user
+      POSTGRES_PASSWORD: viralpe_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U viralpe_user -d viralpe_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: viralpe-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/viralpe_db
+      SPRING_DATASOURCE_USERNAME: viralpe_user
+      SPRING_DATASOURCE_PASSWORD: viralpe_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: viralpe-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

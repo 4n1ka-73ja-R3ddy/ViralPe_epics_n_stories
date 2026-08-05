@@ -9,6 +9,7 @@ import com.viralpe.royalty.service.VendorRoyaltyService;
 import com.viralpe.royalty.service.VerticalRoyaltyService;
 import com.viralpe.transaction.model.Transaction;
 import com.viralpe.transaction.repository.TransactionRepository;
+import com.viralpe.user.exception.ProfileIncompleteException;
 import com.viralpe.user.model.User;
 import com.viralpe.user.repository.UserRepository;
 import com.viralpe.wallet.model.ReversalWallet;
@@ -58,6 +59,12 @@ public class CheckoutService {
     public CheckoutResponse processCheckout(CheckoutRequest request) {
 
         Long userId = request.getUserId();
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null && !Boolean.TRUE.equals(user.getProfileComplete())) {
+                throw new ProfileIncompleteException("Profile incomplete. Pincode entry required.");
+            }
+        }
         Long vendorId = request.getVendorId();
         Double amount = request.getAmount();
 
