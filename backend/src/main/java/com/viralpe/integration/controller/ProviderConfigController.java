@@ -22,6 +22,17 @@ public class ProviderConfigController {
         return ResponseEntity.ok(orchestrationService.getAllProviderConfigs());
     }
 
+    @GetMapping("/admin/providers/strategy")
+    public ResponseEntity<java.util.Map<String, String>> getRoutingStrategy() {
+        return ResponseEntity.ok(java.util.Map.of("routingStrategy", orchestrationService.getGlobalRoutingStrategy()));
+    }
+
+    @PostMapping("/admin/providers/strategy")
+    public ResponseEntity<java.util.Map<String, String>> updateRoutingStrategy(@RequestParam String strategy) {
+        orchestrationService.setGlobalRoutingStrategy(strategy);
+        return ResponseEntity.ok(java.util.Map.of("routingStrategy", orchestrationService.getGlobalRoutingStrategy()));
+    }
+
     @PostMapping("/admin/providers/config/{providerId}")
     public ResponseEntity<ProviderConfigDTO> updateProviderConfig(
             @PathVariable String providerId,

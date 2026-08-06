@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { createVoucherPDFBlob } from '../lib/pdfGenerator';
+import {
+  createVoucherPDFBlob,
+  createVoucherPNGBlob,
+  generateVoucherText
+} from '../lib/pdfGenerator';
 import { getSession } from '../lib/session';
 
 export interface VoucherReceiptDetails {
@@ -20,19 +24,21 @@ export default function VoucherReceiptModal({ details, onClose }: VoucherReceipt
   const userName = session?.fullName || 'Anika Teja Reddy';
   const userPincode = session?.registeredPincode || '560001';
 
-  const [copied, setCopied] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [sharingPng, setSharingPng] = useState(false);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(details.voucherCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  // 1. Download Option as PDF
   const handleDownloadPDF = async () => {
     try {
-      setDownloading(true);
+      setDownloadingPdf(true);
       const pdfBlob = await createVoucherPDFBlob(details, userName, userPincode);
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -46,42 +52,51 @@ export default function VoucherReceiptModal({ details, onClose }: VoucherReceipt
       console.error('Error generating PDF voucher:', e);
       alert('Unable to generate PDF voucher.');
     } finally {
-      setDownloading(false);
+      setDownloadingPdf(false);
     }
   };
 
-  const handleShareVoucher = async () => {
+  // 2. Share Option as PNG
+  const handleSharePNG = async () => {
     try {
-      setSharing(true);
-      const pdfBlob = await createVoucherPDFBlob(details, userName, userPincode);
-      const pdfFile = new File(
-        [pdfBlob],
-        `ViralPe_Voucher_${details.voucherCode}.pdf`,
-        { type: 'application/pdf' }
-      );
+      setSharingPng(true);
+      const pngBlob = await createVoucherPNGBlob(details, userName, userPincode);
+      const fileName = `ViralPe_Voucher_${details.voucherCode}.png`;
+      const pngFile = new File([pngBlob], fileName, { type: 'image/png' });
 
-      const textMessage = `🎁 Payment Successful! Voucher Issued!\n\n` +
-        `• Brand: ${details.brandName}\n` +
-        `• Voucher Code: ${details.voucherCode}\n` +
-        `• PIN Code: ${details.voucherPin}\n` +
-        `• Denomination: ₹${details.denomination}\n\n` +
-        `Purchased securely on ViralPe Network!`;
-
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      if (navigator.canShare && navigator.canShare({ files: [pngFile] })) {
         await navigator.share({
           title: `${details.brandName} Gift Voucher`,
-          text: textMessage,
-          files: [pdfFile]
+          text: `🎁 Payment Successful! Voucher Issued for ${details.brandName}!`,
+          files: [pngFile]
         });
       } else {
+        const url = URL.createObjectURL(pngBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        const textMessage = generateVoucherText(details, userName, userPincode);
         const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`;
         window.open(whatsappUrl, '_blank');
       }
     } catch (e) {
-      console.error('Error sharing voucher:', e);
+      console.error('Error sharing PNG voucher:', e);
     } finally {
-      setSharing(false);
+      setSharingPng(false);
     }
+  };
+
+  // 3. Text Option to Copy
+  const handleCopyText = () => {
+    const voucherText = generateVoucherText(details, userName, userPincode);
+    navigator.clipboard.writeText(voucherText);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2200);
   };
 
   return (
@@ -191,7 +206,7 @@ export default function VoucherReceiptModal({ details, onClose }: VoucherReceipt
             width: '100%',
             padding: '0.85rem 1.5rem',
             borderRadius: '16px',
-            background: copied ? '#10b981' : 'var(--accent-gradient)',
+            background: copiedCode ? '#10b981' : 'var(--accent-gradient)',
             color: '#ffffff',
             border: 'none',
             fontWeight: 800,
@@ -206,56 +221,82 @@ export default function VoucherReceiptModal({ details, onClose }: VoucherReceipt
             transition: 'all 0.2s ease-in-out'
           }}
         >
-          <span>{copied ? '✅ Voucher Code Copied!' : 'Copy Voucher Code 📋'}</span>
+          <span>{copiedCode ? '✅ Voucher Code Copied!' : 'Copy Voucher Code 📋'}</span>
         </button>
 
-        {/* Secondary Action Row: Share + Download PDF */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', marginBottom: '1.25rem' }}>
-          <button
-            onClick={handleShareVoucher}
-            disabled={sharing}
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: '14px',
-              background: '#25D366',
-              color: '#ffffff',
-              border: 'none',
-              fontWeight: 800,
-              fontSize: '0.88rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 4px 12px rgba(37, 211, 102, 0.25)'
-            }}
-          >
-            <span>📲</span>
-            <span>{sharing ? 'Sharing...' : 'Share Voucher'}</span>
-          </button>
-
+        {/* 3 Action Buttons Grid: Download PDF, Share PNG, Copy Text */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
           <button
             onClick={handleDownloadPDF}
-            disabled={downloading}
+            disabled={downloadingPdf}
             style={{
-              padding: '0.75rem 1rem',
+              padding: '0.75rem 0.5rem',
               borderRadius: '14px',
               background: 'var(--bg-card-subtle)',
               color: 'var(--accent-primary)',
               border: '1.5px solid var(--border-color)',
               fontWeight: 800,
-              fontSize: '0.88rem',
+              fontSize: '0.82rem',
               cursor: 'pointer',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.4rem'
+              gap: '0.25rem'
             }}
           >
-            <span>📄</span>
-            <span>{downloading ? 'Downloading...' : 'Download PDF'}</span>
+            <span style={{ fontSize: '1.1rem' }}>📄</span>
+            <span>{downloadingPdf ? 'Saving...' : 'Download PDF'}</span>
+          </button>
+
+          <button
+            onClick={handleSharePNG}
+            disabled={sharingPng}
+            style={{
+              padding: '0.75rem 0.5rem',
+              borderRadius: '14px',
+              background: '#25D366',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem',
+              boxShadow: '0 4px 12px rgba(37, 211, 102, 0.25)'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>🖼️</span>
+            <span>{sharingPng ? 'Sharing...' : 'Share PNG'}</span>
+          </button>
+
+          <button
+            onClick={handleCopyText}
+            style={{
+              padding: '0.75rem 0.5rem',
+              borderRadius: '14px',
+              background: copiedText ? '#10b981' : 'var(--bg-highlight)',
+              color: copiedText ? '#ffffff' : 'var(--text-primary)',
+              border: `1.5px solid ${copiedText ? '#10b981' : 'var(--border-color)'}`,
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>{copiedText ? '✅' : '📋'}</span>
+            <span>{copiedText ? 'Copied!' : 'Copy Text'}</span>
           </button>
         </div>
+
+        {/* Close Button */}
 
         {/* Close Button */}
         <button

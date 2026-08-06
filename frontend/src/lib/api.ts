@@ -947,6 +947,10 @@ export interface ProviderConfigItem {
   successRate24h: number;
   offerMarginPercentage: number;
   maxTimeoutMs: number;
+  routingStrategy?: string;
+  averageLatencyMs?: number;
+  lastFailureTimestamp?: string;
+  consecutiveTimeouts?: number;
 }
 
 export interface ProviderExecuteRequestPayload {
@@ -972,6 +976,8 @@ export interface ProviderExecuteResponseData {
   normalizedErrorCode?: string;
   errorMessage?: string;
   timestamp: string;
+  executionLatencyMs?: number;
+  failoverReason?: string;
 }
 
 export function getProviderConfigs(): Promise<ProviderConfigItem[]> {
@@ -999,6 +1005,19 @@ export function getProviderConfigs(): Promise<ProviderConfigItem[]> {
       maxTimeoutMs: 6000
     }
   ]);
+}
+
+export function getGlobalRoutingStrategy(): Promise<{ routingStrategy: string }> {
+  return apiRequest<{ routingStrategy: string }>('/api/admin/providers/strategy').catch(() => ({
+    routingStrategy: 'PRIORITY_BASED'
+  }));
+}
+
+export function updateGlobalRoutingStrategy(strategy: string): Promise<{ routingStrategy: string }> {
+  const params = new URLSearchParams({ strategy });
+  return apiRequest<{ routingStrategy: string }>(`/api/admin/providers/strategy?${params.toString()}`, {
+    method: 'POST'
+  });
 }
 
 export function updateProviderConfig(

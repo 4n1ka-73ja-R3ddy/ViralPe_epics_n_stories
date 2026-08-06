@@ -12,6 +12,10 @@ public class ProviderConfigDTO {
     private double successRate24h;
     private double offerMarginPercentage;
     private long maxTimeoutMs;
+    private String routingStrategy; // PRIORITY_BASED, OFFER_MARGIN_BASED
+    private long averageLatencyMs;
+    private String lastFailureTimestamp;
+    private int consecutiveTimeouts;
 
     public ProviderConfigDTO() {}
 
@@ -25,6 +29,41 @@ public class ProviderConfigDTO {
         this.successRate24h = successRate24h;
         this.offerMarginPercentage = offerMarginPercentage;
         this.maxTimeoutMs = maxTimeoutMs;
+        this.routingStrategy = "PRIORITY_BASED";
+        this.averageLatencyMs = 45;
+        this.consecutiveTimeouts = 0;
+    }
+
+    public long getAverageLatencyMs() {
+        return averageLatencyMs;
+    }
+
+    public void setAverageLatencyMs(long averageLatencyMs) {
+        this.averageLatencyMs = averageLatencyMs;
+    }
+
+    public String getLastFailureTimestamp() {
+        return lastFailureTimestamp;
+    }
+
+    public void setLastFailureTimestamp(String lastFailureTimestamp) {
+        this.lastFailureTimestamp = lastFailureTimestamp;
+    }
+
+    public int getConsecutiveTimeouts() {
+        return consecutiveTimeouts;
+    }
+
+    public void setConsecutiveTimeouts(int consecutiveTimeouts) {
+        this.consecutiveTimeouts = consecutiveTimeouts;
+    }
+
+    public String getRoutingStrategy() {
+        return routingStrategy;
+    }
+
+    public void setRoutingStrategy(String routingStrategy) {
+        this.routingStrategy = routingStrategy;
     }
 
     public String getProviderId() {

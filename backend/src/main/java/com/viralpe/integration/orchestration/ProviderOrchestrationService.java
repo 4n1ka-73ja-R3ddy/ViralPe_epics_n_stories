@@ -20,6 +20,7 @@ public class ProviderOrchestrationService {
     private final Map<String, ProviderConfigDTO> configMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> failureCounter = new ConcurrentHashMap<>();
     private final IdempotencyService idempotencyService;
+    private String globalRoutingStrategy = "PRIORITY_BASED";
 
     public ProviderOrchestrationService(List<ProviderAdapter> adapters, IdempotencyService idempotencyService) {
         this.idempotencyService = idempotencyService;
@@ -27,6 +28,18 @@ public class ProviderOrchestrationService {
             adapterMap.put(adapter.getProviderId().toUpperCase(), adapter);
         }
         initDefaultConfigs();
+    }
+
+    public String getGlobalRoutingStrategy() {
+        return globalRoutingStrategy;
+    }
+
+    public void setGlobalRoutingStrategy(String strategy) {
+        if (strategy != null && (strategy.equalsIgnoreCase("PRIORITY_BASED") || strategy.equalsIgnoreCase("OFFER_MARGIN_BASED"))) {
+            this.globalRoutingStrategy = strategy.toUpperCase();
+            configMap.values().forEach(c -> c.setRoutingStrategy(this.globalRoutingStrategy));
+            log.info("Global provider routing strategy updated to: {}", this.globalRoutingStrategy);
+        }
     }
 
     private void initDefaultConfigs() {
@@ -74,16 +87,21 @@ public class ProviderOrchestrationService {
                 ? request.getServiceType().toUpperCase()
                 : "RECHARGE";
 
-        // Select active candidate adapters sorted by priority
+        // Select active candidate adapters sorted by routing strategy (Priority vs Offer Margin)
+        Comparator<ProviderConfigDTO> strategyComparator = "OFFER_MARGIN_BASED".equalsIgnoreCase(globalRoutingStrategy)
+                ? Comparator.comparingDouble(ProviderConfigDTO::getOfferMarginPercentage).reversed()
+                : Comparator.comparingInt(ProviderConfigDTO::getPriority);
+
         List<ProviderConfigDTO> candidates = configMap.values().stream()
                 .filter(ProviderConfigDTO::isEnabled)
                 .filter(c -> !"DOWN".equalsIgnoreCase(c.getHealthStatus()))
                 .filter(c -> c.getSupportedCategories() != null && c.getSupportedCategories().contains(category))
-                .sorted(Comparator.comparingInt(ProviderConfigDTO::getPriority))
+                .sorted(strategyComparator)
                 .collect(Collectors.toList());
 
         List<String> attemptedProviders = new ArrayList<>();
         boolean failoverOccurred = false;
+        String lastFailoverReason = "NONE";
 
         for (int i = 0; i < candidates.size(); i++) {
             ProviderConfigDTO config = candidates.get(i);
@@ -98,6 +116,8 @@ public class ProviderOrchestrationService {
                 log.warn("Failover triggered! Attempting execution via secondary provider: {}", pid);
             }
 
+            long startTime = System.currentTimeMillis();
+
             try {
                 ProviderPaymentRequest pReq = new ProviderPaymentRequest(
                         correlationId,
@@ -108,12 +128,23 @@ public class ProviderOrchestrationService {
                         request.getAmount()
                 );
 
-                ProviderPaymentResponse pRes = adapter.executePayment(pReq);
+                // Enforce per-provider maximum timeout asynchronously
+                long timeoutMs = config.getMaxTimeoutMs() > 0 ? config.getMaxTimeoutMs() : 5000;
+                ProviderPaymentResponse pRes = java.util.concurrent.CompletableFuture.supplyAsync(() -> adapter.executePayment(pReq))
+                        .orTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
+                        .get();
+
+                long executionLatency = System.currentTimeMillis() - startTime;
 
                 if (pRes != null && pRes.isSuccess()) {
                     // Reset failure counter on success
                     failureCounter.put(pid, 0);
                     config.setHealthStatus("HEALTHY");
+                    config.setConsecutiveTimeouts(0);
+                    
+                    // Update running average latency
+                    long updatedLatency = (config.getAverageLatencyMs() + executionLatency) / 2;
+                    config.setAverageLatencyMs(updatedLatency > 0 ? updatedLatency : executionLatency);
 
                     ProviderExecuteResponseDTO response = new ProviderExecuteResponseDTO();
                     response.setStatus("SUCCESS");
@@ -124,16 +155,23 @@ public class ProviderOrchestrationService {
                     response.setAmountPaid(request.getAmount());
                     response.setFailoverOccurred(failoverOccurred);
                     response.setAttemptedProviders(attemptedProviders);
+                    response.setExecutionLatencyMs(executionLatency);
+                    response.setFailoverReason(failoverOccurred ? lastFailoverReason : "NONE");
                     response.setTimestamp(Instant.now().toString());
 
                     idempotencyService.recordResponse(idempotencyKey, response);
                     return response;
                 } else {
-                    recordFailure(pid, config);
+                    lastFailoverReason = "PROVIDER_EXECUTION_FAILED";
+                    recordFailure(pid, config, false);
                 }
             } catch (Exception ex) {
-                log.error("Error executing payment via provider {}: {}", pid, ex.getMessage());
-                recordFailure(pid, config);
+                long executionLatency = System.currentTimeMillis() - startTime;
+                boolean isTimeout = ex instanceof java.util.concurrent.TimeoutException || (ex.getCause() != null && ex.getCause() instanceof java.util.concurrent.TimeoutException);
+                lastFailoverReason = isTimeout ? "TIMEOUT_EXCEEDED" : "PROVIDER_EXCEPTION";
+                
+                log.error("Error/Timeout executing payment via provider {} (Latency: {}ms): {}", pid, executionLatency, ex.getMessage());
+                recordFailure(pid, config, isTimeout);
             }
         }
 
@@ -144,22 +182,29 @@ public class ProviderOrchestrationService {
         failResponse.setRequestCorrelationId(correlationId);
         failResponse.setFailoverOccurred(failoverOccurred);
         failResponse.setAttemptedProviders(attemptedProviders);
+        failResponse.setFailoverReason(lastFailoverReason);
         failResponse.setNormalizedErrorCode("ALL_PROVIDERS_FAILED");
-        failResponse.setErrorMessage("All orchestrated payment providers failed or were unavailable.");
+        failResponse.setErrorMessage("All orchestrated payment providers failed or timed out.");
         failResponse.setTimestamp(Instant.now().toString());
 
         idempotencyService.recordResponse(idempotencyKey, failResponse);
         return failResponse;
     }
 
-    private void recordFailure(String providerId, ProviderConfigDTO config) {
+    private void recordFailure(String providerId, ProviderConfigDTO config, boolean isTimeout) {
         int count = failureCounter.getOrDefault(providerId, 0) + 1;
         failureCounter.put(providerId, count);
-        if (count >= 3) {
-            config.setHealthStatus("DEGRADED");
-            log.warn("Provider {} health state changed to DEGRADED due to {} consecutive failures", providerId, count);
+        config.setLastFailureTimestamp(Instant.now().toString());
+
+        if (isTimeout) {
+            config.setConsecutiveTimeouts(config.getConsecutiveTimeouts() + 1);
         }
-        if (count >= 5) {
+
+        if (count >= 3 || config.getConsecutiveTimeouts() >= 2) {
+            config.setHealthStatus("DEGRADED");
+            log.warn("Provider {} health state changed to DEGRADED (failures={}, timeouts={})", providerId, count, config.getConsecutiveTimeouts());
+        }
+        if (count >= 5 || config.getConsecutiveTimeouts() >= 3) {
             config.setHealthStatus("DOWN");
             log.error("Circuit breaker tripped! Provider {} marked DOWN", providerId);
         }

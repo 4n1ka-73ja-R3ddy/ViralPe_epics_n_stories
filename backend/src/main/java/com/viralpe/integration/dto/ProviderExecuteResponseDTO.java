@@ -15,8 +15,26 @@ public class ProviderExecuteResponseDTO {
     private String normalizedErrorCode;
     private String errorMessage;
     private String timestamp;
+    private long executionLatencyMs;
+    private String failoverReason; // NONE, TIMEOUT_EXCEEDED, PROVIDER_ERROR
 
     public ProviderExecuteResponseDTO() {}
+
+    public long getExecutionLatencyMs() {
+        return executionLatencyMs;
+    }
+
+    public void setExecutionLatencyMs(long executionLatencyMs) {
+        this.executionLatencyMs = executionLatencyMs;
+    }
+
+    public String getFailoverReason() {
+        return failoverReason;
+    }
+
+    public void setFailoverReason(String failoverReason) {
+        this.failoverReason = failoverReason;
+    }
 
     public String getStatus() {
         return status;

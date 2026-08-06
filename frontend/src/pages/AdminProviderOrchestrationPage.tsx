@@ -6,6 +6,8 @@ import { getSession } from '../lib/session';
 import {
   getProviderConfigs,
   updateProviderConfig,
+  getGlobalRoutingStrategy,
+  updateGlobalRoutingStrategy,
   executeOrchestratedPayment,
   ProviderConfigItem,
   ProviderExecuteResponseData
@@ -16,6 +18,7 @@ export default function AdminProviderOrchestrationPage() {
   const session = getSession();
 
   const [providers, setProviders] = useState<ProviderConfigItem[]>([]);
+  const [routingStrategy, setRoutingStrategy] = useState<'PRIORITY_BASED' | 'OFFER_MARGIN_BASED'>('PRIORITY_BASED');
   const [loading, setLoading] = useState(true);
 
   // Test Sandbox State
@@ -39,10 +42,23 @@ export default function AdminProviderOrchestrationPage() {
     try {
       const data = await getProviderConfigs();
       setProviders(data);
+      const stratRes = await getGlobalRoutingStrategy();
+      if (stratRes?.routingStrategy) {
+        setRoutingStrategy(stratRes.routingStrategy as any);
+      }
     } catch (e) {
       console.error('Error loading provider configs:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStrategyChange = async (newStrategy: 'PRIORITY_BASED' | 'OFFER_MARGIN_BASED') => {
+    try {
+      await updateGlobalRoutingStrategy(newStrategy);
+      setRoutingStrategy(newStrategy);
+    } catch (e) {
+      alert(`Failed to update routing strategy: ${(e as Error).message}`);
     }
   };
 
@@ -141,6 +157,115 @@ export default function AdminProviderOrchestrationPage() {
             >
               ← Back to Main Admin
             </button>
+          </div>
+        </section>
+
+        {/* Global Strategy Switcher */}
+        <section
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '16px',
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            boxShadow: '0 4px 20px var(--shadow-color)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <span style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                DYNAMIC ROUTING STRATEGY
+              </span>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0.2rem 0', color: 'var(--text-primary)' }}>
+                Active Mode: {routingStrategy === 'PRIORITY_BASED' ? '🎯 Priority-Based Ranking' : '💰 Offer Margin-Based Maximization'}
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0 }}>
+                {routingStrategy === 'PRIORITY_BASED'
+                  ? 'Transactions route strictly according to Provider Priority Ranks (Priority 1 -> Priority 2 -> Priority 3).'
+                  : 'Transactions route dynamically to whichever active gateway offers the highest Cash Offer Margin %.'}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => handleStrategyChange('PRIORITY_BASED')}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '10px',
+                  background: routingStrategy === 'PRIORITY_BASED' ? 'var(--accent-primary)' : 'var(--input-bg)',
+                  color: routingStrategy === 'PRIORITY_BASED' ? '#ffffff' : 'var(--text-primary)',
+                  border: `1px solid ${routingStrategy === 'PRIORITY_BASED' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                🎯 Priority-Based Mode
+              </button>
+
+              <button
+                onClick={() => handleStrategyChange('OFFER_MARGIN_BASED')}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '10px',
+                  background: routingStrategy === 'OFFER_MARGIN_BASED' ? 'var(--accent-primary)' : 'var(--input-bg)',
+                  color: routingStrategy === 'OFFER_MARGIN_BASED' ? '#ffffff' : 'var(--text-primary)',
+                  border: `1px solid ${routingStrategy === 'OFFER_MARGIN_BASED' ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                💰 Offer Margin Mode
+              </button>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '1.25rem 0' }} />
+
+          {/* Active Candidate Execution Pipeline Banner */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '0.88rem' }}>
+            <span style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>
+              🚀 Live Candidate Execution Pipeline:
+            </span>
+            {(() => {
+              const active = [...providers]
+                .filter((p) => p.enabled && p.healthStatus !== 'DOWN')
+                .sort((a, b) => {
+                  if (routingStrategy === 'OFFER_MARGIN_BASED') {
+                    return b.offerMarginPercentage - a.offerMarginPercentage;
+                  }
+                  return a.priority - b.priority;
+                });
+
+              if (active.length === 0) {
+                return <span style={{ color: '#ef4444', fontWeight: 800 }}>⚠️ NO ACTIVE CANDIDATES (ALL DISABLED / DOWN)</span>;
+              }
+
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {active.map((p, idx) => (
+                    <span
+                      key={p.providerId}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '20px',
+                        background: idx === 0 ? 'rgba(34, 197, 94, 0.15)' : 'var(--input-bg)',
+                        color: idx === 0 ? '#16a34a' : 'var(--text-primary)',
+                        border: `1px solid ${idx === 0 ? '#22c55e' : 'var(--border-color)'}`,
+                        fontWeight: 800,
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      {idx === 0 ? '1st ' : `${idx + 1}nd `} {p.providerName} ({p.providerId})
+                      {routingStrategy === 'OFFER_MARGIN_BASED' ? ` [${p.offerMarginPercentage}% Margin]` : ` [Priority ${p.priority}]`}
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </section>
 
@@ -267,8 +392,8 @@ export default function AdminProviderOrchestrationPage() {
                       </div>
                     </div>
 
-                    {/* Health Status Badge & Info */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                    {/* Health Status Badge & Latency Info */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.82rem', marginTop: '0.5rem' }}>
                       <div>
                         <span style={{ color: 'var(--text-secondary)' }}>Health State: </span>
                         <span
@@ -283,6 +408,14 @@ export default function AdminProviderOrchestrationPage() {
                       <div>
                         <span style={{ color: 'var(--text-secondary)' }}>24h Success: </span>
                         <strong style={{ color: 'var(--text-primary)' }}>{p.successRate24h}%</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Avg Latency: </span>
+                        <strong style={{ color: '#3b82f6' }}>{p.averageLatencyMs || 45}ms</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-secondary)' }}>Max Timeout: </span>
+                        <strong style={{ color: '#eab308' }}>{p.maxTimeoutMs || 5000}ms</strong>
                       </div>
                     </div>
                   </div>
@@ -432,6 +565,18 @@ export default function AdminProviderOrchestrationPage() {
                 <div>
                   <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.75rem' }}>Attempted Providers</span>
                   <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{testResult.attemptedProviders?.join(' → ')}</span>
+                </div>
+
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.75rem' }}>Execution Latency</span>
+                  <strong style={{ color: '#3b82f6' }}>{testResult.executionLatencyMs || 0} ms</strong>
+                </div>
+
+                <div>
+                  <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: '0.75rem' }}>Failover Reason</span>
+                  <strong style={{ color: testResult.failoverReason === 'TIMEOUT_EXCEEDED' ? '#ef4444' : 'var(--text-primary)' }}>
+                    {testResult.failoverReason || 'NONE'}
+                  </strong>
                 </div>
               </div>
             </div>

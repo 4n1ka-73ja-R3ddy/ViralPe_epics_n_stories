@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { getSession } from '../lib/session';
-import { createReceiptPDFBlob } from '../lib/pdfGenerator';
+import {
+  createReceiptPDFBlob,
+  createReceiptPNGBlob,
+  generateReceiptText
+} from '../lib/pdfGenerator';
 
 export interface TransactionReceiptDetails {
   status: string;
@@ -28,7 +32,9 @@ interface Props {
 export default function TransactionReceiptModal({ isOpen, onClose, details }: Props) {
   const [showDetails, setShowDetails] = useState(true);
   const [copiedRef, setCopiedRef] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [sharingPng, setSharingPng] = useState(false);
 
   if (!isOpen || !details) return null;
 
@@ -55,50 +61,70 @@ export default function TransactionReceiptModal({ isOpen, onClose, details }: Pr
     setTimeout(() => setCopiedRef(false), 2000);
   };
 
-  const handleDownloadReceipt = async () => {
-    const pdfBlob = await createReceiptPDFBlob(details, userName, userPincode);
-    const fileName = `ViralPe_Receipt_${details.referenceId.substring(0, 8)}.pdf`;
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // 1. Download Option as PDF
+  const handleDownloadPDF = async () => {
+    try {
+      setDownloadingPdf(true);
+      const pdfBlob = await createReceiptPDFBlob(details, userName, userPincode);
+      const fileName = `ViralPe_Receipt_${details.referenceId.substring(0, 8)}.pdf`;
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Error downloading PDF receipt:', e);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
-  const handleShare = async () => {
-    const pdfBlob = await createReceiptPDFBlob(details, userName, userPincode);
-    const fileName = `ViralPe_Receipt_${details.referenceId.substring(0, 8)}.pdf`;
-    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+  // 2. Share Option as PNG
+  const handleSharePNG = async () => {
+    try {
+      setSharingPng(true);
+      const pngBlob = await createReceiptPNGBlob(details, userName, userPincode);
+      const fileName = `ViralPe_Receipt_${details.referenceId.substring(0, 8)}.png`;
+      const pngFile = new File([pngBlob], fileName, { type: 'image/png' });
 
-    // 1. Try Native Web Share API to attach actual .pdf file directly
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      try {
+      // Try native share API with PNG file
+      if (navigator.canShare && navigator.canShare({ files: [pngFile] })) {
         await navigator.share({
-          files: [pdfFile],
+          files: [pngFile],
           title: 'ViralPe Payment Receipt',
           text: `🧾 Payment Receipt for ₹${details.amount.toFixed(2)} (${details.operator || 'Recharge'})`
         });
-        setShareSuccess(true);
-        setTimeout(() => setShareSuccess(false), 2500);
-        return;
-      } catch (e) {
-        // Fallback to Web link if user dismissed
+      } else {
+        // Fallback: Download PNG image directly & open WhatsApp
+        const url = URL.createObjectURL(pngBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        const shareText = generateReceiptText(details, userName, userPincode);
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+        window.open(waUrl, '_blank');
       }
+    } catch (e) {
+      console.error('Error sharing PNG receipt:', e);
+    } finally {
+      setSharingPng(false);
     }
+  };
 
-    // 2. Web WhatsApp Fallback
-    await handleDownloadReceipt();
-    const pdfUrl = `http://localhost:8080/api/receipt/pdf/${details.referenceId}?amount=${details.amount}&operator=${encodeURIComponent(details.operator || 'Recharge')}`;
-    const shareText = `🧾 *ViralPe Payment Receipt*\n\nStatus: *${details.status}*\nAmount: *₹${details.amount.toFixed(2)}*\nPaid On: ${formattedDate}\nRef ID: \`${details.referenceId}\`\n\n📄 *View PDF Receipt*:\n${pdfUrl}`;
-
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-    window.open(waUrl, '_blank');
-
-    setShareSuccess(true);
-    setTimeout(() => setShareSuccess(false), 2500);
+  // 3. Text Option to Copy
+  const handleCopyText = () => {
+    const textReceipt = generateReceiptText(details, userName, userPincode);
+    navigator.clipboard.writeText(textReceipt);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2200);
   };
 
   return (
@@ -215,72 +241,81 @@ export default function TransactionReceiptModal({ isOpen, onClose, details }: Pr
           </div>
         </div>
 
-        {/* Action Buttons Row: Hide Details & Share */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        {/* 3 Action Buttons Grid: Download PDF, Share PNG, Copy Text */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem', marginBottom: '1.25rem' }}>
           <button
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={handleDownloadPDF}
+            disabled={downloadingPdf}
             style={{
-              padding: '0.75rem',
-              borderRadius: '14px',
-              background: 'var(--bg-highlight)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-color)',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem'
-            }}
-          >
-            👁️ {showDetails ? 'Hide Details' : 'View Details'}
-          </button>
-
-          <button
-            onClick={handleShare}
-            style={{
-              padding: '0.75rem',
+              padding: '0.75rem 0.5rem',
               borderRadius: '14px',
               background: 'var(--accent-gradient)',
               color: '#ffffff',
               border: 'none',
-              fontWeight: 700,
-              fontSize: '0.88rem',
+              fontWeight: 800,
+              fontSize: '0.82rem',
               cursor: 'pointer',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.4rem',
-              boxShadow: '0 4px 14px var(--shadow-color)'
+              gap: '0.25rem',
+              boxShadow: '0 4px 14px var(--shadow-color)',
+              transition: 'all 0.15s ease'
             }}
           >
-            📤 {shareSuccess ? 'Copied Link!' : 'Share'}
+            <span style={{ fontSize: '1.1rem' }}>📄</span>
+            <span>{downloadingPdf ? 'Saving...' : 'Download PDF'}</span>
+          </button>
+
+          <button
+            onClick={handleSharePNG}
+            disabled={sharingPng}
+            style={{
+              padding: '0.75rem 0.5rem',
+              borderRadius: '14px',
+              background: '#25D366',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem',
+              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.25)',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>🖼️</span>
+            <span>{sharingPng ? 'Sharing...' : 'Share PNG'}</span>
+          </button>
+
+          <button
+            onClick={handleCopyText}
+            style={{
+              padding: '0.75rem 0.5rem',
+              borderRadius: '14px',
+              background: copiedText ? '#10b981' : 'var(--bg-highlight)',
+              color: copiedText ? '#ffffff' : 'var(--accent-primary)',
+              border: `1.5px solid ${copiedText ? '#10b981' : 'var(--border-color)'}`,
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem' }}>{copiedText ? '✅' : '📋'}</span>
+            <span>{copiedText ? 'Copied!' : 'Copy Text'}</span>
           </button>
         </div>
-
-        {/* Full-width Download Receipt Button */}
-        <button
-          onClick={handleDownloadReceipt}
-          style={{
-            width: '100%',
-            padding: '0.85rem',
-            borderRadius: '14px',
-            background: 'var(--bg-highlight)',
-            color: 'var(--accent-primary)',
-            border: '1.5px solid var(--border-color)',
-            fontWeight: 800,
-            fontSize: '0.92rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            marginBottom: '1.25rem'
-          }}
-        >
-          📥 Download Receipt
-        </button>
 
         {/* Detailed Receipt Table */}
         {showDetails && (
