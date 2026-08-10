@@ -14,6 +14,9 @@ import org.springframework.util.StringUtils;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class WalletService {
@@ -21,6 +24,7 @@ public class WalletService {
     private final WalletBalanceRepository walletBalanceRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final ReversalWalletRepository reversalWalletRepository;
+    private final Map<Long, ReentrantLock> userLocks = new ConcurrentHashMap<>();
 
     public WalletService(
             WalletBalanceRepository walletBalanceRepository,
@@ -30,6 +34,10 @@ public class WalletService {
         this.walletBalanceRepository = walletBalanceRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.reversalWalletRepository = reversalWalletRepository;
+    }
+
+    private ReentrantLock getUserLock(Long userId) {
+        return userLocks.computeIfAbsent(userId, k -> new ReentrantLock());
     }
 
     public WalletBalance getWalletBalance(Long userId) {
@@ -55,33 +63,39 @@ public class WalletService {
         validateAmount(amount, "Credit");
         validateCategory(category);
 
-        WalletBalance walletBalance =
-                walletBalanceRepository.findByUserId(userId)
-                        .orElseGet(() -> {
-                            WalletBalance newBalance = new WalletBalance();
-                            newBalance.setUserId(userId);
-                            newBalance.setBalance(0.0);
-                            return newBalance;
-                        });
+        ReentrantLock lock = getUserLock(userId);
+        lock.lock();
+        try {
+            WalletBalance walletBalance =
+                    walletBalanceRepository.findByUserId(userId)
+                            .orElseGet(() -> {
+                                WalletBalance newBalance = new WalletBalance();
+                                newBalance.setUserId(userId);
+                                newBalance.setBalance(0.0);
+                                return newBalance;
+                            });
 
-        double currentBalance =
-                walletBalance.getBalance() == null
-                        ? 0.0
-                        : walletBalance.getBalance();
+            double currentBalance =
+                    walletBalance.getBalance() == null
+                            ? 0.0
+                            : walletBalance.getBalance();
 
-        walletBalance.setBalance(currentBalance + amount);
+            walletBalance.setBalance(currentBalance + amount);
 
-        WalletBalance savedBalance =
-                walletBalanceRepository.save(walletBalance);
+            WalletBalance savedBalance =
+                    walletBalanceRepository.save(walletBalance);
 
-        addLedgerEntry(
-                userId,
-                category.trim(),
-                amount,
-                normalizeSourceReference(sourceReference)
-        );
+            addLedgerEntry(
+                    userId,
+                    category.trim(),
+                    amount,
+                    normalizeSourceReference(sourceReference)
+            );
 
-        return savedBalance;
+            return savedBalance;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Transactional
@@ -95,38 +109,44 @@ public class WalletService {
         validateAmount(amount, "Debit");
         validateCategory(category);
 
-        WalletBalance walletBalance =
-                walletBalanceRepository.findByUserId(userId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Wallet balance not found for user."
-                                )
-                        );
+        ReentrantLock lock = getUserLock(userId);
+        lock.lock();
+        try {
+            WalletBalance walletBalance =
+                    walletBalanceRepository.findByUserId(userId)
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException(
+                                            "Wallet balance not found for user."
+                                    )
+                            );
 
-        double currentBalance =
-                walletBalance.getBalance() == null
-                        ? 0.0
-                        : walletBalance.getBalance();
+            double currentBalance =
+                    walletBalance.getBalance() == null
+                            ? 0.0
+                            : walletBalance.getBalance();
 
-        if (currentBalance < amount) {
-            throw new IllegalArgumentException(
-                    "Insufficient wallet balance."
+            if (currentBalance < amount) {
+                throw new IllegalArgumentException(
+                        "Insufficient wallet balance."
+                );
+            }
+
+            walletBalance.setBalance(currentBalance - amount);
+
+            WalletBalance savedBalance =
+                    walletBalanceRepository.save(walletBalance);
+
+            addLedgerEntry(
+                    userId,
+                    category.trim(),
+                    -amount,
+                    normalizeSourceReference(sourceReference)
             );
+
+            return savedBalance;
+        } finally {
+            lock.unlock();
         }
-
-        walletBalance.setBalance(currentBalance - amount);
-
-        WalletBalance savedBalance =
-                walletBalanceRepository.save(walletBalance);
-
-        addLedgerEntry(
-                userId,
-                category.trim(),
-                -amount,
-                normalizeSourceReference(sourceReference)
-        );
-
-        return savedBalance;
     }
 
     public List<LedgerEntry> getLedgerEntries(Long userId) {

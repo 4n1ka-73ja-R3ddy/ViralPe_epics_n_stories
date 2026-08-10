@@ -19,6 +19,7 @@ public class ProviderOrchestrationService {
     private final Map<String, ProviderAdapter> adapterMap = new ConcurrentHashMap<>();
     private final Map<String, ProviderConfigDTO> configMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> failureCounter = new ConcurrentHashMap<>();
+    private final Map<String, String> simulatedFaults = new ConcurrentHashMap<>();
     private final IdempotencyService idempotencyService;
     private String globalRoutingStrategy = "PRIORITY_BASED";
 
@@ -76,7 +77,7 @@ public class ProviderOrchestrationService {
         String idempotencyKey = request != null ? request.getIdempotencyKey() : null;
         if (idempotencyService.isProcessed(idempotencyKey)) {
             log.info("Idempotent request detected for key: {}", idempotencyKey);
-            return idempotencyService.getExistingResponse(idempotencyKey);
+            return idempotencyService.getExistingResponse(idempotencyKey, ProviderExecuteResponseDTO.class);
         }
 
         String correlationId = (request != null && request.getRequestCorrelationId() != null)
@@ -128,9 +129,27 @@ public class ProviderOrchestrationService {
                         request.getAmount()
                 );
 
+                // Check for simulated faults
+                String faultMode = simulatedFaults.get(pid);
+                if ("DOWN_STATUS".equalsIgnoreCase(faultMode)) {
+                    config.setHealthStatus("DOWN");
+                    throw new RuntimeException("Simulated DOWN health status for provider " + pid);
+                }
+
                 // Enforce per-provider maximum timeout asynchronously
                 long timeoutMs = config.getMaxTimeoutMs() > 0 ? config.getMaxTimeoutMs() : 5000;
-                ProviderPaymentResponse pRes = java.util.concurrent.CompletableFuture.supplyAsync(() -> adapter.executePayment(pReq))
+                ProviderPaymentResponse pRes = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                    if ("TIMEOUT".equalsIgnoreCase(faultMode)) {
+                        try {
+                            Thread.sleep(timeoutMs + 300);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } else if ("HTTP_500".equalsIgnoreCase(faultMode)) {
+                        throw new RuntimeException("Simulated HTTP 500 Gateway Error from " + pid);
+                    }
+                    return adapter.executePayment(pReq);
+                })
                         .orTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS)
                         .get();
 
@@ -208,5 +227,23 @@ public class ProviderOrchestrationService {
             config.setHealthStatus("DOWN");
             log.error("Circuit breaker tripped! Provider {} marked DOWN", providerId);
         }
+    }
+
+    public Map<String, String> getSimulatedFaults() {
+        return Map.copyOf(simulatedFaults);
+    }
+
+    public void setSimulatedFault(String providerId, String faultMode) {
+        if (providerId != null && faultMode != null) {
+            if ("NONE".equalsIgnoreCase(faultMode)) {
+                simulatedFaults.remove(providerId.toUpperCase());
+            } else {
+                simulatedFaults.put(providerId.toUpperCase(), faultMode.toUpperCase());
+            }
+        }
+    }
+
+    public void clearAllSimulatedFaults() {
+        simulatedFaults.clear();
     }
 }

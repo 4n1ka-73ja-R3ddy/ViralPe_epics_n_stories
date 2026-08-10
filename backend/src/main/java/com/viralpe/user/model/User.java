@@ -20,6 +20,7 @@ public class User {
     private String email;
     private String registeredPincode;
     private Boolean profileComplete = false;
+    private String role = "CUSTOMER";
     private Long referredByUserId;
     private Long onboardedByUserId;
 
@@ -93,5 +94,13 @@ public class User {
 
     public void setOnboardedByUserId(Long onboardedByUserId) {
         this.onboardedByUserId = onboardedByUserId;
+    }
+
+    public String getRole() {
+        return role == null ? "CUSTOMER" : role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

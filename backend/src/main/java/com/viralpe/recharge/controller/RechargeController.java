@@ -63,7 +63,7 @@ public class RechargeController {
 
     @PostMapping("/preview")
     public ResponseEntity<RechargePreviewResponse> previewRecharge(
-            @RequestBody RechargeRequest request
+            @jakarta.validation.Valid @RequestBody RechargeRequest request
     ) {
 
         return ResponseEntity.ok(
@@ -75,7 +75,7 @@ public class RechargeController {
 
     @PostMapping
     public ResponseEntity<RechargeTransaction> recharge(
-            @RequestBody RechargeRequest request
+            @jakarta.validation.Valid @RequestBody RechargeRequest request
     ) {
 
         return ResponseEntity.ok(
